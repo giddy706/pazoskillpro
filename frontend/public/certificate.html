@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate - pazoskill</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .certificate-page {
+            min-height: 100vh;
+            background: var(--bg);
+            padding: 2rem 0;
+        }
+        .certificate-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+        .cert-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .certificate-document {
+            background: linear-gradient(135deg, #0f1f3d 0%, #1a2c50 50%, #0f1f3d 100%);
+            border: 6px solid #4FD1E8;
+            border-radius: 1.5rem;
+            padding: 4rem 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+        .certificate-document::before {
+            content: '';
+            position: absolute;
+            top: 20px; left: 20px; right: 20px; bottom: 20px;
+            border: 1px solid rgba(79,209,232,0.3);
+            border-radius: 1rem;
+            pointer-events: none;
+        }
+        .cert-corner {
+            position: absolute;
+            width: 60px; height: 60px;
+            border-color: #4FD1E8;
+            border-style: solid;
+            border-width: 0;
+        }
+        .cert-corner.tl { top: 30px; left: 30px; border-top-width: 3px; border-left-width: 3px; border-radius: 4px 0 0 0; }
+        .cert-corner.tr { top: 30px; right: 30px; border-top-width: 3px; border-right-width: 3px; border-radius: 0 4px 0 0; }
+        .cert-corner.bl { bottom: 30px; left: 30px; border-bottom-width: 3px; border-left-width: 3px; border-radius: 0 0 0 4px; }
+        .cert-corner.br { bottom: 30px; right: 30px; border-bottom-width: 3px; border-right-width: 3px; border-radius: 0 0 4px 0; }
+        .cert-logo-area {
+            margin-bottom: 1.5rem;
+        }
+        .cert-logo-area img {
+            height: 56px;
+            width: auto;
+            margin-bottom: 0.5rem;
+        }
+        .cert-brand-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4FD1E8;
+            letter-spacing: 0.1em;
+        }
+        .cert-divider {
+            width: 120px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #4FD1E8, #7C6FEF, transparent);
+            margin: 1.5rem auto;
+            border-radius: 2px;
+        }
+        .cert-headline {
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: #8993AC;
+            margin-bottom: 0.5rem;
+        }
+        .cert-main-title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #EAEDF5;
+            margin: 0.5rem 0;
+            letter-spacing: 0.05em;
+        }
+        .cert-subtitle {
+            font-size: 0.85rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #8993AC;
+            margin-bottom: 2rem;
+        }
+        .cert-recipient {
+            font-size: 1.1rem;
+            color: #8993AC;
+            margin-bottom: 0.5rem;
+        }
+        .cert-recipient-name {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #4FD1E8;
+            margin: 0.25rem 0 1.5rem;
+            font-style: italic;
+        }
+        .cert-course-label {
+            font-size: 0.9rem;
+            color: #8993AC;
+            margin-bottom: 0.25rem;
+        }
+        .cert-course-name {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #EAEDF5;
+            margin-bottom: 2rem;
+        }
+        .cert-meta {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin: 2rem 0;
+        }
+        .cert-meta-item {
+            text-align: center;
+        }
+        .cert-meta-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #8993AC;
+        }
+        .cert-meta-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #EAEDF5;
+            margin-top: 0.25rem;
+        }
+        .cert-code-box {
+            background: rgba(79,209,232,0.08);
+            border: 1px solid rgba(79,209,232,0.3);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            display: inline-block;
+            margin: 1.5rem 0;
+        }
+        .cert-code-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #8993AC;
+        }
+        .cert-code-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #4FD1E8;
+            letter-spacing: 0.15em;
+            margin-top: 0.2rem;
+        }
+        .cert-seal {
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4FD1E8, #7C6FEF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1.5rem auto 0;
+            font-size: 2.5rem;
+            box-shadow: 0 0 30px rgba(79,209,232,0.4);
+        }
+        .cert-signature {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(79,209,232,0.2);
+        }
+        .cert-signature-name {
+            font-weight: 600;
+            color: #EAEDF5;
+        }
+        .cert-signature-role {
+            font-size: 0.8rem;
+            color: #8993AC;
+        }
+        .verify-badge {
+            background: rgba(79,209,232,0.1);
+            border: 1px solid rgba(79,209,232,0.3);
+            border-radius: 50px;
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+            color: #4FD1E8;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 1rem;
+        }
+        @media print {
+            nav, .cert-actions, footer { display: none !important; }
+            body { background: white !important; }
+            .certificate-document { box-shadow: none; }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="index.html" class="logo"><img src="images/logo.png" alt="pazoskill logo"><span>pazoskill</span></a>
+            <a href="dashboard.html" class="btn btn-outline btn-small">← Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <section class="certificate-page">
+        <div class="certificate-wrapper">
+            <div id="loadingMsg" style="text-align:center; padding: 3rem; color: var(--text-dim);">
+                <div style="font-size:2rem; margin-bottom:1rem;">⏳</div>
+                <p>Loading certificate...</p>
+            </div>
+
+            <div id="errorMsg" class="hidden" style="text-align:center; padding: 3rem; color: var(--error);">
+                <div style="font-size:2rem; margin-bottom:1rem;">❌</div>
+                <p id="errorText">Certificate not found.</p>
+                <a href="dashboard.html" class="btn btn-primary" style="margin-top:1rem;">Back to Dashboard</a>
+            </div>
+
+            <div id="certContainer" class="hidden">
+                <div class="cert-actions">
+                    <button onclick="window.print()" class="btn btn-primary">🖨️ Print / Download PDF</button>
+                    <button onclick="shareCertificate()" class="btn btn-outline">🔗 Share</button>
+                    <a href="dashboard.html" class="btn btn-outline">← Dashboard</a>
+                </div>
+
+                <div class="certificate-document" id="certDoc">
+                    <div class="cert-corner tl"></div>
+                    <div class="cert-corner tr"></div>
+                    <div class="cert-corner bl"></div>
+                    <div class="cert-corner br"></div>
+
+                    <div class="cert-logo-area">
+                        <img src="images/logo.png" alt="pazoskill logo">
+                        <div class="cert-brand-name">pazoskill</div>
+                    </div>
+
+                    <div class="cert-divider"></div>
+
+                    <div class="cert-headline">This is to certify that</div>
+                    <div class="cert-main-title">Certificate</div>
+                    <div class="cert-subtitle">of Completion</div>
+
+                    <div class="cert-recipient">has been awarded to</div>
+                    <div class="cert-recipient-name" id="certRecipient">Student Name</div>
+
+                    <div class="cert-course-label">for successfully completing</div>
+                    <div class="cert-course-name" id="certCourseName">Course Title</div>
+
+                    <div class="cert-code-box">
+                        <div class="cert-code-label">Certificate Code</div>
+                        <div class="cert-code-value" id="certCode">PAZO-CERT-XXXX</div>
+                    </div>
+
+                    <div class="cert-meta">
+                        <div class="cert-meta-item">
+                            <div class="cert-meta-label">Issued by</div>
+                            <div class="cert-meta-value" id="certIssuer">pazoskill Academic Directorate</div>
+                        </div>
+                        <div class="cert-meta-item">
+                            <div class="cert-meta-label">Date Issued</div>
+                            <div class="cert-meta-value" id="certDate">—</div>
+                        </div>
+                    </div>
+
+                    <div class="cert-seal">🎓</div>
+
+                    <div class="verify-badge">
+                        ✓ Verified Certificate
+                    </div>
+
+                    <div class="cert-signature">
+                        <div class="cert-signature-name">pazoskill Academic Directorate</div>
+                        <div class="cert-signature-role">Authorized by the pazoskill Platform</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        async function loadCertificate() {
+            const params = new URLSearchParams(window.location.search);
+            const certId = params.get('id');
+            const courseId = params.get('courseId');
+
+            try {
+                let certificate = null;
+                const token = getToken();
+
+                if (certId) {
+                    // Fetch by certificate ID
+                    const res = await fetch((window.API_BASE_URL || '') + '/api/certificates/' + certId, {
+                        headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+                    });
+                    const data = await res.json();
+                    if (data.success) certificate = data.certificate;
+                } else if (courseId) {
+                    // Fetch user's certificate for this course from session
+                    const user = await syncUserSession();
+                    if (user && user.certificates) {
+                        certificate = user.certificates.find(c => String(c.courseId) === String(courseId));
+                        if (certificate) {
+                            // Enhance with API data
+                            const res2 = await fetch((window.API_BASE_URL || '') + '/api/certificates/' + certificate.id, {
+                                headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+                            });
+                            const data2 = await res2.json();
+                            if (data2.success) certificate = { ...certificate, ...data2.certificate };
+                        }
+                    }
+                    if (!certificate) {
+                        // Try session data
+                        const user2 = getCurrentUser();
+                        if (user2 && user2.certificates) {
+                            certificate = user2.certificates.find(c => String(c.courseId) === String(courseId));
+                        }
+                    }
+                }
+
+                if (!certificate) {
+                    document.getElementById('loadingMsg').classList.add('hidden');
+                    document.getElementById('errorMsg').classList.remove('hidden');
+                    document.getElementById('errorText').textContent = 'Certificate not found. Please ensure you have completed the course.';
+                    return;
+                }
+
+                // Populate certificate
+                document.getElementById('certRecipient').textContent = certificate.userName || (getCurrentUser() ? (getCurrentUser().fullName || getCurrentUser().name) : 'Student');
+                document.getElementById('certCourseName').textContent = certificate.courseTitle || 'Course';
+                document.getElementById('certCode').textContent = certificate.certificate_code || certificate.certificateCode || 'PAZO-CERT-XXXX';
+                document.getElementById('certIssuer').textContent = certificate.issuer_name || certificate.issuerName || 'pazoskill Academic Directorate';
+                document.getElementById('certDate').textContent = new Date(certificate.issued_at || certificate.issuedDate || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+                document.getElementById('loadingMsg').classList.add('hidden');
+                document.getElementById('certContainer').classList.remove('hidden');
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loadingMsg').classList.add('hidden');
+                document.getElementById('errorMsg').classList.remove('hidden');
+                document.getElementById('errorText').textContent = 'Failed to load certificate. Please try again.';
+            }
+        }
+
+        function shareCertificate() {
+            const code = document.getElementById('certCode').textContent;
+            const url = window.location.href;
+            if (navigator.share) {
+                navigator.share({ title: 'My pazoskill Certificate', text: 'I earned a certificate from pazoskill! Code: ' + code, url });
+            } else {
+                navigator.clipboard.writeText(url).then(() => alert('Certificate link copied to clipboard!'));
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadCertificate);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,44 @@
+Create a Powerful Hero Section
+Use something like:
+
+Master High-Income Digital Skills & Get Hired
+
+Learn practical courses in Graphic Design, Digital Marketing, AI, Online Writing, Web Development, Data Analysis and more. Earn a professional certificate and connect with employers.
+
+Buttons:
+
+🟢 Start Learning Free
+
+🔵 Browse Courses
+
+Background:
+
+Modern gradient (dark blue → purple)
+Animated floating shapes
+Students working on laptops
+Small statistics underneath
+25+ Courses
+10,000+ Students
+95% Completion Rate
+200+ Hiring Partners
+2. Use Better Colors
+
+The current colors make the site feel flat.
+
+I'd recommend:
+
+Primary
+
+#2563EB (Blue)
+
+Secondary
+
+#7C3AED (Purple)
+
+Accent
+
+#F59E0B (Gold)
+
+Background
+
+#F8FAFC

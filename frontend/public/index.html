@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="pazoskill - Learn practical skills online and get hired. Professional training programs that lead to real job opportunities.">
+    <title>pazoskill - Learn Skills, Get Hired</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="index.html" class="logo"><img src="images/logo.png" alt="pazoskill logo"><span>pazoskill</span></a>
+
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html" class="nav-link active">Home</a></li>
+                <li><a href="courses.html" class="nav-link">Courses</a></li>
+                <li><a href="jobs.html" class="nav-link">Jobs</a></li>
+                <li><a href="about.html" class="nav-link">About Us</a></li>
+                <li><a href="contact.html" class="nav-link">Contact</a></li>
+                <li><a href="login.html" class="btn btn-primary btn-small">Login</a></li>
+                <li><a href="register.html" class="btn btn-secondary btn-small">Get Started</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container" style="position:relative; z-index:2; text-align:center;">
+            <span
+                style="display:inline-block; background:rgba(79,209,232,0.15); color:var(--cyan); font-size:0.78rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; padding:0.35rem 1.2rem; border-radius:2rem; border:1px solid rgba(79,209,232,0.3); margin-bottom:1.4rem;">
+                Professional E-Learning Platform</span>
+
+            <h1
+                style="font-size:clamp(2.2rem, 5.5vw, 4rem); line-height:1.1; margin-bottom:1.2rem; color:#fff; max-width:820px; margin-left:auto; margin-right:auto;">
+                Master High-Income Digital Skills &amp; <span
+                    style="background:linear-gradient(90deg,var(--cyan),var(--violet)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Get
+                    Hired</span>
+            </h1>
+
+            <p
+                style="color:rgba(255,255,255,0.82); font-size:clamp(1rem,2.5vw,1.2rem); line-height:1.75; max-width:660px; margin:0 auto 2.5rem;">
+                Learn practical courses in Graphic Design, Digital Marketing, AI, Web Development, Data Analysis and
+                more. Earn a professional certificate and connect with employers.
+            </p>
+
+            <div class="hero-buttons" style="justify-content:center; margin-bottom:2.5rem;">
+                <a href="register.html" class="btn btn-secondary btn-large"> Start Learning </a>
+                <a href="courses.html" class="btn btn-primary btn-large"> Browse Courses</a>
+            </div>
+
+            <!-- Feature pills -->
+            <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
+                <div
+                    style="display:flex; align-items:center; gap:0.45rem; background:rgba(255,255,255,0.08); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.15); border-radius:2rem; padding:0.5rem 1.1rem;">
+                    <span style="font-size:0.95rem;"></span>
+                    <span style="font-size:0.85rem; color:rgba(255,255,255,0.85); font-weight:500;">Live Hands-On
+                        Projects</span>
+                </div>
+                <div
+                    style="display:flex; align-items:center; gap:0.45rem; background:rgba(255,255,255,0.08); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.15); border-radius:2rem; padding:0.5rem 1.1rem;">
+                    <span style="font-size:0.95rem;"></span>
+                    <span style="font-size:0.85rem; color:rgba(255,255,255,0.85); font-weight:500;">Certified
+                        Graduates</span>
+                </div>
+                <div
+                    style="display:flex; align-items:center; gap:0.45rem; background:rgba(255,255,255,0.08); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.15); border-radius:2rem; padding:0.5rem 1.1rem;">
+                    <span style="font-size:0.95rem;"></span>
+                    <span style="font-size:0.85rem; color:rgba(255,255,255,0.85); font-weight:500;">200+ Hiring
+                        Partners</span>
+                </div>
+                <div
+                    style="display:flex; align-items:center; gap:0.45rem; background:rgba(255,255,255,0.08); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.15); border-radius:2rem; padding:0.5rem 1.1rem;">
+                    <span style="font-size:0.95rem;"></span>
+                    <span style="font-size:0.85rem; color:rgba(255,255,255,0.85); font-weight:500;">Learn
+                        Anywhere</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="section">
+        <div class="container">
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-number">25+</span>
+                    <span class="stat-label">Courses</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">10,000+</span>
+                    <span class="stat-label">Students</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">95%</span>
+                    <span class="stat-label">Completion Rate</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">200+</span>
+                    <span class="stat-label">Hiring Partners</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="feature-section section-alt">
+        <div class="container">
+            <div class="feature-grid">
+                <div class="feature-content">
+                    <h2 class="feature-title">About pazoskill</h2>
+                    <p>At pazoskill, we believe that education should be practical, accessible, and aligned with
+                        industry demands. We partner with top companies to create curricula that teach the exact skills
+                        you need to succeed in today's digital economy.</p>
+                    <a href="about.html" class="btn btn-outline mt-2">Learn More About Us</a>
+                </div>
+                <div class="feature-image">
+                    <div class="img-frame">
+                        <span class="img-badge-floating img-badge-top-right"> Industry Standard</span>
+                        <img src="images/image5.jpg" alt="About pazoskill">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Learn Anywhere -->
+    <section class="feature-section">
+        <div class="container">
+            <div class="feature-grid reverse">
+                <div class="feature-content">
+                    <h2 class="feature-title">Learn Anywhere, Anytime</h2>
+                    <p>Our platform is fully responsive and accessible on any device. Whether you are at home on your
+                        laptop, or commuting with your smartphone, you can continue your education at your own pace and
+                        on your own schedule.</p>
+                </div>
+                <div class="feature-image">
+                    <div class="img-frame">
+                        <span class="img-badge-floating img-badge-bottom-left"> Mobile & Desktop Ready</span>
+                        <img src="images/image2.jpg" alt="Learn Anywhere">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Student Community -->
+    <section class="feature-section section-alt">
+        <div class="container">
+            <div class="feature-grid">
+                <div class="feature-content">
+                    <h2 class="feature-title">Vibrant Student Community</h2>
+                    <p>You're never alone on your learning journey. Join thousands of other students in our active
+                        community forums. Share ideas, collaborate on projects, and build a network that will support
+                        you throughout your career.</p>
+                </div>
+                <div class="feature-image">
+                    <div class="img-frame">
+                        <span class="img-badge-floating img-badge-top-right"> 10,000+ Active Members</span>
+                        <img src="images/image3.jpg" alt="Student Community">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Career Support -->
+    <section class="feature-section">
+        <div class="container">
+            <div class="feature-grid reverse">
+                <div class="feature-content">
+                    <h2 class="feature-title">Dedicated Career Support</h2>
+                    <p>Your success is our goal. Once you complete a course, you'll gain access to exclusive job
+                        opportunities from our partner network. We also provide resume reviews, interview preparation,
+                        and direct employer introductions.</p>
+                    <a href="jobs.html" class="btn btn-primary mt-2">View Job Opportunities</a>
+                </div>
+                <div class="feature-image">
+                    <div class="img-frame">
+                        <span class="img-badge-floating img-badge-bottom-left"> 200+ Hiring Partners</span>
+                        <img src="images/image1.jpg" alt="Career Support">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Certificate Preview -->
+    <section class="feature-section section-alt">
+        <div class="container">
+            <div class="feature-grid">
+                <div class="feature-content">
+                    <h2 class="feature-title">Earn a Verified Certificate</h2>
+                    <p>Showcase your newly acquired skills with an official pazoskill Certificate of Completion.
+                        You can add it to your resume, share it on LinkedIn, and use it to stand out to employers during
+                        your job search.</p>
+                    <ul style="list-style: none; padding: 0; margin: 1.5rem 0; color: var(--gray);">
+                        <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span
+                                style="color: var(--secondary-color);">✓</span> Globally recognized</li>
+                        <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span
+                                style="color: var(--secondary-color);">✓</span> Shareable on LinkedIn</li>
+                        <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span
+                                style="color: var(--secondary-color);">✓</span> Validates your practical skills</li>
+                    </ul>
+                </div>
+                <div class="feature-image">
+                    <div class="img-frame"
+                        style="padding: 10px; background: rgba(255,255,255,0.05); border-radius: var(--radius-lg);">
+                        <span class="img-badge-floating img-badge-top-right"> Official Certificate</span>
+                        <img src="images/certificate-preview.png"
+                            alt="pazoskill Certificate of Completion Preview"
+                            style="border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.1); width: 100%;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Courses -->
+    <section class="section">
+        <div class="container">
+            <div class="flex-between mb-4">
+                <div>
+                    <h2>Featured Courses</h2>
+                    <p>Start learning today and unlock new career opportunities</p>
+                </div>
+                <a href="courses.html" class="btn btn-outline">View All Courses</a>
+            </div>
+
+            <div class="grid grid-3" id="featuredCourses">
+                <!-- Courses will be loaded dynamically -->
+                <div class="card">
+                    <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=200&fit=crop"
+                        alt="Web Development" class="card-image">
+                    <div class="card-body">
+                        <div class="flex-between mb-2">
+                            <span class="badge badge-primary">IT & Programming</span>
+                            <span style="color: var(--gray); font-size: 0.875rem;">12 Weeks</span>
+                        </div>
+                        <h3 class="card-title">Full Stack Web Development</h3>
+                        <p class="card-text">Master HTML, CSS, JavaScript, React, Node.js and build real-world
+                            applications from scratch.</p>
+                        <div class="flex-between">
+                            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                                <span
+                                    style="display:inline-block; background:linear-gradient(90deg,#e53e3e,#fc8181); color:#fff; font-size:0.72rem; font-weight:700; padding:0.18rem 0.6rem; border-radius:2rem; letter-spacing:0.06em; width:fit-content;">🏷️
+                                    20% OFF</span>
+                                <div style="display:flex; align-items:baseline; gap:0.5rem;">
+                                    <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">KSH
+                                        20,000</span>
+                                    <span style="font-size:0.9rem; color:var(--gray); text-decoration:line-through;">KSH
+                                        25,000</span>
+                                </div>
+                            </div>
+                            <a href="course-detail.html?id=1" class="btn btn-primary">Enroll Now</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=200&fit=crop"
+                        alt="Digital Marketing" class="card-image">
+                    <div class="card-body">
+                        <div class="flex-between mb-2">
+                            <span class="badge badge-success">Marketing</span>
+                            <span style="color: var(--gray); font-size: 0.875rem;">8 Weeks</span>
+                        </div>
+                        <h3 class="card-title">Digital Marketing Mastery</h3>
+                        <p class="card-text">Learn SEO, social media marketing, email campaigns, and analytics to grow
+                            any business online.</p>
+                        <div class="flex-between">
+                            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                                <span
+                                    style="display:inline-block; background:linear-gradient(90deg,#e53e3e,#fc8181); color:#fff; font-size:0.72rem; font-weight:700; padding:0.18rem 0.6rem; border-radius:2rem; letter-spacing:0.06em; width:fit-content;">🏷️
+                                    20% OFF</span>
+                                <div style="display:flex; align-items:baseline; gap:0.5rem;">
+                                    <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">KSH
+                                        14,400</span>
+                                    <span style="font-size:0.9rem; color:var(--gray); text-decoration:line-through;">KSH
+                                        18,000</span>
+                                </div>
+                            </div>
+                            <a href="course-detail.html?id=2" class="btn btn-primary">Enroll Now</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=200&fit=crop"
+                        alt="Data Analytics" class="card-image">
+                    <div class="card-body">
+                        <div class="flex-between mb-2">
+                            <span class="badge badge-warning">Data Science</span>
+                            <span style="color: var(--gray); font-size: 0.875rem;">10 Weeks</span>
+                        </div>
+                        <h3 class="card-title">Data Analytics & Visualization</h3>
+                        <p class="card-text">Transform raw data into actionable insights using Excel, SQL, Python, and
+                            Power BI.</p>
+                        <div class="flex-between">
+                            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                                <span
+                                    style="display:inline-block; background:linear-gradient(90deg,#e53e3e,#fc8181); color:#fff; font-size:0.72rem; font-weight:700; padding:0.18rem 0.6rem; border-radius:2rem; letter-spacing:0.06em; width:fit-content;">🏷️
+                                    20% OFF</span>
+                                <div style="display:flex; align-items:baseline; gap:0.5rem;">
+                                    <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">KSH
+                                        17,600</span>
+                                    <span style="font-size:0.9rem; color:var(--gray); text-decoration:line-through;">KSH
+                                        22,000</span>
+                                </div>
+                            </div>
+                            <a href="course-detail.html?id=3" class="btn btn-primary">Enroll Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- Testimonials -->
+    <section class="section">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h2>Success Stories</h2>
+                <p>Hear from students who transformed their careers</p>
+            </div>
+
+            <div class="grid grid-3">
+                <div class="card">
+                    <div class="card-body">
+                        <p style="font-style: italic; margin-bottom: 1rem;">"pazoskill changed my life! I
+                            completed the Web Development course and landed a job as a junior developer within 2 months.
+                            The training was practical and the job placement support was incredible."</p>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div
+                                style="width: 50px; height: 50px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                                MK</div>
+                            <div>
+                                <div style="font-weight: 600;">Mary Kamau</div>
+                                <div style="color: var(--gray); font-size: 0.875rem;">Web Developer</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <p style="font-style: italic; margin-bottom: 1rem;">"The Digital Marketing course gave me the
+                            skills I needed to start my own agency. The instructors were knowledgeable and the course
+                            content was up-to-date with current industry trends."</p>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div
+                                style="width: 50px; height: 50px; border-radius: 50%; background: var(--secondary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                                JO</div>
+                            <div>
+                                <div style="font-weight: 600;">James Omondi</div>
+                                <div style="color: var(--gray); font-size: 0.875rem;">Marketing Consultant</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <p style="font-style: italic; margin-bottom: 1rem;">"I was able to transition from retail to
+                            data analytics thanks to pazoskill. The certificate I earned helped me stand out to
+                            employers and I'm now working at a great company."</p>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div
+                                style="width: 50px; height: 50px; border-radius: 50%; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                                SA</div>
+                            <div>
+                                <div style="font-weight: 600;">Sarah Achieng</div>
+                                <div style="color: var(--gray); font-size: 0.875rem;">Data Analyst</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section"
+        style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); color: white;">
+        <div class="container text-center">
+            <h2 style="color: white;">Ready to Start Your Journey?</h2>
+            <p style="color: rgba(255, 255, 255, 0.9); font-size: 1.125rem; margin-bottom: 2rem;">Join pazoskill
+                today and take the first step towards your dream career.</p>
+            <div class="flex-center gap-3">
+                <a href="register.html" class="btn btn-secondary btn-large">Create Free Account</a>
+                <a href="courses.html" class="btn btn-outline btn-large"
+                    style="border-color: white; color: white;">Browse Courses</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>pazoskill</h4>
+                    <p>Empowering individuals with practical skills and connecting them to meaningful employment
+                        opportunities.</p>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="courses.html">Courses</a></li>
+                        <li><a href="jobs.html">Job Opportunities</a></li>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>For Students</h4>
+                    <ul class="footer-links">
+                        <li><a href="register.html">Sign Up</a></li>
+                        <li><a href="login.html">Login</a></li>
+                        <li><a href="dashboard.html">My Dashboard</a></li>
+                        <li><a href="#">Help Center</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Contact Us</h4>
+                    <p>Email: nderitugideon73@gmail.com</p>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 pazoskill. All rights reserved. | <a href="privacy-policy.html"
+                        style="color:rgba(255,255,255,0.7); text-decoration:underline;">Privacy &amp; Policy</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/main.js"></script>
+</body>
+
+</html>

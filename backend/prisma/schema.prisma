@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id               Int                @id @default(autoincrement())
+  name             String
+  email            String             @unique
+  password_hash    String
+  role             String             @default("student")
+  created_at       DateTime?          @default(now())
+  enrollments      enrollments[]
+  job_applications job_applications[]
+  certificates     certificates[]
+}
+
+model courses {
+  id             Int            @id @default(autoincrement())
+  title          String
+  category       String
+  description    String
+  duration       String
+  price          Float
+  image          String
+  instructor     String
+  level          String
+  rating         Float?         @default(5.0)
+  students_count Int?           @default(0)
+  requirements   String?        @default("[]")
+  outcomes       String?        @default("[]")
+  enrollments    enrollments[]
+  jobs           jobs[]
+  lessons        lessons[]
+  certificates   certificates[]
+}
+
+model lessons {
+  id              Int               @id @default(autoincrement())
+  course_id       Int
+  title           String
+  order_index     Int
+  video_url       String?           @default("")
+  content         String?           @default("")
+  courses         courses           @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  lesson_progress lesson_progress[]
+}
+
+model enrollments {
+  id              Int               @id @default(autoincrement())
+  user_id         Int
+  course_id       Int
+  progress        Int?              @default(0)
+  completed       Int?              @default(0)
+  enrolled_at     DateTime?         @default(now())
+  completed_at    DateTime?
+  users           users             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  courses         courses           @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  lesson_progress lesson_progress[]
+
+  @@unique([user_id, course_id])
+}
+
+model lesson_progress {
+  id            Int         @id @default(autoincrement())
+  enrollment_id Int
+  lesson_id     Int
+  completed_at  DateTime?   @default(now())
+  enrollments   enrollments @relation(fields: [enrollment_id], references: [id], onDelete: Cascade)
+  lessons       lessons     @relation(fields: [lesson_id], references: [id], onDelete: Cascade)
+
+  @@unique([enrollment_id, lesson_id])
+}
+
+model jobs {
+  id                 Int                @id @default(autoincrement())
+  title              String
+  company            String
+  location           String
+  type               String
+  salary             String
+  category           String
+  description        String
+  requirements       String
+  responsibilities   String
+  benefits           String
+  required_course_id Int?
+  created_at         DateTime?          @default(now())
+  courses            courses?           @relation(fields: [required_course_id], references: [id], onDelete: SetNull)
+  job_applications   job_applications[]
+}
+
+model job_applications {
+  id           Int       @id @default(autoincrement())
+  job_id       Int
+  user_id      Int
+  full_name    String
+  email        String
+  phone        String
+  cover_letter String
+  status       String?   @default("pending")
+  applied_at   DateTime? @default(now())
+  jobs         jobs      @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  users        users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([job_id, user_id])
+}
+
+model traffic_logs {
+  id         Int       @id @default(autoincrement())
+  session_id String
+  ip_address String?
+  page_url   String
+  page_title String?
+  referrer   String?
+  user_agent String?
+  user_id    Int?
+  timestamp  DateTime? @default(now())
+}
+
+model certificates {
+  id              Int       @id @default(autoincrement())
+  certificate_code String    @unique
+  user_id         Int
+  course_id       Int
+  issued_at       DateTime? @default(now())
+  issuer_name     String?   @default("pazoskill Academic Directorate")
+  status          String?   @default("active")
+  users           users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  courses         courses   @relation(fields: [course_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, course_id])
+}
+
