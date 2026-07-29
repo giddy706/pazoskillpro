@@ -73,19 +73,12 @@ async function start() {
     logger.info('Database initialized successfully.');
     app.use('/api', routes);
 
-    // Serve frontend static files
-    const frontendPath = path.join(__dirname, '..', '..', 'frontend', 'public');
-    app.use(express.static(frontendPath));
-
-    // Redirect old admin-dashboard.html to admin server
-    app.get('/admin-dashboard.html', (req, res) => {
-        res.redirect('http://localhost:8001/');
+    app.get("/", (req, res) => {
+    res.json({
+        message: "PazoSkillPro API is running",
+        status: "online"
     });
-
-    // Fallback to index.html for client-side routing
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(frontendPath, 'index.html'));
-    });
+});
 
     app.use(notFoundHandler);
     app.use(errorHandler);
