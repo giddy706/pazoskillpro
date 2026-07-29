@@ -3,7 +3,7 @@
 // ============================================
 
 // --- Config ---
-window.API_BASE_URL = window.API_BASE_URL || 'http://localhost:8000';
+window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onrender.com';
 
 // --- Token Helpers ---
 function getToken() {
