@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - SkillPath Academy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onrender.com';
+</script>
+    <script src="/js/auth.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0f1117; --surface: #1a1d2e; --surface2: #22253a; --surface3: #2a2d45;
+            --border: #2e3155; --primary: #6c63ff; --primary-light: #8b85ff;
+            --secondary: #00d4aa; --danger: #ff4d6d; --warning: #ffb703;
+            --text: #e8e8f0; --text2: #9898b8;
+            --radius: 12px; --radius-sm: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background: var(--bg); color: var(--text); min-height: 100vh;
+            display: flex;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--surface); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px; background: var(--surface); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+        }
+        .sidebar-brand {
+            padding: 24px 20px 20px; font-family: 'Poppins', sans-serif;
+            font-size: 18px; font-weight: 700; color: var(--primary-light);
+            border-bottom: 1px solid var(--border); letter-spacing: -0.3px;
+        }
+        .sidebar-brand span { color: var(--secondary); }
+        .sidebar-nav { padding: 12px 10px; flex: 1; display: flex; flex-direction: column; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+            border-radius: var(--radius-sm); color: var(--text2); cursor: pointer;
+            transition: all .2s; font-size: 14px; font-weight: 500; border: none; background: none; width: 100%; text-align: left;
+        }
+        .nav-item:hover { background: var(--surface2); color: var(--text); }
+        .nav-item.active { background: var(--primary); color: #fff; }
+        .nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
+        .sidebar-footer { padding: 12px 10px; border-top: 1px solid var(--border); margin-top: auto; }
+
+        /* Main */
+        .main { flex: 1; overflow-y: auto; }
+        .topbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 32px; background: var(--surface); border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 10;
+        }
+        .topbar h2 { font-size: 20px; font-weight: 600; }
+        .topbar-actions { display: flex; align-items: center; gap: 16px; }
+        .topbar-actions span { font-size: 13px; color: var(--text2); }
+        .content { padding: 24px 32px; }
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 20px; display: flex; flex-direction: column; gap: 4px;
+        }
+        .stat-card .label { font-size: 13px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+        .stat-card .value { font-size: 28px; font-weight: 700; color: var(--primary-light); }
+        .stat-card .sub { font-size: 12px; color: var(--secondary); }
+
+        /* Charts */
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .chart-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 20px;
+        }
+        .chart-card h3 { font-size: 14px; color: var(--text2); margin-bottom: 12px; }
+        .chart-card canvas { max-height: 280px; }
+
+        /* Tables */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { color: var(--text2); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+        td { color: var(--text); }
+        tr:hover td { background: var(--surface2); }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px; border-radius: var(--radius-sm); border: none; cursor: pointer;
+            font-size: 13px; font-weight: 600; transition: all .2s; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-light); }
+        .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--surface3); }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { opacity: .85; }
+        .btn-success { background: var(--secondary); color: #000; }
+        .btn-success:hover { opacity: .85; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        .btn-logout { color: var(--danger); }
+        .btn-logout:hover { background: rgba(255,77,109,.1); }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+
+        /* Forms */
+        .form-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6);
+            z-index: 100; justify-content: center; align-items: center;
+        }
+        .form-overlay.open { display: flex; }
+        .form-modal {
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 28px; width: 90%; max-width: 540px; max-height: 85vh; overflow-y: auto;
+        }
+        .form-modal h3 { font-size: 18px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--text2); }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); color: var(--text); font-size: 14px; font-family: 'Inter', sans-serif;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none; border-color: var(--primary);
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+
+        /* Checkbox toggle */
+        .toggle-wrap { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
+        .toggle-wrap input[type="checkbox"] {
+            appearance: none; width: 36px; height: 20px; background: var(--border);
+            border-radius: 10px; position: relative; cursor: pointer; transition: all .2s;
+        }
+        .toggle-wrap input[type="checkbox"]::after {
+            content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+            background: #fff; border-radius: 50%; transition: all .2s;
+        }
+        .toggle-wrap input[type="checkbox"]:checked { background: var(--primary); }
+        .toggle-wrap input[type="checkbox"]:checked::after { left: 18px; }
+
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-green { background: rgba(0,212,170,.15); color: var(--secondary); }
+        .badge-yellow { background: rgba(255,183,3,.15); color: var(--warning); }
+        .badge-red { background: rgba(255,77,109,.15); color: var(--danger); }
+        .badge-blue { background: rgba(108,99,255,.15); color: var(--primary-light); }
+
+        .empty { text-align: center; padding: 40px; color: var(--text2); }
+        .loading { text-align: center; padding: 40px; color: var(--text2); }
+        .error { text-align: center; padding: 40px; color: var(--danger); }
+        .msg { padding: 10px 16px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 13px; display: none; }
+        .msg.success { display: block; background: rgba(0,212,170,.1); color: var(--secondary); border: 1px solid rgba(0,212,170,.2); }
+        .msg.error { display: block; background: rgba(255,77,109,.1); color: var(--danger); border: 1px solid rgba(255,77,109,.2); }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar-brand span, .sidebar-brand { font-size: 0; }
+            .sidebar-brand::after { content: 'SA'; font-size: 18px; color: var(--primary-light); }
+            .nav-item span { display: none; }
+            .nav-item { justify-content: center; padding: 10px; }
+            .topbar { padding: 12px 16px; flex-direction: column; gap: 8px; align-items: flex-start; }
+            .content { padding: 16px; }
+            .chart-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">SkillPath <span>Admin</span></div>
+        <nav class="sidebar-nav">
+            <button class="nav-item active" data-section="overview"><span class="icon">&#9632;</span><span>Overview</span></button>
+            <button class="nav-item" data-section="courses"><span class="icon">&#128218;</span><span>Courses</span></button>
+            <button class="nav-item" data-section="lessons"><span class="icon">&#128196;</span><span>Lessons</span></button>
+            <button class="nav-item" data-section="enrollments"><span class="icon">&#128101;</span><span>Enrollments</span></button>
+            <button class="nav-item" data-section="users"><span class="icon">&#128100;</span><span>Users</span></button>
+            <button class="nav-item" data-section="payments"><span class="icon">&#128176;</span><span>Payments</span></button>
+            <button class="nav-item" data-section="quizzes"><span class="icon">&#128221;</span><span>Quizzes</span></button>
+            <button class="nav-item" data-section="attempts"><span class="icon">&#128200;</span><span>Attempts</span></button>
+            <button class="nav-item" data-section="settings"><span class="icon">&#9881;</span><span>Settings</span></button>
+            <button class="nav-item" data-section="cms"><span class="icon">&#128240;</span><span>CMS Pages</span></button>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="nav-item btn-logout" onclick="adminLogout()"><span class="icon">&#128682;</span><span>Logout</span></button>
+        </div>
+    </aside>
+
+    <div class="main">
+        <div class="topbar">
+            <h2 id="sectionTitle">Overview</h2>
+            <div class="topbar-actions">
+                <span id="adminEmail"></span>
+            </div>
+        </div>
+        <div class="content">
+
+            <!-- ===== OVERVIEW ===== -->
+            <div class="section active" id="section-overview">
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card"><div class="label">Courses</div><div class="value" id="statCourses">--</div></div>
+                    <div class="stat-card"><div class="label">Lessons</div><div class="value" id="statLessons">--</div></div>
+                    <div class="stat-card"><div class="label">Users</div><div class="value" id="statUsers">--</div></div>
+                    <div class="stat-card"><div class="label">Enrollments</div><div class="value" id="statEnrollments">--</div></div>
+                    <div class="stat-card"><div class="label">Revenue</div><div class="value" id="statRevenue">--</div></div>
+                    <div class="stat-card"><div class="label">Quiz Attempts</div><div class="value" id="statAttempts">--</div></div>
+                </div>
+                <div class="chart-grid">
+                    <div class="chart-card"><h3>Enrollments (Last 7 Days)</h3><canvas id="enrollChart"></canvas></div>
+                    <div class="chart-card"><h3>Revenue (Last 7 Days)</h3><canvas id="revenueChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- ===== COURSES ===== -->
+            <div class="section" id="section-courses">
+                <div class="toolbar">
+                    <h3>Manage Courses</h3>
+                    <button class="btn btn-primary" onclick="showCourseForm()">+ Add Course</button>
+                </div>
+                <div class="msg" id="courseMsg"></div>
+                <div class="table-container" id="coursesTable"><div class="loading">Loading...</div></div>
+
+                <div class="form-overlay" id="courseFormOverlay">
+                    <div class="form-modal">
+                        <h3 id="courseFormTitle">Add Course</h3>
+                        <div class="msg" id="courseFormMsg"></div>
+                        <form id="courseForm" onsubmit="saveCourse(event)">
+                            <input type="hidden" id="courseId">
+                            <div class="form-group"><label>Title</label><input type="text" id="courseTitle" required></div>
+                            <div class="form-group"><label>Description</label><textarea id="courseDescription" required></textarea></div>
+                            <div class="form-group"><label>Category</label><input type="text" id="courseCategory" placeholder="e.g. Web Development"></div>
+                            <div class="form-group"><label>Image URL</label><input type="url" id="courseImage" placeholder="https://..."></div>
+                            <div class="form-group"><label>Price ($)</label><input type="number" step="0.01" id="coursePrice" placeholder="0 = Free"></div>
+                            <div class="form-group"><label>Duration (weeks)</label><input type="number" id="courseDuration" placeholder="e.g. 8"></div>
+                            <div class="form-group"><label>Level</label><select id="courseLevel"><option value="">Any</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
+                            <div class="form-group"><label>What You'll Learn (one per line)</label><textarea id="courseLearn" placeholder="JavaScript fundamentals&#10;React basics&#10;..."></textarea></div>
+                            <div class="form-group toggle-wrap">
+                                <input type="checkbox" id="coursePublished"> <label for="coursePublished">Published</label>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="closeForm('courseFormOverlay')">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== LESSONS ===== -->
+            <div class="section" id="section-lessons">
+                <div class="toolbar">
+                    <h3>Manage Lessons</h3>
+                    <button class="btn btn-primary" onclick="showLessonForm()">+ Add Lesson</button>
+                </div>
+                <div class="msg" id="lessonMsg"></div>
+                <div class="table-container" id="lessonsTable"><div class="loading">Loading...</div></div>
+
+                <div class="form-overlay" id="lessonFormOverlay">
+                    <div class="form-modal">
+                        <h3 id="lessonFormTitle">Add Lesson</h3>
+                        <div class="msg" id="lessonFormMsg"></div>
+                        <form id="lessonForm" onsubmit="saveLesson(event)">
+                            <input type="hidden" id="lessonId">
+                            <div class="form-group"><label>Course</label><select id="lessonCourseId" required></select></div>
+                            <div class="form-group"><label>Title</label><input type="text" id="lessonTitle" required></div>
+                            <div class="form-group"><label>Content (HTML)</label><textarea id="lessonContent" required></textarea></div>
+                            <div class="form-group"><label>Video URL</label><input type="url" id="lessonVideo" placeholder="https://..."></div>
+                            <div class="form-group"><label>Order</label><input type="number" id="lessonOrder" value="0"></div>
+                            <div class="form-group toggle-wrap">
+                                <input type="checkbox" id="lessonPublished"> <label for="lessonPublished">Published</label>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="closeForm('lessonFormOverlay')">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== ENROLLMENTS ===== -->
+            <div class="section" id="section-enrollments">
+                <div class="toolbar"><h3>Enrollments</h3></div>
+                <div class="msg" id="enrollmentMsg"></div>
+                <div class="table-container" id="enrollmentsTable"><div class="loading">Loading...</div></div>
+            </div>
+
+            <!-- ===== USERS ===== -->
+            <div class="section" id="section-users">
+                <div class="toolbar"><h3>Users</h3></div>
+                <div class="table-container" id="usersTable"><div class="loading">Loading...</div></div>
+            </div>
+
+            <!-- ===== PAYMENTS ===== -->
+            <div class="section" id="section-payments">
+                <div class="toolbar"><h3>Payments</h3></div>
+                <div class="msg" id="paymentMsg"></div>
+                <div class="table-container" id="paymentsTable"><div class="loading">Loading...</div></div>
+            </div>
+
+            <!-- ===== QUIZZES ===== -->
+            <div class="section" id="section-quizzes">
+                <div class="toolbar">
+                    <h3>Manage Quizzes</h3>
+                    <button class="btn btn-primary" onclick="showQuizForm()">+ Add Quiz</button>
+                </div>
+                <div class="msg" id="quizMsg"></div>
+                <div class="table-container" id="quizzesTable"><div class="loading">Loading...</div></div>
+
+                <div class="form-overlay" id="quizFormOverlay">
+                    <div class="form-modal">
+                        <h3 id="quizFormTitle">Add Quiz</h3>
+                        <div class="msg" id="quizFormMsg"></div>
+                        <form id="quizForm" onsubmit="saveQuiz(event)">
+                            <input type="hidden" id="quizId">
+                            <div class="form-group"><label>Lesson</label><select id="quizLessonId" required></select></div>
+                            <div class="form-group"><label>Question</label><textarea id="quizQuestion" required></textarea></div>
+                            <div class="form-group"><label>Option A</label><input type="text" id="quizOptionA" required></div>
+                            <div class="form-group"><label>Option B</label><input type="text" id="quizOptionB" required></div>
+                            <div class="form-group"><label>Option C</label><input type="text" id="quizOptionC" required></div>
+                            <div class="form-group"><label>Option D</label><input type="text" id="quizOptionD" required></div>
+                            <div class="form-group"><label>Correct Answer</label><select id="quizCorrect" required><option value="">--</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="closeForm('quizFormOverlay')">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== ATTEMPTS ===== -->
+            <div class="section" id="section-attempts">
+                <div class="toolbar"><h3>Quiz Attempts</h3></div>
+                <div class="table-container" id="attemptsTable"><div class="loading">Loading...</div></div>
+            </div>
+
+            <!-- ===== SETTINGS ===== -->
+            <div class="section" id="section-settings">
+                <div class="toolbar"><h3>Site Settings</h3></div>
+                <div class="msg" id="settingsMsg"></div>
+                <form id="settingsForm" onsubmit="saveSettings(event)">
+                    <div class="form-group"><label>Site Name</label><input type="text" id="settingSiteName"></div>
+                    <div class="form-group"><label>Site Description</label><textarea id="settingSiteDescription" rows="3"></textarea></div>
+                    <div class="form-group"><label>Contact Email</label><input type="email" id="settingContactEmail"></div>
+                    <div class="form-group"><label>Currency</label><select id="settingCurrency"><option>USD</option><option>EUR</option><option>GBP</option></select></div>
+                    <div class="form-group toggle-wrap">
+                        <input type="checkbox" id="settingMaintenance"> <label for="settingMaintenance">Maintenance Mode</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </form>
+            </div>
+
+            <!-- ===== CMS PAGES ===== -->
+            <div class="section" id="section-cms">
+                <div class="toolbar">
+                    <h3>CMS Pages</h3>
+                    <button class="btn btn-primary" onclick="showCMSPageForm()">+ Add Page</button>
+                </div>
+                <div class="msg" id="cmsMsg"></div>
+                <div class="table-container" id="cmsTable"><div class="loading">Loading...</div></div>
+
+                <div class="form-overlay" id="cmsFormOverlay">
+                    <div class="form-modal">
+                        <h3 id="cmsFormTitle">Add Page</h3>
+                        <div class="msg" id="cmsFormMsg"></div>
+                        <form id="cmsForm" onsubmit="saveCMSPage(event)">
+                            <input type="hidden" id="cmsId">
+                            <div class="form-group"><label>Title</label><input type="text" id="cmsTitle" required></div>
+                            <div class="form-group"><label>Slug</label><input type="text" id="cmsSlug" placeholder="about-us" required></div>
+                            <div class="form-group"><label>Content (HTML)</label><textarea id="cmsContent" rows="8" required></textarea></div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="closeForm('cmsFormOverlay')">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+    // ---- Token extraction from URL ----
+    (function() {
+        var params = new URLSearchParams(window.location.search);
+        var token = params.get('token');
+        if (token) {
+            localStorage.setItem('token', token);
+            // Clean URL
+            var clean = window.location.protocol + '//' + window.location.host + window.location.pathname;
+            window.history.replaceState({}, document.title, clean);
+        }
+    })();
+
+    // ---- Helpers ----
+    if (typeof window.API_BASE_URL === 'undefined') { window.API_BASE_URL = 'https://pazoskillpro-backend.onrender.com'; }
+
+    function apiUrl(path) { return window.API_BASE_URL + '/api' + path; }
+
+    function authFetch(url, options) {
+        options = options || {};
+        options.headers = options.headers || {};
+        options.headers['Authorization'] = 'Bearer ' + localStorage.getItem('token');
+        return fetch(url, options);
+    }
+
+    function showMsg(id, type, text) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.className = 'msg ' + type;
+        el.textContent = text;
+        el.style.display = 'block';
+        setTimeout(function() { el.style.display = 'none'; }, 3000);
+    }
+
+    function closeForm(id) { document.getElementById(id).classList.remove('open'); }
+
+    function openForm(id) { document.getElementById(id).classList.add('open'); }
+
+    function checkAuth() {
+        var token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = window.location.origin + '/login.html';
+            return false;
+        }
+        return true;
+    }
+
+    function adminLogout() {
+        localStorage.removeItem('token');
+        window.location.href = window.location.origin + '/index.html';
+    }
+
+    function getEmail() {
+        var t = localStorage.getItem('token');
+        if (!t) return '';
+        try { return JSON.parse(atob(t.split('.')[1])).email || ''; } catch(e) { return ''; }
+    }
+
+    document.getElementById('adminEmail').textContent = getEmail() ? 'Logged in as ' + getEmail() : '';
+
+    // ---- Navigation ----
+    document.querySelectorAll('.nav-item[data-section]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.nav-item').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            var section = btn.getAttribute('data-section');
+            document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+            var el = document.getElementById('section-' + section);
+            if (el) el.classList.add('active');
+            document.getElementById('sectionTitle').textContent = btn.querySelector('span:last-child').textContent;
+            loadSection(section);
+        });
+    });
+
+    // ---- Section data loaders ----
+    function loadSection(name) {
+        if (!checkAuth()) return;
+        switch(name) {
+            case 'overview': loadOverview(); break;
+            case 'courses': loadCourses(); break;
+            case 'lessons': loadLessons(); break;
+            case 'enrollments': loadEnrollments(); break;
+            case 'users': loadUsers(); break;
+            case 'payments': loadPayments(); break;
+            case 'quizzes': loadQuizzes(); break;
+            case 'attempts': loadAttempts(); break;
+            case 'settings': loadSettings(); break;
+            case 'cms': loadCMS(); break;
+        }
+    }
+
+    // ---- Overview ----
+    var enrollChartInstance = null;
+    var revenueChartInstance = null;
+
+    function loadOverview() {
+        if (!checkAuth()) return;
+        authFetch(apiUrl('/admin/stats'))
+            .then(function(r) { if (!r.ok) throw new Error('Failed to load stats'); return r.json(); })
+            .then(function(d) {
+                document.getElementById('statCourses').textContent = d.courses || 0;
+                document.getElementById('statLessons').textContent = d.lessons || 0;
+                document.getElementById('statUsers').textContent = d.users || 0;
+                document.getElementById('statEnrollments').textContent = d.enrollments || 0;
+                document.getElementById('statRevenue').textContent = '$' + (d.revenue || 0).toFixed(2);
+                document.getElementById('statAttempts').textContent = d.attempts || 0;
+                if (d.enrollTrend && d.enrollTrend.length) {
+                    var labels = d.enrollTrend.map(function(e) { return e.date; });
+                    var data = d.enrollTrend.map(function(e) { return e.count; });
+                    if (enrollChartInstance) enrollChartInstance.destroy();
+                    enrollChartInstance = new Chart(document.getElementById('enrollChart'), {
+                        type: 'line', data: { labels: labels, datasets: [{ label: 'Enrollments', data: data, borderColor: '#6c63ff', backgroundColor: 'rgba(108,99,255,.1)', fill: true, tension: .3 }] },
+                        options: { responsive: true, plugins: { legend: { labels: { color: '#9898b8' } } }, scales: { x: { ticks: { color: '#9898b8' } }, y: { ticks: { color: '#9898b8' } } } }
+                    });
+                }
+                if (d.revenueTrend && d.revenueTrend.length) {
+                    var labels2 = d.revenueTrend.map(function(e) { return e.date; });
+                    var data2 = d.revenueTrend.map(function(e) { return e.total; });
+                    if (revenueChartInstance) revenueChartInstance.destroy();
+                    revenueChartInstance = new Chart(document.getElementById('revenueChart'), {
+                        type: 'bar', data: { labels: labels2, datasets: [{ label: 'Revenue', data: data2, backgroundColor: '#00d4aa' }] },
+                        options: { responsive: true, plugins: { legend: { labels: { color: '#9898b8' } } }, scales: { x: { ticks: { color: '#9898b8' } }, y: { ticks: { color: '#9898b8' } } } }
+                    });
+                }
+            })
+            .catch(function(err) { console.error('Overview load error:', err); });
+    }
+
+    // ---- Courses ----
+    function loadCourses() {
+        if (!checkAuth()) return;
+        var tbody = document.getElementById('coursesTable');
+        tbody.innerHTML = '<div class="loading">Loading...</div>';
+        authFetch(apiUrl('/admin/courses'))
+            .then(function(r) { return r.json(); })
+            .then(function(courses) {
+                if (!courses || !courses.length) { tbody.innerHTML = '<div class="empty">No courses found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Price</th><th>Published</th><th>Actions</th></tr></thead><tbody>';
+                courses.forEach(function(c) {
+                    var pub = c.published ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-yellow">No</span>';
+                    html += '<tr><td>' + c.id + '</td><td>' + esc(c.title) + '</td><td>' + esc(c.category||'') + '</td><td>$' + (c.price||0).toFixed(2) + '</td><td>' + pub + '</td><td>';
+                    html += '<button class="btn btn-sm btn-secondary" onclick="editCourse(' + c.id + ')">Edit</button> ';
+                    html += '<button class="btn btn-sm btn-danger" onclick="deleteCourse(' + c.id + ')">Del</button>';
+                    html += '</td></tr>';
+                });
+                html += '</tbody></table>';
+                tbody.innerHTML = html;
+            })
+            .catch(function(err) { tbody.innerHTML = '<div class="error">Error loading courses.</div>'; console.error(err); });
+    }
+
+    function showCourseForm(data) {
+        document.getElementById('courseFormTitle').textContent = data ? 'Edit Course' : 'Add Course';
+        document.getElementById('courseId').value = data ? data.id : '';
+        document.getElementById('courseTitle').value = data ? data.title : '';
+        document.getElementById('courseDescription').value = data ? data.description : '';
+        document.getElementById('courseCategory').value = data ? (data.category || '') : '';
+        document.getElementById('courseImage').value = data ? (data.image_url || '') : '';
+        document.getElementById('coursePrice').value = data ? (data.price || 0) : '';
+        document.getElementById('courseDuration').value = data ? (data.duration || '') : '';
+        document.getElementById('courseLevel').value = data ? (data.level || '') : '';
+        document.getElementById('courseLearn').value = data ? (data.what_you_learn || '') : '';
+        document.getElementById('coursePublished').checked = data ? !!data.published : false;
+        document.getElementById('courseFormMsg').style.display = 'none';
+        openForm('courseFormOverlay');
+    }
+
+    function editCourse(id) {
+        authFetch(apiUrl('/admin/courses/' + id))
+            .then(function(r) { return r.json(); })
+            .then(function(c) { showCourseForm(c); })
+            .catch(function(err) { showMsg('courseMsg', 'error', 'Failed to load course'); });
+    }
+
+    function saveCourse(e) {
+        e.preventDefault();
+        var id = document.getElementById('courseId').value;
+        var data = {
+            title: document.getElementById('courseTitle').value,
+            description: document.getElementById('courseDescription').value,
+            category: document.getElementById('courseCategory').value,
+            image_url: document.getElementById('courseImage').value,
+            price: parseFloat(document.getElementById('coursePrice').value) || 0,
+            duration: parseInt(document.getElementById('courseDuration').value) || null,
+            level: document.getElementById('courseLevel').value,
+            what_you_learn: document.getElementById('courseLearn').value,
+            published: document.getElementById('coursePublished').checked
+        };
+        var method = id ? 'PUT' : 'POST';
+        var url = apiUrl('/admin/courses' + (id ? '/' + id : ''));
+        authFetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to save');
+                showMsg('courseFormMsg', 'success', 'Saved successfully');
+                closeForm('courseFormOverlay');
+                loadCourses();
+            })
+            .catch(function(err) { showMsg('courseFormMsg', 'error', 'Failed to save course'); });
+    }
+
+    function deleteCourse(id) {
+        if (!confirm('Delete this course?')) return;
+        authFetch(apiUrl('/admin/courses/' + id), { method: 'DELETE' })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to delete');
+                showMsg('courseMsg', 'success', 'Deleted');
+                loadCourses();
+            })
+            .catch(function(err) { showMsg('courseMsg', 'error', 'Failed to delete'); });
+    }
+
+    // ---- Lessons ----
+    function loadLessons() {
+        if (!checkAuth()) return;
+        var tbody = document.getElementById('lessonsTable');
+        tbody.innerHTML = '<div class="loading">Loading...</div>';
+        authFetch(apiUrl('/admin/lessons'))
+            .then(function(r) { return r.json(); })
+            .then(function(lessons) {
+                if (!lessons || !lessons.length) { tbody.innerHTML = '<div class="empty">No lessons found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>Course</th><th>Title</th><th>Order</th><th>Published</th><th>Actions</th></tr></thead><tbody>';
+                lessons.forEach(function(l) {
+                    var pub = l.published ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-yellow">No</span>';
+                    html += '<tr><td>' + l.id + '</td><td>' + esc(l.course_title||'') + ' (ID:' + l.course_id + ')</td><td>' + esc(l.title) + '</td><td>' + (l.order_index||0) + '</td><td>' + pub + '</td><td>';
+                    html += '<button class="btn btn-sm btn-secondary" onclick="editLesson(' + l.id + ')">Edit</button> ';
+                    html += '<button class="btn btn-sm btn-danger" onclick="deleteLesson(' + l.id + ')">Del</button>';
+                    html += '</td></tr>';
+                });
+                html += '</tbody></table>';
+                tbody.innerHTML = html;
+            })
+            .catch(function(err) { tbody.innerHTML = '<div class="error">Error loading lessons.</div>'; console.error(err); });
+    }
+
+    function showLessonForm(data) {
+        loadLessonSelect();
+        document.getElementById('lessonFormTitle').textContent = data ? 'Edit Lesson' : 'Add Lesson';
+        document.getElementById('lessonId').value = data ? data.id : '';
+        document.getElementById('lessonTitle').value = data ? data.title : '';
+        document.getElementById('lessonContent').value = data ? data.content : '';
+        document.getElementById('lessonVideo').value = data ? (data.video_url || '') : '';
+        document.getElementById('lessonOrder').value = data ? (data.order_index || 0) : '';
+        document.getElementById('lessonPublished').checked = data ? !!data.published : false;
+        if (data) document.getElementById('lessonCourseId').value = data.course_id;
+        document.getElementById('lessonFormMsg').style.display = 'none';
+        openForm('lessonFormOverlay');
+    }
+
+    function loadLessonSelect() {
+        authFetch(apiUrl('/admin/courses'))
+            .then(function(r) { return r.json(); })
+            .then(function(courses) {
+                var sel = document.getElementById('lessonCourseId');
+                sel.innerHTML = '<option value="">-- Select Course --</option>';
+                if (courses) courses.forEach(function(c) {
+                    sel.innerHTML += '<option value="' + c.id + '">' + esc(c.title) + '</option>';
+                });
+            })
+            .catch(function(err) { console.error(err); });
+    }
+
+    function editLesson(id) {
+        authFetch(apiUrl('/admin/lessons/' + id))
+            .then(function(r) { return r.json(); })
+            .then(function(l) { showLessonForm(l); })
+            .catch(function(err) { showMsg('lessonMsg', 'error', 'Failed to load lesson'); });
+    }
+
+    function saveLesson(e) {
+        e.preventDefault();
+        var id = document.getElementById('lessonId').value;
+        var data = {
+            course_id: parseInt(document.getElementById('lessonCourseId').value),
+            title: document.getElementById('lessonTitle').value,
+            content: document.getElementById('lessonContent').value,
+            video_url: document.getElementById('lessonVideo').value,
+            order_index: parseInt(document.getElementById('lessonOrder').value) || 0,
+            published: document.getElementById('lessonPublished').checked
+        };
+        var method = id ? 'PUT' : 'POST';
+        var url = apiUrl('/admin/lessons' + (id ? '/' + id : ''));
+        authFetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to save');
+                showMsg('lessonFormMsg', 'success', 'Saved successfully');
+                closeForm('lessonFormOverlay');
+                loadLessons();
+            })
+            .catch(function(err) { showMsg('lessonFormMsg', 'error', 'Failed to save lesson'); });
+    }
+
+    function deleteLesson(id) {
+        if (!confirm('Delete this lesson?')) return;
+        authFetch(apiUrl('/admin/lessons/' + id), { method: 'DELETE' })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to delete');
+                showMsg('lessonMsg', 'success', 'Deleted');
+                loadLessons();
+            })
+            .catch(function(err) { showMsg('lessonMsg', 'error', 'Failed to delete'); });
+    }
+
+    // ---- Enrollments ----
+    function loadEnrollments() {
+        if (!checkAuth()) return;
+        var tbody = document.getElementById('enrollmentsTable');
+        tbody.innerHTML = '<div class="loading">Loading...</div>';
+        authFetch(apiUrl('/admin/enrollments'))
+            .then(function(r) { return r.json(); })
+            .then(function(enrollments) {
+                if (!enrollments || !enrollments.length) { tbody.innerHTML = '<div class="empty">No enrollments found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>User</th><th>Course</th><th>Enrolled</th><th>Progress</th></tr></thead><tbody>';
+                enrollments.forEach(function(e) {
+                    html += '<tr><td>' + e.id + '</td><td>' + esc(e.user_name||'') + ' (ID:' + e.user_id + ')</td><td>' + esc(e.course_title||'') + '</td><td>' + (e.enrolled_at || '') + '</td><td>' + (e.progress||0) + '%</td></tr>';
+                });
+                html += '</tbody></table>';
+                tbody.innerHTML = html;
+            })
+            .catch(function(err) { tbody.innerHTML = '<div class="error">Error loading enrollments.</div>'; console.error(err); });
+    }
+
+    // ---- Users ----
+    function loadUsers() {
+        if (!checkAuth()) return;
+        var tbody = document.getElementById('usersTable');
+        tbody.innerHTML = '<div class="loading">Loading...</div>';
+        authFetch(apiUrl('/admin/users'))
+            .then(function(r) { return r.json(); })
+            .then(function(users) {
+                if (!users || !users.length) { tbody.innerHTML = '<div class="empty">No users found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr></thead><tbody>';
+                users.forEach(function(u) {
+                    var role = u.is_admin ? '<span class="badge badge-blue">Admin</span>' : '<span class="badge badge-green">User</span>';
+                    html += '<tr><td>' + u.id + '</td><td>' + esc(u.name||'') + '</td><td>' + esc(u.email) + '</td><td>' + role + '</td><td>' + (u.created_at||'') + '</td></tr>';
+                });
+                html += '</tbody></table>';
+                tbody.innerHTML = html;
+            })
+            .catch(function(err) { tbody.innerHTML = '<div class="error">Error loading users.</div>'; console.error(err); });
+    }
+
+    // ---- Payments ----
+    function loadPayments() {
+        if (!checkAuth()) return;
+        var tbody = document.getElementById('paymentsTable');
+        tbody.innerHTML = '<div class="loading">Loading...</div>';
+        authFetch(apiUrl('/admin/payments'))
+            .then(function(r) { return r.json(); })
+            .then(function(payments) {
+                if (!payments || !payments.length) { tbody.innerHTML = '<div class="empty">No payments found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead><tbody>';
+                payments.forEach(function(p) {
+                    var statusClass = p.status === 'completed' ? 'badge-green' : (p.status === 'pending' ? 'badge-yellow' : 'badge-red');
+                    html += '<tr><td>' + p.id + '</td><td>' + esc(p.user_name||'') + '</td><td>$' + (p.amount||0).toFixed(2) + '</td><td>' + esc(p.payment_method||'') + '</td><td><span class="badge ' + statusClass + '">' + esc(p.status) + '</span></td><td>' + (p.created_at||'') + '</td></tr>';
+                });
+                html += '</tbody></table>';
+                tbody.innerHTML = html;
+            })
+            .catch(function(err) { tbody.innerHTML = '<div class="error">Error loading payments.</div>'; console.error(err); });
+    }
+
+    // ---- Quizzes ----
+    function loadQuizzes() {
+        if (!checkAuth()) return;
+        var tbody = document.getElementById('quizzesTable');
+        tbody.innerHTML = '<div class="loading">Loading...</div>';
+        authFetch(apiUrl('/admin/quizzes'))
+            .then(function(r) { return r.json(); })
+            .then(function(quizzes) {
+                if (!quizzes || !quizzes.length) { tbody.innerHTML = '<div class="empty">No quizzes found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>Lesson</th><th>Question</th><th>Answer</th><th>Actions</th></tr></thead><tbody>';
+                quizzes.forEach(function(q) {
+                    html += '<tr><td>' + q.id + '</td><td>' + esc(q.lesson_title||'') + '</td><td>' + esc(q.question.substring(0,60)) + '</td><td>' + esc(q.correct_answer) + '</td><td>';
+                    html += '<button class="btn btn-sm btn-secondary" onclick="editQuiz(' + q.id + ')">Edit</button> ';
+                    html += '<button class="btn btn-sm btn-danger" onclick="deleteQuiz(' + q.id + ')">Del</button>';
+                    html += '</td></tr>';
+                });
+                html += '</tbody></table>';
+                tbody.innerHTML = html;
+            })
+            .catch(function(err) { tbody.innerHTML = '<div class="error">Error loading quizzes.</div>'; console.error(err); });
+    }
+
+    function showQuizForm(data) {
+        loadQuizSelect();
+        document.getElementById('quizFormTitle').textContent = data ? 'Edit Quiz' : 'Add Quiz';
+        document.getElementById('quizId').value = data ? data.id : '';
+        document.getElementById('quizQuestion').value = data ? data.question : '';
+        document.getElementById('quizOptionA').value = data ? data.option_a : '';
+        document.getElementById('quizOptionB').value = data ? data.option_b : '';
+        document.getElementById('quizOptionC').value = data ? data.option_c : '';
+        document.getElementById('quizOptionD').value = data ? data.option_d : '';
+        document.getElementById('quizCorrect').value = data ? data.correct_answer : '';
+        if (data) document.getElementById('quizLessonId').value = data.lesson_id;
+        document.getElementById('quizFormMsg').style.display = 'none';
+        openForm('quizFormOverlay');
+    }
+
+    function loadQuizSelect() {
+        authFetch(apiUrl('/admin/lessons'))
+            .then(function(r) { return r.json(); })
+            .then(function(lessons) {
+                var sel = document.getElementById('quizLessonId');
+                sel.innerHTML = '<option value="">-- Select Lesson --</option>';
+                if (lessons) lessons.forEach(function(l) {
+                    sel.innerHTML += '<option value="' + l.id + '">' + esc(l.title) + '</option>';
+                });
+            })
+            .catch(function(err) { console.error(err); });
+    }
+
+    function editQuiz(id) {
+        authFetch(apiUrl('/admin/quizzes/' + id))
+            .then(function(r) { return r.json(); })
+            .then(function(q) { showQuizForm(q); })
+            .catch(function(err) { showMsg('quizMsg', 'error', 'Failed to load quiz'); });
+    }
+
+    function saveQuiz(e) {
+        e.preventDefault();
+        var id = document.getElementById('quizId').value;
+        var data = {
+            lesson_id: parseInt(document.getElementById('quizLessonId').value),
+            question: document.getElementById('quizQuestion').value,
+            option_a: document.getElementById('quizOptionA').value,
+            option_b: document.getElementById('quizOptionB').value,
+            option_c: document.getElementById('quizOptionC').value,
+            option_d: document.getElementById('quizOptionD').value,
+            correct_answer: document.getElementById('quizCorrect').value
+        };
+        var method = id ? 'PUT' : 'POST';
+        var url = apiUrl('/admin/quizzes' + (id ? '/' + id : ''));
+        authFetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to save');
+                showMsg('quizFormMsg', 'success', 'Saved successfully');
+                closeForm('quizFormOverlay');
+                loadQuizzes();
+            })
+            .catch(function(err) { showMsg('quizFormMsg', 'error', 'Failed to save quiz'); });
+    }
+
+    function deleteQuiz(id) {
+        if (!confirm('Delete this quiz?')) return;
+        authFetch(apiUrl('/admin/quizzes/' + id), { method: 'DELETE' })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to delete');
+                showMsg('quizMsg', 'success', 'Deleted');
+                loadQuizzes();
+            })
+            .catch(function(err) { showMsg('quizMsg', 'error', 'Failed to delete'); });
+    }
+
+    // ---- Attempts ----
+    function loadAttempts() {
+        if (!checkAuth()) return;
+        var tbody = document.getElementById('attemptsTable');
+        tbody.innerHTML = '<div class="loading">Loading...</div>';
+        authFetch(apiUrl('/admin/attempts'))
+            .then(function(r) { return r.json(); })
+            .then(function(attempts) {
+                if (!attempts || !attempts.length) { tbody.innerHTML = '<div class="empty">No attempts found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>User</th><th>Lesson</th><th>Score</th><th>Passed</th><th>Date</th></tr></thead><tbody>';
+                attempts.forEach(function(a) {
+                    var pass = a.passed ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-red">No</span>';
+                    html += '<tr><td>' + a.id + '</td><td>' + esc(a.user_name||'') + '</td><td>' + esc(a.lesson_title||'') + '</td><td>' + (a.score||0) + '/' + (a.total||0) + '</td><td>' + pass + '</td><td>' + (a.created_at||'') + '</td></tr>';
+                });
+                html += '</tbody></table>';
+                tbody.innerHTML = html;
+            })
+            .catch(function(err) { tbody.innerHTML = '<div class="error">Error loading attempts.</div>'; console.error(err); });
+    }
+
+    // ---- Settings ----
+    function loadSettings() {
+        if (!checkAuth()) return;
+        authFetch(apiUrl('/admin/settings'))
+            .then(function(r) { return r.json(); })
+            .then(function(s) {
+                if (!s) return;
+                document.getElementById('settingSiteName').value = s.site_name || '';
+                document.getElementById('settingSiteDescription').value = s.site_description || '';
+                document.getElementById('settingContactEmail').value = s.contact_email || '';
+                document.getElementById('settingCurrency').value = s.currency || 'USD';
+                document.getElementById('settingMaintenance').checked = !!s.maintenance_mode;
+            })
+            .catch(function(err) { console.error('Settings load error:', err); });
+    }
+
+    function saveSettings(e) {
+        e.preventDefault();
+        var data = {
+            site_name: document.getElementById('settingSiteName').value,
+            site_description: document.getElementById('settingSiteDescription').value,
+            contact_email: document.getElementById('settingContactEmail').value,
+            currency: document.getElementById('settingCurrency').value,
+            maintenance_mode: document.getElementById('settingMaintenance').checked
+        };
+        authFetch(apiUrl('/admin/settings'), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to save');
+                showMsg('settingsMsg', 'success', 'Settings saved');
+            })
+            .catch(function(err) { showMsg('settingsMsg', 'error', 'Failed to save settings'); });
+    }
+
+    // ---- CMS Pages ----
+    function loadCMS() {
+        if (!checkAuth()) return;
+        var tbody = document.getElementById('cmsTable');
+        tbody.innerHTML = '<div class="loading">Loading...</div>';
+        authFetch(apiUrl('/admin/cms'))
+            .then(function(r) { return r.json(); })
+            .then(function(pages) {
+                if (!pages || !pages.length) { tbody.innerHTML = '<div class="empty">No CMS pages found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>Title</th><th>Slug</th><th>Actions</th></tr></thead><tbody>';
+                pages.forEach(function(p) {
+                    html += '<tr><td>' + p.id + '</td><td>' + esc(p.title) + '</td><td>' + esc(p.slug) + '</td><td>';
+                    html += '<button class="btn btn-sm btn-secondary" onclick="editCMSPage(' + p.id + ')">Edit</button> ';
+                    html += '<button class="btn btn-sm btn-danger" onclick="deleteCMSPage(' + p.id + ')">Del</button>';
+                    html += '</td></tr>';
+                });
+                html += '</tbody></table>';
+                tbody.innerHTML = html;
+            })
+            .catch(function(err) { tbody.innerHTML = '<div class="error">Error loading CMS pages.</div>'; console.error(err); });
+    }
+
+    function showCMSPageForm(data) {
+        document.getElementById('cmsFormTitle').textContent = data ? 'Edit Page' : 'Add Page';
+        document.getElementById('cmsId').value = data ? data.id : '';
+        document.getElementById('cmsTitle').value = data ? data.title : '';
+        document.getElementById('cmsSlug').value = data ? data.slug : '';
+        document.getElementById('cmsContent').value = data ? data.content : '';
+        document.getElementById('cmsFormMsg').style.display = 'none';
+        openForm('cmsFormOverlay');
+    }
+
+    function editCMSPage(id) {
+        authFetch(apiUrl('/admin/cms/' + id))
+            .then(function(r) { return r.json(); })
+            .then(function(p) { showCMSPageForm(p); })
+            .catch(function(err) { showMsg('cmsMsg', 'error', 'Failed to load page'); });
+    }
+
+    function saveCMSPage(e) {
+        e.preventDefault();
+        var id = document.getElementById('cmsId').value;
+        var data = {
+            title: document.getElementById('cmsTitle').value,
+            slug: document.getElementById('cmsSlug').value,
+            content: document.getElementById('cmsContent').value
+        };
+        var method = id ? 'PUT' : 'POST';
+        var url = apiUrl('/admin/cms' + (id ? '/' + id : ''));
+        authFetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to save');
+                showMsg('cmsFormMsg', 'success', 'Saved successfully');
+                closeForm('cmsFormOverlay');
+                loadCMS();
+            })
+            .catch(function(err) { showMsg('cmsFormMsg', 'error', 'Failed to save page'); });
+    }
+
+    function deleteCMSPage(id) {
+        if (!confirm('Delete this page?')) return;
+        authFetch(apiUrl('/admin/cms/' + id), { method: 'DELETE' })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to delete');
+                showMsg('cmsMsg', 'success', 'Deleted');
+                loadCMS();
+            })
+            .catch(function(err) { showMsg('cmsMsg', 'error', 'Failed to delete'); });
+    }
+
+    // ---- Util ----
+    function esc(s) {
+        if (!s) return '';
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(s));
+        return d.innerHTML;
+    }
+
+    // ---- Init ----
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!checkAuth()) return;
+        loadOverview();
+    });
+    </script>
+</body>
+</html>
