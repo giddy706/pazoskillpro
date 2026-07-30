@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
-window.API_BASE_URL = 'http://localhost:8000';
+window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onrender.com';
 </script>
     <script src="/js/auth.js"></script>
     <style>
@@ -402,7 +402,7 @@ window.API_BASE_URL = 'http://localhost:8000';
     })();
 
     // ---- Helpers ----
-    if (typeof window.API_BASE_URL === 'undefined') { window.API_BASE_URL = 'http://localhost:8000'; }
+    if (typeof window.API_BASE_URL === 'undefined') { window.API_BASE_URL = 'https://pazoskillpro-backend.onrender.com'; }
 
     function apiUrl(path) { return window.API_BASE_URL + '/api' + path; }
 
@@ -429,7 +429,7 @@ window.API_BASE_URL = 'http://localhost:8000';
     function checkAuth() {
         var token = localStorage.getItem('token');
         if (!token) {
-            window.location.href = 'http://localhost:8000/login.html';
+            window.location.href = window.location.origin + '/login.html';
             return false;
         }
         return true;
@@ -437,7 +437,7 @@ window.API_BASE_URL = 'http://localhost:8000';
 
     function adminLogout() {
         localStorage.removeItem('token');
-        window.location.href = 'http://localhost:8000/index.html';
+        window.location.href = window.location.origin + '/index.html';
     }
 
     function getEmail() {
