@@ -68,11 +68,26 @@ app.get('/health', (req, res) => {
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
+// Redirect old admin dashboard URL to dedicated admin panel
+app.get('/admin-dashboard.html', (req, res) => {
+    res.redirect('http://localhost:8001/');
+});
+
 async function start() {
     await initDB();
     logger.info('Database initialized successfully.');
     app.use('/api', routes);
 
+    // Serve frontend static files (after API routes)
+    const publicPath = path.join(__dirname, '..', '..', 'frontend', 'public');
+    app.use(express.static(publicPath));
+// Serve admin dashboard
+const adminPath = path.join(__dirname, '..', 'admin');
+app.use('/admin', express.static(adminPath));
+
+app.get('/admin', (req, res) => {
+    res.send("ADMIN ROUTE WORKS");
+});
     app.get("/", (req, res) => {
     res.json({
         message: "PazoSkillPro API is running",
