@@ -51,24 +51,26 @@
     <script src="js/main.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
+document.getElementById('loginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
 
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-            const result = await loginUser(email, password);
+    const result = await loginUser(email, password);
+    if (result.success) {
 
-            if (result.user && (result.user.role === 'admin' || result.user.is_admin)) {
-    window.location.href = '/admin/?token=' + encodeURIComponent(getToken());
-} else {
-    window.location.href = '/dashboard.html';
-}
-            } else {
-                alert(result.message);
-            }
-        });
-    </script>
+        if (result.user && (result.user.role === 'admin' || result.user.is_admin)) {
+            window.location.href = 'https://pazoskillpro-backend.onrender.com/admin-panel/?token=' + encodeURIComponent(result.token || getToken());
+        } else {
+            window.location.href = '/dashboard.html';
+        }
+
+    } else {
+        alert(result.message);
+    }
+});
+</script>
 </body>
 
 </html>

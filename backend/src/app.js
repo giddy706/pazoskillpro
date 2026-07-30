@@ -68,6 +68,11 @@ app.get('/health', (req, res) => {
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
+// Redirect old admin dashboard URL to admin panel
+app.get('/admin-dashboard.html', (req, res) => {
+    res.redirect('/admin-panel/');
+});
+
 async function start() {
     await initDB();
     logger.info('Database initialized successfully.');
@@ -76,13 +81,20 @@ async function start() {
     // Serve frontend static files (after API routes)
     const publicPath = path.join(__dirname, '..', '..', 'frontend', 'public');
     app.use(express.static(publicPath));
-// Serve admin dashboard
-const adminPath = path.join(__dirname, '..', 'admin');
-app.use('/admin', express.static(adminPath));
 
-app.get('/admin', (req, res) => {
-    res.sendFile(path.join(adminPath, 'index.html'));
-});
+    // Serve admin dashboard at /admin-panel
+    const adminPanelPath = path.join(__dirname, '..', '..', 'frontend', 'admin');
+    app.use('/admin-panel', express.static(adminPanelPath));
+
+    // Serve /js from frontend/public/js (needed by admin panel for auth.js)
+    const publicJsPath = path.join(__dirname, '..', '..', 'frontend', 'public', 'js');
+    app.use('/js', express.static(publicJsPath));
+
+    // Admin panel fallback — any unmatched /admin-panel* path serves index.html
+    app.get('/admin-panel*', (req, res) => {
+        res.sendFile(path.join(adminPanelPath, 'index.html'));
+    });
+
     app.get("/", (req, res) => {
     res.json({
         message: "PazoSkillPro API is running",

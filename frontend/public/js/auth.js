@@ -107,12 +107,16 @@ async function loginUser(email, password) {
         });
         const result = await response.json();
         if (result.success) {
-            saveToken(result.token);
-            localStorage.setItem('currentUser', JSON.stringify(result.user));
-            return { success: true, message: result.message, user: result.user };
-        } else {
-            return { success: false, message: result.message };
-        }
+    saveToken(result.token);
+    localStorage.setItem('currentUser', JSON.stringify(result.user));
+
+    return {
+        success: true,
+        message: result.message,
+        user: result.user,
+        token: result.token
+    };
+}
     } catch (err) {
         console.warn('Backend unavailable, falling back to local storage mock');
         const mockUser = {

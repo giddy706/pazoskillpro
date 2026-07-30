@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
 
-window.API_BASE_URL = window.location.origin;
+window.API_BASE_URL = "https://pazoskillpro-backend.onrender.com";
 </script>
     <script src="/js/auth.js"></script>
     <style>
@@ -395,7 +395,7 @@ window.API_BASE_URL = window.location.origin;
         var params = new URLSearchParams(window.location.search);
         var token = params.get('token');
         if (token) {
-            localStorage.setItem('token', token);
+            localStorage.setItem('authToken', token);
             // Clean URL
             var clean = window.location.protocol + '//' + window.location.host + window.location.pathname;
             window.history.replaceState({}, document.title, clean);
