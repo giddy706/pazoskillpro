@@ -68,11 +68,6 @@ app.get('/health', (req, res) => {
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
-// Redirect old admin dashboard URL to dedicated admin panel
-app.get('/admin-dashboard.html', (req, res) => {
-    res.redirect('http://localhost:8001/');
-});
-
 async function start() {
     await initDB();
     logger.info('Database initialized successfully.');
