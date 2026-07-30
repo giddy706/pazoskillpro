@@ -81,7 +81,7 @@ const adminPath = path.join(__dirname, '..', 'admin');
 app.use('/admin', express.static(adminPath));
 
 app.get('/admin', (req, res) => {
-    res.send("ADMIN ROUTE WORKS");
+    res.sendFile(path.join(adminPath, 'index.html'));
 });
     app.get("/", (req, res) => {
     res.json({
