@@ -9,7 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
-window.API_BASE_URL = 'http://localhost:8000';
+
+window.API_BASE_URL = window.location.origin;
 </script>
     <script src="/js/auth.js"></script>
     <style>
@@ -400,12 +401,14 @@ window.API_BASE_URL = 'http://localhost:8000';
             window.history.replaceState({}, document.title, clean);
         }
     })();
+// ---- Helpers ----
+if (typeof window.API_BASE_URL === 'undefined') {
+    window.API_BASE_URL = window.location.origin;
+}
 
-    // ---- Helpers ----
-    if (typeof window.API_BASE_URL === 'undefined') { window.API_BASE_URL = 'http://localhost:8000'; }
-
-    function apiUrl(path) { return window.API_BASE_URL + '/api' + path; }
-
+function apiUrl(path) {
+    return window.API_BASE_URL + '/api' + path;
+}
     function authFetch(url, options) {
         options = options || {};
         options.headers = options.headers || {};
@@ -427,20 +430,21 @@ window.API_BASE_URL = 'http://localhost:8000';
     function openForm(id) { document.getElementById(id).classList.add('open'); }
 
     function checkAuth() {
-        var token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = 'http://localhost:8000/login.html';
-            return false;
-        }
-        return true;
-    }
+    var token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
 
-    function adminLogout() {
-        localStorage.removeItem('token');
-        window.location.href = 'http://localhost:8000/index.html';
+        return false;
     }
+    return true;
+}
 
-    function getEmail() {
+function adminLogout() {
+    localStorage.removeItem('token');
+    window.location.href = '/login.html';
+}
+
+  function getEmail() {
         var t = localStorage.getItem('token');
         if (!t) return '';
         try { return JSON.parse(atob(t.split('.')[1])).email || ''; } catch(e) { return ''; }
