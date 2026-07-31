@@ -106,30 +106,22 @@ async function loginUser(email, password) {
             body: JSON.stringify({ email, password })
         });
         const result = await response.json();
+        
         if (result.success) {
-    saveToken(result.token);
-    localStorage.setItem('currentUser', JSON.stringify(result.user));
-
-    return {
-        success: true,
-        message: result.message,
-        user: result.user,
-        token: result.token
-    };
-}
+            saveToken(result.token);
+            localStorage.setItem('currentUser', JSON.stringify(result.user));
+            return {
+                success: true,
+                message: result.message,
+                user: result.user,
+                token: result.token
+            };
+        } else {
+            return { success: false, message: result.message || 'Login failed' };
+        }
     } catch (err) {
-        console.warn('Backend unavailable, falling back to local storage mock');
-        const mockUser = {
-            id: Date.now(),
-            name: email.split('@')[0],
-            email: email,
-            role: 'student',
-            enrolledCourses: [],
-            certificates: [],
-            jobApplications: []
-        };
-        localStorage.setItem('currentUser', JSON.stringify(mockUser));
-        return { success: true, message: 'Login successful (Offline Mode)', user: mockUser };
+        console.error('Backend login failed:', err);
+        return { success: false, message: 'Could not connect to backend server. Please try again later.' };
     }
 }
 

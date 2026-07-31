@@ -84,14 +84,14 @@ async function start() {
         const { PrismaClient } = require('@prisma/client');
         const prisma = new PrismaClient();
         const bcrypt = require('bcryptjs');
-        const adminEmail = 'admin@pazoskill.com';
+        const adminEmail = 'Admin34@pazoskill.com';
         const existingAdmin = await prisma.users.findUnique({ where: { email: adminEmail } });
         if (!existingAdmin) {
-            const hash = await bcrypt.hash('admin123', 10);
+            const hash = await bcrypt.hash('Admin@5864', 10);
             await prisma.users.create({
                 data: { name: 'Admin', email: adminEmail, password_hash: hash, role: 'admin' }
             });
-            logger.info('Created default admin: admin@pazoskill.com / admin123');
+            logger.info(`Created default admin: ${adminEmail}`);
         }
     } catch (e) {
         logger.error('Failed to create default admin:', e);
