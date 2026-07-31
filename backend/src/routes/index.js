@@ -10,5 +10,6 @@ router.use('/applications', require('./applications.routes'));
 router.use('/users', require('./users.routes'));
 router.use('/traffic', require('./traffic.routes'));
 router.use('/certificates', require('./certificates.routes'));
+router.use('/ai', require('./ai.routes'));
 
 module.exports = router;
