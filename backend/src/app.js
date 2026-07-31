@@ -92,6 +92,12 @@ async function start() {
                 data: { name: 'Admin', email: adminEmail, password_hash: hash, role: 'admin' }
             });
             logger.info(`Created default admin: ${adminEmail}`);
+        } else if (existingAdmin.role !== 'admin') {
+            await prisma.users.update({
+                where: { email: adminEmail },
+                data: { role: 'admin' }
+            });
+            logger.info(`Promoted existing user to admin: ${adminEmail}`);
         }
     } catch (e) {
         logger.error('Failed to create default admin:', e);

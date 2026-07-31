@@ -96,9 +96,7 @@
                     if (jobData.success) job = jobData.job;
                     user = userData.success ? userData.user : null;
                 } catch(e) {
-                    if (typeof jobsData !== 'undefined') {
-                        job = jobsData.find(j => j.id === jobId);
-                    }
+                    console.error('Failed to load job details:', e);
                 }
 
                 if (!job) {

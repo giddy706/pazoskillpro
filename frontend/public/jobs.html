@@ -193,9 +193,10 @@
                 const res = await fetch((window.API_BASE_URL || '') + '/api/jobs');
                 if (!res.ok) throw new Error('API fetch failed');
                 const data = await res.json();
-                allJobs = data.success ? data.jobs : (typeof jobsData !== 'undefined' ? jobsData : []);
+                allJobs = data.success ? data.jobs : [];
             } catch (e) {
-                allJobs = typeof jobsData !== 'undefined' ? jobsData : [];
+                console.error('Failed to load jobs:', e);
+                allJobs = [];
             }
             displayJobs(allJobs);
         }

@@ -191,10 +191,11 @@
                 if (data.success) {
                     allCourses = data.courses;
                 } else {
-                    allCourses = typeof coursesData !== 'undefined' ? coursesData : [];
+                    allCourses = [];
                 }
             } catch (e) {
-                allCourses = typeof coursesData !== 'undefined' ? coursesData : [];
+                console.error('Failed to load courses:', e);
+                allCourses = [];
             }
             displayCourses(allCourses);
         }

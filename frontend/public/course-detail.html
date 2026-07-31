@@ -92,9 +92,7 @@
                     const data = await res.json();
                     if (data.success) course = data.course;
                 } catch(e) {
-                    if (typeof coursesData !== 'undefined') {
-                        course = coursesData.find(c => c.id === courseId);
-                    }
+                    console.error('Failed to load course details:', e);
                 }
 
                 if (!course) {

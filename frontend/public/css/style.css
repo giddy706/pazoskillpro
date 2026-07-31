@@ -154,8 +154,10 @@ a:hover {
    NAVIGATION
    ============================================ */
 .navbar {
-  background-color: var(--white);
-  box-shadow: var(--shadow-md);
+  background: rgba(23, 31, 53, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -268,7 +270,7 @@ button, .btn, input[type="submit"], input[type="button"] {
 .btn-primary:hover {
   background-color: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 20px -5px rgba(79, 209, 232, 0.4);
 }
 
 .btn-secondary {
@@ -319,8 +321,9 @@ button, .btn, input[type="submit"], input[type="button"] {
 }
 
 .card:hover {
-  box-shadow: var(--shadow-xl);
-  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -10px rgba(79, 209, 232, 0.15), 0 0 15px rgba(79, 209, 232, 0.1);
+  transform: translateY(-6px) scale(1.01);
+  border: 1px solid rgba(79, 209, 232, 0.3);
 }
 
 .card-image {

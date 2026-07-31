@@ -98,23 +98,27 @@
         const urlParams = new URLSearchParams(window.location.search);
         const courseId = parseInt(urlParams.get('courseId'));
 
-        // Resolve course: prefer in-memory coursesData (loaded by data.js), fallback to localStorage
-        let course = null;
-        if (typeof coursesData !== 'undefined') {
-            course = coursesData.find(c => c.id === courseId);
+        async function initCheckout() {
+            try {
+                const res = await fetch((window.API_BASE_URL || '') + `/api/courses/${courseId}`);
+                if (!res.ok) throw new Error('Fetch failed');
+                const data = await res.json();
+                if (data.success && data.course) {
+                    const course = data.course;
+                    document.getElementById('courseName').textContent = course.title;
+                    document.getElementById('courseDuration').textContent = course.duration;
+                    document.getElementById('coursePrice').textContent = `KSH ${course.price.toLocaleString()}`;
+                } else {
+                    alert('Course not found');
+                    window.location.href = 'courses.html';
+                }
+            } catch (e) {
+                console.error('Failed to load course details:', e);
+                alert('Course not found');
+                window.location.href = 'courses.html';
+            }
         }
-        if (!course) {
-            const stored = JSON.parse(localStorage.getItem('courses') || '[]');
-            course = stored.find(c => c.id === courseId);
-        }
-
-        if (course) {
-            document.getElementById('courseName').textContent = course.title;
-            document.getElementById('courseDuration').textContent = course.duration;
-            document.getElementById('coursePrice').textContent = `KSH ${course.price.toLocaleString()}`;
-        } else {
-            document.getElementById('courseName').textContent = 'Course not found';
-        }
+        initCheckout();
 
         // Payment method toggle
         document.getElementById('paymentMethod').addEventListener('change', function (e) {
