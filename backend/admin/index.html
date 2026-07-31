@@ -162,6 +162,19 @@ window.API_BASE_URL = "https://pazoskillpro-backend.onrender.com";
         .msg.success { display: block; background: rgba(0,212,170,.1); color: var(--secondary); border: 1px solid rgba(0,212,170,.2); }
         .msg.error { display: block; background: rgba(255,77,109,.1); color: var(--danger); border: 1px solid rgba(255,77,109,.2); }
 
+        /* Login */
+        .login-overlay {
+            position: fixed; inset: 0; background: var(--bg); z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .login-box {
+            width: 100%; max-width: 360px; background: var(--surface);
+            border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 32px;
+        }
+        .login-brand { font-family: 'Poppins', sans-serif; font-size: 22px; font-weight: 700; color: var(--primary-light); margin-bottom: 24px; text-align: center; }
+        .login-brand span { color: var(--secondary); }
+        .btn-block { width: 100%; }
         @media (max-width: 768px) {
             .sidebar { width: 60px; }
             .sidebar-brand span, .sidebar-brand { font-size: 0; }
@@ -175,6 +188,17 @@ window.API_BASE_URL = "https://pazoskillpro-backend.onrender.com";
     </style>
 </head>
 <body>
+    <div class="login-overlay" id="loginOverlay" style="display:none;">
+        <div class="login-box">
+            <div class="login-brand">pazoskill <span>Admin</span></div>
+            <form id="loginForm" onsubmit="adminLogin(event)">
+                <div class="msg" id="loginMsg"></div>
+                <div class="form-group"><label>Admin Email</label><input type="email" id="loginEmail" placeholder="admin@example.com" required></div>
+                <div class="form-group"><label>Password</label><input type="password" id="loginPassword" required></div>
+                <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+            </form>
+        </div>
+    </div>
     <aside class="sidebar">
         <div class="sidebar-brand">SkillPath <span>Admin</span></div>
         <nav class="sidebar-nav">
@@ -238,8 +262,9 @@ window.API_BASE_URL = "https://pazoskillpro-backend.onrender.com";
                             <div class="form-group"><label>Description</label><textarea id="courseDescription" required></textarea></div>
                             <div class="form-group"><label>Category</label><input type="text" id="courseCategory" placeholder="e.g. Web Development"></div>
                             <div class="form-group"><label>Image URL</label><input type="url" id="courseImage" placeholder="https://..."></div>
+                            <div class="form-group"><label>Instructor</label><input type="text" id="courseInstructor" placeholder="e.g. John Doe"></div>
                             <div class="form-group"><label>Price ($)</label><input type="number" step="0.01" id="coursePrice" placeholder="0 = Free"></div>
-                            <div class="form-group"><label>Duration (weeks)</label><input type="number" id="courseDuration" placeholder="e.g. 8"></div>
+                            <div class="form-group"><label>Duration</label><input type="text" id="courseDuration" placeholder="e.g. 8 weeks"></div>
                             <div class="form-group"><label>Level</label><select id="courseLevel"><option value="">Any</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
                             <div class="form-group"><label>What You'll Learn (one per line)</label><textarea id="courseLearn" placeholder="JavaScript fundamentals&#10;React basics&#10;..."></textarea></div>
                             <div class="form-group toggle-wrap">
@@ -274,9 +299,6 @@ window.API_BASE_URL = "https://pazoskillpro-backend.onrender.com";
                             <div class="form-group"><label>Content (HTML)</label><textarea id="lessonContent" required></textarea></div>
                             <div class="form-group"><label>Video URL</label><input type="url" id="lessonVideo" placeholder="https://..."></div>
                             <div class="form-group"><label>Order</label><input type="number" id="lessonOrder" value="0"></div>
-                            <div class="form-group toggle-wrap">
-                                <input type="checkbox" id="lessonPublished"> <label for="lessonPublished">Published</label>
-                            </div>
                             <div class="form-actions">
                                 <button type="button" class="btn btn-secondary" onclick="closeForm('lessonFormOverlay')">Cancel</button>
                                 <button type="submit" class="btn btn-primary">Save</button>
@@ -321,13 +343,13 @@ window.API_BASE_URL = "https://pazoskillpro-backend.onrender.com";
                         <div class="msg" id="quizFormMsg"></div>
                         <form id="quizForm" onsubmit="saveQuiz(event)">
                             <input type="hidden" id="quizId">
-                            <div class="form-group"><label>Lesson</label><select id="quizLessonId" required></select></div>
-                            <div class="form-group"><label>Question</label><textarea id="quizQuestion" required></textarea></div>
-                            <div class="form-group"><label>Option A</label><input type="text" id="quizOptionA" required></div>
-                            <div class="form-group"><label>Option B</label><input type="text" id="quizOptionB" required></div>
-                            <div class="form-group"><label>Option C</label><input type="text" id="quizOptionC" required></div>
-                            <div class="form-group"><label>Option D</label><input type="text" id="quizOptionD" required></div>
-                            <div class="form-group"><label>Correct Answer</label><select id="quizCorrect" required><option value="">--</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
+                            <div class="form-group"><label>Course</label><select id="quizCourseId" required></select></div>
+                            <div class="form-group"><label>Lesson (optional)</label><select id="quizLessonId"><option value="">-- No Lesson --</option></select></div>
+                            <div class="form-group"><label>Title</label><input type="text" id="quizTitle" required></div>
+                            <div class="form-group"><label>Description</label><textarea id="quizDescription"></textarea></div>
+                            <div class="form-group"><label>Passing Score (%)</label><input type="number" id="quizPassingScore" value="70"></div>
+                            <div class="form-group"><label>Max Attempts</label><input type="number" id="quizMaxAttempts" value="3"></div>
+                            <div class="form-group"><label>Time Limit (minutes, 0 = none)</label><input type="number" id="quizTimeLimit" value="0"></div>
                             <div class="form-actions">
                                 <button type="button" class="btn btn-secondary" onclick="closeForm('quizFormOverlay')">Cancel</button>
                                 <button type="submit" class="btn btn-primary">Save</button>
@@ -351,7 +373,7 @@ window.API_BASE_URL = "https://pazoskillpro-backend.onrender.com";
                     <div class="form-group"><label>Site Name</label><input type="text" id="settingSiteName"></div>
                     <div class="form-group"><label>Site Description</label><textarea id="settingSiteDescription" rows="3"></textarea></div>
                     <div class="form-group"><label>Contact Email</label><input type="email" id="settingContactEmail"></div>
-                    <div class="form-group"><label>Currency</label><select id="settingCurrency"><option>USD</option><option>EUR</option><option>GBP</option></select></div>
+                    <div class="form-group"><label>Currency</label><select id="settingCurrency"><option>KSH</option><option>USD</option><option>EUR</option><option>GBP</option></select></div>
                     <div class="form-group toggle-wrap">
                         <input type="checkbox" id="settingMaintenance"> <label for="settingMaintenance">Maintenance Mode</label>
                     </div>
@@ -430,14 +452,56 @@ function apiUrl(path) {
     function openForm(id) { document.getElementById(id).classList.add('open'); }
 
     function checkAuth() {
-    var token = localStorage.getItem('authToken');
-    if (!token) {
-        window.location.href = 'https://pazoskillpro.pages.dev/login.html';
-
-        return false;
+        var token = localStorage.getItem('authToken');
+        if (!token) {
+            showLogin();
+            return false;
+        }
+        hideLogin();
+        return true;
     }
-    return true;
-}
+
+    function showLogin() {
+        var ov = document.getElementById('loginOverlay');
+        if (ov) ov.style.display = 'flex';
+    }
+
+    function hideLogin() {
+        var ov = document.getElementById('loginOverlay');
+        if (ov) ov.style.display = 'none';
+    }
+
+    function adminLogin(e) {
+        e.preventDefault();
+        var msg = document.getElementById('loginMsg');
+        msg.className = 'msg';
+        msg.style.display = 'block';
+        msg.textContent = 'Signing in...';
+        fetch(apiUrl('/admin/login'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.success && d.token) {
+                localStorage.setItem('authToken', d.token);
+                hideLogin();
+                document.getElementById('adminEmail').textContent = getEmail() ? 'Logged in as ' + getEmail() : '';
+                loadOverview();
+            } else {
+                msg.className = 'msg error';
+                msg.textContent = d.message || 'Invalid credentials';
+            }
+        })
+        .catch(function() {
+            msg.className = 'msg error';
+            msg.textContent = 'Could not reach backend server.';
+        });
+    }
 
 function adminLogout() {
     localStorage.removeItem('authToken');
@@ -486,30 +550,34 @@ function adminLogout() {
     // ---- Overview ----
     var enrollChartInstance = null;
     var revenueChartInstance = null;
+    var CUR = 'KSH';
 
     function loadOverview() {
         if (!checkAuth()) return;
         authFetch(apiUrl('/admin/stats'))
             .then(function(r) { if (!r.ok) throw new Error('Failed to load stats'); return r.json(); })
             .then(function(d) {
-                document.getElementById('statCourses').textContent = d.courses || 0;
-                document.getElementById('statLessons').textContent = d.lessons || 0;
-                document.getElementById('statUsers').textContent = d.users || 0;
-                document.getElementById('statEnrollments').textContent = d.enrollments || 0;
-                document.getElementById('statRevenue').textContent = '$' + (d.revenue || 0).toFixed(2);
-                document.getElementById('statAttempts').textContent = d.attempts || 0;
-                if (d.enrollTrend && d.enrollTrend.length) {
-                    var labels = d.enrollTrend.map(function(e) { return e.date; });
-                    var data = d.enrollTrend.map(function(e) { return e.count; });
+                var s = d.stats || {};
+                document.getElementById('statCourses').textContent = s.totalCourses || 0;
+                document.getElementById('statLessons').textContent = s.totalLessons || 0;
+                document.getElementById('statUsers').textContent = s.totalUsers || 0;
+                document.getElementById('statEnrollments').textContent = s.totalEnrollments || 0;
+                document.getElementById('statRevenue').textContent = CUR + ' ' + (s.totalRevenue || 0).toFixed(2);
+                document.getElementById('statAttempts').textContent = s.totalAttempts || 0;
+                var enrollTrend = s.enrollTrend || [];
+                if (enrollTrend.length) {
+                    var labels = enrollTrend.map(function(e) { return e.date; });
+                    var data = enrollTrend.map(function(e) { return e.count; });
                     if (enrollChartInstance) enrollChartInstance.destroy();
                     enrollChartInstance = new Chart(document.getElementById('enrollChart'), {
                         type: 'line', data: { labels: labels, datasets: [{ label: 'Enrollments', data: data, borderColor: '#6c63ff', backgroundColor: 'rgba(108,99,255,.1)', fill: true, tension: .3 }] },
                         options: { responsive: true, plugins: { legend: { labels: { color: '#9898b8' } } }, scales: { x: { ticks: { color: '#9898b8' } }, y: { ticks: { color: '#9898b8' } } } }
                     });
                 }
-                if (d.revenueTrend && d.revenueTrend.length) {
-                    var labels2 = d.revenueTrend.map(function(e) { return e.date; });
-                    var data2 = d.revenueTrend.map(function(e) { return e.total; });
+                var revenueTrend = s.revenueTrend || [];
+                if (revenueTrend.length) {
+                    var labels2 = revenueTrend.map(function(e) { return e.date; });
+                    var data2 = revenueTrend.map(function(e) { return e.total; });
                     if (revenueChartInstance) revenueChartInstance.destroy();
                     revenueChartInstance = new Chart(document.getElementById('revenueChart'), {
                         type: 'bar', data: { labels: labels2, datasets: [{ label: 'Revenue', data: data2, backgroundColor: '#00d4aa' }] },
@@ -527,12 +595,13 @@ function adminLogout() {
         tbody.innerHTML = '<div class="loading">Loading...</div>';
         authFetch(apiUrl('/admin/courses'))
             .then(function(r) { return r.json(); })
-            .then(function(courses) {
-                if (!courses || !courses.length) { tbody.innerHTML = '<div class="empty">No courses found.</div>'; return; }
-                var html = '<table><thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Price</th><th>Published</th><th>Actions</th></tr></thead><tbody>';
+            .then(function(d) {
+                var courses = d.courses || [];
+                if (!courses.length) { tbody.innerHTML = '<div class="empty">No courses found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Price</th><th>Students</th><th>Published</th><th>Actions</th></tr></thead><tbody>';
                 courses.forEach(function(c) {
                     var pub = c.published ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-yellow">No</span>';
-                    html += '<tr><td>' + c.id + '</td><td>' + esc(c.title) + '</td><td>' + esc(c.category||'') + '</td><td>$' + (c.price||0).toFixed(2) + '</td><td>' + pub + '</td><td>';
+                    html += '<tr><td>' + c.id + '</td><td>' + esc(c.title) + '</td><td>' + esc(c.category||'') + '</td><td>' + CUR + ' ' + (c.price||0).toFixed(2) + '</td><td>' + (c.students || c.students_count || 0) + '</td><td>' + pub + '</td><td>';
                     html += '<button class="btn btn-sm btn-secondary" onclick="editCourse(' + c.id + ')">Edit</button> ';
                     html += '<button class="btn btn-sm btn-danger" onclick="deleteCourse(' + c.id + ')">Del</button>';
                     html += '</td></tr>';
@@ -549,11 +618,12 @@ function adminLogout() {
         document.getElementById('courseTitle').value = data ? data.title : '';
         document.getElementById('courseDescription').value = data ? data.description : '';
         document.getElementById('courseCategory').value = data ? (data.category || '') : '';
-        document.getElementById('courseImage').value = data ? (data.image_url || '') : '';
+        document.getElementById('courseImage').value = data ? (data.image || data.image_url || '') : '';
+        document.getElementById('courseInstructor').value = data ? (data.instructor || '') : '';
         document.getElementById('coursePrice').value = data ? (data.price || 0) : '';
         document.getElementById('courseDuration').value = data ? (data.duration || '') : '';
         document.getElementById('courseLevel').value = data ? (data.level || '') : '';
-        document.getElementById('courseLearn').value = data ? (data.what_you_learn || '') : '';
+        document.getElementById('courseLearn').value = data ? (Array.isArray(data.outcomes) ? data.outcomes.join('\n') : (data.what_you_learn || '')) : '';
         document.getElementById('coursePublished').checked = data ? !!data.published : false;
         document.getElementById('courseFormMsg').style.display = 'none';
         openForm('courseFormOverlay');
@@ -562,7 +632,7 @@ function adminLogout() {
     function editCourse(id) {
         authFetch(apiUrl('/admin/courses/' + id))
             .then(function(r) { return r.json(); })
-            .then(function(c) { showCourseForm(c); })
+            .then(function(d) { showCourseForm(d.course); })
             .catch(function(err) { showMsg('courseMsg', 'error', 'Failed to load course'); });
     }
 
@@ -573,14 +643,15 @@ function adminLogout() {
             title: document.getElementById('courseTitle').value,
             description: document.getElementById('courseDescription').value,
             category: document.getElementById('courseCategory').value,
-            image_url: document.getElementById('courseImage').value,
+            image: document.getElementById('courseImage').value,
+            instructor: document.getElementById('courseInstructor').value,
             price: parseFloat(document.getElementById('coursePrice').value) || 0,
-            duration: parseInt(document.getElementById('courseDuration').value) || null,
+            duration: document.getElementById('courseDuration').value,
             level: document.getElementById('courseLevel').value,
-            what_you_learn: document.getElementById('courseLearn').value,
+            outcomes: document.getElementById('courseLearn').value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean),
             published: document.getElementById('coursePublished').checked
         };
-        var method = id ? 'PUT' : 'POST';
+        var method = id ? 'PATCH' : 'POST';
         var url = apiUrl('/admin/courses' + (id ? '/' + id : ''));
         authFetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
             .then(function(r) {
@@ -610,12 +681,12 @@ function adminLogout() {
         tbody.innerHTML = '<div class="loading">Loading...</div>';
         authFetch(apiUrl('/admin/lessons'))
             .then(function(r) { return r.json(); })
-            .then(function(lessons) {
-                if (!lessons || !lessons.length) { tbody.innerHTML = '<div class="empty">No lessons found.</div>'; return; }
-                var html = '<table><thead><tr><th>ID</th><th>Course</th><th>Title</th><th>Order</th><th>Published</th><th>Actions</th></tr></thead><tbody>';
+            .then(function(d) {
+                var lessons = d.lessons || [];
+                if (!lessons.length) { tbody.innerHTML = '<div class="empty">No lessons found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>Course</th><th>Title</th><th>Order</th><th>Actions</th></tr></thead><tbody>';
                 lessons.forEach(function(l) {
-                    var pub = l.published ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-yellow">No</span>';
-                    html += '<tr><td>' + l.id + '</td><td>' + esc(l.course_title||'') + ' (ID:' + l.course_id + ')</td><td>' + esc(l.title) + '</td><td>' + (l.order_index||0) + '</td><td>' + pub + '</td><td>';
+                    html += '<tr><td>' + l.id + '</td><td>' + esc(l.courseTitle || ('Course #' + l.course_id)) + '</td><td>' + esc(l.title) + '</td><td>' + (l.order_index||0) + '</td><td>';
                     html += '<button class="btn btn-sm btn-secondary" onclick="editLesson(' + l.id + ')">Edit</button> ';
                     html += '<button class="btn btn-sm btn-danger" onclick="deleteLesson(' + l.id + ')">Del</button>';
                     html += '</td></tr>';
@@ -634,7 +705,6 @@ function adminLogout() {
         document.getElementById('lessonContent').value = data ? data.content : '';
         document.getElementById('lessonVideo').value = data ? (data.video_url || '') : '';
         document.getElementById('lessonOrder').value = data ? (data.order_index || 0) : '';
-        document.getElementById('lessonPublished').checked = data ? !!data.published : false;
         if (data) document.getElementById('lessonCourseId').value = data.course_id;
         document.getElementById('lessonFormMsg').style.display = 'none';
         openForm('lessonFormOverlay');
@@ -643,10 +713,11 @@ function adminLogout() {
     function loadLessonSelect() {
         authFetch(apiUrl('/admin/courses'))
             .then(function(r) { return r.json(); })
-            .then(function(courses) {
+            .then(function(d) {
+                var courses = d.courses || [];
                 var sel = document.getElementById('lessonCourseId');
                 sel.innerHTML = '<option value="">-- Select Course --</option>';
-                if (courses) courses.forEach(function(c) {
+                courses.forEach(function(c) {
                     sel.innerHTML += '<option value="' + c.id + '">' + esc(c.title) + '</option>';
                 });
             })
@@ -656,7 +727,7 @@ function adminLogout() {
     function editLesson(id) {
         authFetch(apiUrl('/admin/lessons/' + id))
             .then(function(r) { return r.json(); })
-            .then(function(l) { showLessonForm(l); })
+            .then(function(d) { showLessonForm(d.lesson); })
             .catch(function(err) { showMsg('lessonMsg', 'error', 'Failed to load lesson'); });
     }
 
@@ -668,10 +739,9 @@ function adminLogout() {
             title: document.getElementById('lessonTitle').value,
             content: document.getElementById('lessonContent').value,
             video_url: document.getElementById('lessonVideo').value,
-            order_index: parseInt(document.getElementById('lessonOrder').value) || 0,
-            published: document.getElementById('lessonPublished').checked
+            order_index: parseInt(document.getElementById('lessonOrder').value) || 0
         };
-        var method = id ? 'PUT' : 'POST';
+        var method = id ? 'PATCH' : 'POST';
         var url = apiUrl('/admin/lessons' + (id ? '/' + id : ''));
         authFetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
             .then(function(r) {
@@ -701,11 +771,14 @@ function adminLogout() {
         tbody.innerHTML = '<div class="loading">Loading...</div>';
         authFetch(apiUrl('/admin/enrollments'))
             .then(function(r) { return r.json(); })
-            .then(function(enrollments) {
-                if (!enrollments || !enrollments.length) { tbody.innerHTML = '<div class="empty">No enrollments found.</div>'; return; }
+            .then(function(d) {
+                var enrollments = d.enrollments || [];
+                if (!enrollments.length) { tbody.innerHTML = '<div class="empty">No enrollments found.</div>'; return; }
                 var html = '<table><thead><tr><th>ID</th><th>User</th><th>Course</th><th>Enrolled</th><th>Progress</th></tr></thead><tbody>';
                 enrollments.forEach(function(e) {
-                    html += '<tr><td>' + e.id + '</td><td>' + esc(e.user_name||'') + ' (ID:' + e.user_id + ')</td><td>' + esc(e.course_title||'') + '</td><td>' + (e.enrolled_at || '') + '</td><td>' + (e.progress||0) + '%</td></tr>';
+                    var pr = (e.progress||0) + '%';
+                    if (e.completed) pr = '<span class="badge badge-green">100%</span>';
+                    html += '<tr><td>' + e.id + '</td><td>' + esc(e.userName || ('User #' + e.user_id)) + '</td><td>' + esc(e.courseTitle || ('Course #' + e.course_id)) + '</td><td>' + (e.enrolled_at || '') + '</td><td>' + pr + '</td></tr>';
                 });
                 html += '</tbody></table>';
                 tbody.innerHTML = html;
@@ -720,11 +793,13 @@ function adminLogout() {
         tbody.innerHTML = '<div class="loading">Loading...</div>';
         authFetch(apiUrl('/admin/users'))
             .then(function(r) { return r.json(); })
-            .then(function(users) {
-                if (!users || !users.length) { tbody.innerHTML = '<div class="empty">No users found.</div>'; return; }
+            .then(function(d) {
+                var users = d.users || [];
+                if (!users.length) { tbody.innerHTML = '<div class="empty">No users found.</div>'; return; }
                 var html = '<table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr></thead><tbody>';
                 users.forEach(function(u) {
-                    var role = u.is_admin ? '<span class="badge badge-blue">Admin</span>' : '<span class="badge badge-green">User</span>';
+                    var isAdmin = u.role === 'admin' || u.is_admin;
+                    var role = isAdmin ? '<span class="badge badge-blue">Admin</span>' : '<span class="badge badge-green">Student</span>';
                     html += '<tr><td>' + u.id + '</td><td>' + esc(u.name||'') + '</td><td>' + esc(u.email) + '</td><td>' + role + '</td><td>' + (u.created_at||'') + '</td></tr>';
                 });
                 html += '</tbody></table>';
@@ -740,12 +815,13 @@ function adminLogout() {
         tbody.innerHTML = '<div class="loading">Loading...</div>';
         authFetch(apiUrl('/admin/payments'))
             .then(function(r) { return r.json(); })
-            .then(function(payments) {
-                if (!payments || !payments.length) { tbody.innerHTML = '<div class="empty">No payments found.</div>'; return; }
-                var html = '<table><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead><tbody>';
+            .then(function(d) {
+                var payments = d.payments || [];
+                if (!payments.length) { tbody.innerHTML = '<div class="empty">No payments found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>User</th><th>Course</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead><tbody>';
                 payments.forEach(function(p) {
                     var statusClass = p.status === 'completed' ? 'badge-green' : (p.status === 'pending' ? 'badge-yellow' : 'badge-red');
-                    html += '<tr><td>' + p.id + '</td><td>' + esc(p.user_name||'') + '</td><td>$' + (p.amount||0).toFixed(2) + '</td><td>' + esc(p.payment_method||'') + '</td><td><span class="badge ' + statusClass + '">' + esc(p.status) + '</span></td><td>' + (p.created_at||'') + '</td></tr>';
+                    html += '<tr><td>' + p.id + '</td><td>' + esc(p.userName || ('User #' + p.user_id)) + '</td><td>' + esc(p.courseTitle || '') + '</td><td>' + esc(p.currency || CUR) + ' ' + (p.amount||0).toFixed(2) + '</td><td>' + esc(p.payment_method||'') + '</td><td><span class="badge ' + statusClass + '">' + esc(p.status) + '</span></td><td>' + (p.paid_at || p.created_at || '') + '</td></tr>';
                 });
                 html += '</tbody></table>';
                 tbody.innerHTML = html;
@@ -760,11 +836,12 @@ function adminLogout() {
         tbody.innerHTML = '<div class="loading">Loading...</div>';
         authFetch(apiUrl('/admin/quizzes'))
             .then(function(r) { return r.json(); })
-            .then(function(quizzes) {
-                if (!quizzes || !quizzes.length) { tbody.innerHTML = '<div class="empty">No quizzes found.</div>'; return; }
-                var html = '<table><thead><tr><th>ID</th><th>Lesson</th><th>Question</th><th>Answer</th><th>Actions</th></tr></thead><tbody>';
+            .then(function(d) {
+                var quizzes = d.quizzes || [];
+                if (!quizzes.length) { tbody.innerHTML = '<div class="empty">No quizzes found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>Title</th><th>Course</th><th>Passing %</th><th>Max Attempts</th><th>Actions</th></tr></thead><tbody>';
                 quizzes.forEach(function(q) {
-                    html += '<tr><td>' + q.id + '</td><td>' + esc(q.lesson_title||'') + '</td><td>' + esc(q.question.substring(0,60)) + '</td><td>' + esc(q.correct_answer) + '</td><td>';
+                    html += '<tr><td>' + q.id + '</td><td>' + esc(q.title || ('Quiz #' + q.id)) + '</td><td>' + esc(q.courseTitle || ('Course #' + q.course_id)) + '</td><td>' + (q.passing_score || 0) + '%</td><td>' + (q.max_attempts || 0) + '</td><td>';
                     html += '<button class="btn btn-sm btn-secondary" onclick="editQuiz(' + q.id + ')">Edit</button> ';
                     html += '<button class="btn btn-sm btn-danger" onclick="deleteQuiz(' + q.id + ')">Del</button>';
                     html += '</td></tr>';
@@ -776,28 +853,46 @@ function adminLogout() {
     }
 
     function showQuizForm(data) {
-        loadQuizSelect();
+        loadQuizCourses();
+        loadQuizLessons();
         document.getElementById('quizFormTitle').textContent = data ? 'Edit Quiz' : 'Add Quiz';
         document.getElementById('quizId').value = data ? data.id : '';
-        document.getElementById('quizQuestion').value = data ? data.question : '';
-        document.getElementById('quizOptionA').value = data ? data.option_a : '';
-        document.getElementById('quizOptionB').value = data ? data.option_b : '';
-        document.getElementById('quizOptionC').value = data ? data.option_c : '';
-        document.getElementById('quizOptionD').value = data ? data.option_d : '';
-        document.getElementById('quizCorrect').value = data ? data.correct_answer : '';
-        if (data) document.getElementById('quizLessonId').value = data.lesson_id;
+        document.getElementById('quizTitle').value = data ? (data.title || '') : '';
+        document.getElementById('quizDescription').value = data ? (data.description || '') : '';
+        document.getElementById('quizPassingScore').value = data ? (data.passing_score || 70) : 70;
+        document.getElementById('quizMaxAttempts').value = data ? (data.max_attempts || 3) : 3;
+        document.getElementById('quizTimeLimit').value = data ? (data.time_limit_minutes || 0) : 0;
+        if (data) {
+            document.getElementById('quizCourseId').value = data.course_id || '';
+            document.getElementById('quizLessonId').value = data.lesson_id || '';
+        }
         document.getElementById('quizFormMsg').style.display = 'none';
         openForm('quizFormOverlay');
     }
 
-    function loadQuizSelect() {
+    function loadQuizCourses() {
+        authFetch(apiUrl('/admin/courses'))
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                var courses = d.courses || [];
+                var sel = document.getElementById('quizCourseId');
+                sel.innerHTML = '<option value="">-- Select Course --</option>';
+                courses.forEach(function(c) {
+                    sel.innerHTML += '<option value="' + c.id + '">' + esc(c.title) + '</option>';
+                });
+            })
+            .catch(function(err) { console.error(err); });
+    }
+
+    function loadQuizLessons() {
         authFetch(apiUrl('/admin/lessons'))
             .then(function(r) { return r.json(); })
-            .then(function(lessons) {
+            .then(function(d) {
+                var lessons = d.lessons || [];
                 var sel = document.getElementById('quizLessonId');
-                sel.innerHTML = '<option value="">-- Select Lesson --</option>';
-                if (lessons) lessons.forEach(function(l) {
-                    sel.innerHTML += '<option value="' + l.id + '">' + esc(l.title) + '</option>';
+                sel.innerHTML = '<option value="">-- No Lesson --</option>';
+                lessons.forEach(function(l) {
+                    sel.innerHTML += '<option value="' + l.id + '">' + esc((l.courseTitle || 'Course #' + l.course_id) + ' - ' + l.title) + '</option>';
                 });
             })
             .catch(function(err) { console.error(err); });
@@ -806,7 +901,7 @@ function adminLogout() {
     function editQuiz(id) {
         authFetch(apiUrl('/admin/quizzes/' + id))
             .then(function(r) { return r.json(); })
-            .then(function(q) { showQuizForm(q); })
+            .then(function(d) { showQuizForm(d.quiz); })
             .catch(function(err) { showMsg('quizMsg', 'error', 'Failed to load quiz'); });
     }
 
@@ -814,15 +909,15 @@ function adminLogout() {
         e.preventDefault();
         var id = document.getElementById('quizId').value;
         var data = {
-            lesson_id: parseInt(document.getElementById('quizLessonId').value),
-            question: document.getElementById('quizQuestion').value,
-            option_a: document.getElementById('quizOptionA').value,
-            option_b: document.getElementById('quizOptionB').value,
-            option_c: document.getElementById('quizOptionC').value,
-            option_d: document.getElementById('quizOptionD').value,
-            correct_answer: document.getElementById('quizCorrect').value
+            course_id: parseInt(document.getElementById('quizCourseId').value),
+            lesson_id: parseInt(document.getElementById('quizLessonId').value) || null,
+            title: document.getElementById('quizTitle').value,
+            description: document.getElementById('quizDescription').value,
+            passing_score: parseInt(document.getElementById('quizPassingScore').value) || 70,
+            max_attempts: parseInt(document.getElementById('quizMaxAttempts').value) || 3,
+            time_limit_minutes: parseInt(document.getElementById('quizTimeLimit').value) || 0
         };
-        var method = id ? 'PUT' : 'POST';
+        var method = id ? 'PATCH' : 'POST';
         var url = apiUrl('/admin/quizzes' + (id ? '/' + id : ''));
         authFetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
             .then(function(r) {
@@ -852,12 +947,13 @@ function adminLogout() {
         tbody.innerHTML = '<div class="loading">Loading...</div>';
         authFetch(apiUrl('/admin/attempts'))
             .then(function(r) { return r.json(); })
-            .then(function(attempts) {
-                if (!attempts || !attempts.length) { tbody.innerHTML = '<div class="empty">No attempts found.</div>'; return; }
-                var html = '<table><thead><tr><th>ID</th><th>User</th><th>Lesson</th><th>Score</th><th>Passed</th><th>Date</th></tr></thead><tbody>';
+            .then(function(d) {
+                var attempts = d.attempts || [];
+                if (!attempts.length) { tbody.innerHTML = '<div class="empty">No attempts found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>User</th><th>Quiz</th><th>Score</th><th>Passed</th><th>Date</th></tr></thead><tbody>';
                 attempts.forEach(function(a) {
                     var pass = a.passed ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-red">No</span>';
-                    html += '<tr><td>' + a.id + '</td><td>' + esc(a.user_name||'') + '</td><td>' + esc(a.lesson_title||'') + '</td><td>' + (a.score||0) + '/' + (a.total||0) + '</td><td>' + pass + '</td><td>' + (a.created_at||'') + '</td></tr>';
+                    html += '<tr><td>' + a.id + '</td><td>' + esc(a.user_name || ('User #' + a.user_id)) + '</td><td>' + esc(a.quiz_title || ('Quiz #' + a.quiz_id)) + '</td><td>' + (a.score||0) + '/' + (a.total_questions||0) + '</td><td>' + pass + '</td><td>' + (a.completed_at || a.started_at || '') + '</td></tr>';
                 });
                 html += '</tbody></table>';
                 tbody.innerHTML = html;
@@ -870,13 +966,16 @@ function adminLogout() {
         if (!checkAuth()) return;
         authFetch(apiUrl('/admin/settings'))
             .then(function(r) { return r.json(); })
-            .then(function(s) {
-                if (!s) return;
-                document.getElementById('settingSiteName').value = s.site_name || '';
-                document.getElementById('settingSiteDescription').value = s.site_description || '';
-                document.getElementById('settingContactEmail').value = s.contact_email || '';
-                document.getElementById('settingCurrency').value = s.currency || 'USD';
-                document.getElementById('settingMaintenance').checked = !!s.maintenance_mode;
+            .then(function(d) {
+                var settings = d.settings || [];
+                var map = {};
+                settings.forEach(function(s) { map[s.setting_key] = s.setting_value; });
+                document.getElementById('settingSiteName').value = map.site_name || '';
+                document.getElementById('settingSiteDescription').value = map.site_description || '';
+                document.getElementById('settingContactEmail').value = map.contact_email || '';
+                document.getElementById('settingCurrency').value = map.currency || 'KSH';
+                document.getElementById('settingMaintenance').checked = map.maintenance_mode === '1' || map.maintenance_mode === 'true';
+                CUR = map.currency || 'KSH';
             })
             .catch(function(err) { console.error('Settings load error:', err); });
     }
@@ -888,12 +987,13 @@ function adminLogout() {
             site_description: document.getElementById('settingSiteDescription').value,
             contact_email: document.getElementById('settingContactEmail').value,
             currency: document.getElementById('settingCurrency').value,
-            maintenance_mode: document.getElementById('settingMaintenance').checked
+            maintenance_mode: document.getElementById('settingMaintenance').checked ? '1' : '0'
         };
         authFetch(apiUrl('/admin/settings'), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
             .then(function(r) {
                 if (!r.ok) throw new Error('Failed to save');
                 showMsg('settingsMsg', 'success', 'Settings saved');
+                CUR = data.currency || CUR;
             })
             .catch(function(err) { showMsg('settingsMsg', 'error', 'Failed to save settings'); });
     }
@@ -905,8 +1005,9 @@ function adminLogout() {
         tbody.innerHTML = '<div class="loading">Loading...</div>';
         authFetch(apiUrl('/admin/cms'))
             .then(function(r) { return r.json(); })
-            .then(function(pages) {
-                if (!pages || !pages.length) { tbody.innerHTML = '<div class="empty">No CMS pages found.</div>'; return; }
+            .then(function(d) {
+                var pages = d.pages || [];
+                if (!pages.length) { tbody.innerHTML = '<div class="empty">No CMS pages found.</div>'; return; }
                 var html = '<table><thead><tr><th>ID</th><th>Title</th><th>Slug</th><th>Actions</th></tr></thead><tbody>';
                 pages.forEach(function(p) {
                     html += '<tr><td>' + p.id + '</td><td>' + esc(p.title) + '</td><td>' + esc(p.slug) + '</td><td>';
@@ -933,7 +1034,7 @@ function adminLogout() {
     function editCMSPage(id) {
         authFetch(apiUrl('/admin/cms/' + id))
             .then(function(r) { return r.json(); })
-            .then(function(p) { showCMSPageForm(p); })
+            .then(function(d) { showCMSPageForm(d.page); })
             .catch(function(err) { showMsg('cmsMsg', 'error', 'Failed to load page'); });
     }
 
@@ -945,7 +1046,7 @@ function adminLogout() {
             slug: document.getElementById('cmsSlug').value,
             content: document.getElementById('cmsContent').value
         };
-        var method = id ? 'PUT' : 'POST';
+        var method = id ? 'PATCH' : 'POST';
         var url = apiUrl('/admin/cms' + (id ? '/' + id : ''));
         authFetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
             .then(function(r) {

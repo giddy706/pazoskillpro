@@ -8,6 +8,9 @@ const paymentModel = require('../models/payment.model');
 const settingModel = require('../models/setting.model');
 const quizModel = require('../models/quiz.model');
 const certificateModel = require('../models/certificate.model');
+const lessonModel = require('../models/lesson.model');
+const quizAttemptModel = require('../models/quiz-attempt.model');
+const cmsPageModel = require('../models/cms-page.model');
 
 async function getMetrics() {
     const students = await userModel.listStudents();
@@ -28,6 +31,24 @@ async function getMetrics() {
 async function getStats() {
     const metrics = await getMetrics();
     const totalRevenue = await enrollmentModel.getRevenue();
+    const totalLessons = await lessonModel.countAll();
+    const totalUsers = await userModel.countAll();
+    const totalAttempts = await quizAttemptModel.countAll();
+    const enrollRaw = await enrollmentModel.getEnrollTrend(7);
+    const revenueRaw = await paymentModel.getRevenueByPeriod(7);
+
+    const enrollTrend = [];
+    const revenueTrend = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        const e = enrollRaw.find((r) => r.date === key);
+        enrollTrend.push({ date: key, count: e ? e.count : 0 });
+        const r = revenueRaw.find((x) => x.date === key);
+        revenueTrend.push({ date: key, total: r ? r.amount : 0 });
+    }
+
     return {
         totalStudents: metrics.totalStudents,
         totalCourses: metrics.totalCourses,
@@ -35,7 +56,20 @@ async function getStats() {
         totalEnrollments: metrics.totalEnrollments,
         totalApplications: metrics.totalApplications,
         totalRevenue,
+        totalLessons,
+        totalUsers,
+        totalAttempts,
+        enrollTrend,
+        revenueTrend,
     };
+}
+
+async function getLessons() {
+    return lessonModel.listAll();
+}
+
+async function getAttempts() {
+    return quizAttemptModel.listAll();
 }
 
 async function getApplications() {
@@ -78,6 +112,35 @@ async function getSettings() {
 
 async function updateSetting(id, value) {
     return settingModel.update(id, value);
+}
+
+async function bulkUpdateSettings(values) {
+    const results = [];
+    for (const [key, value] of Object.entries(values)) {
+        results.push(await settingModel.set(key, String(value)));
+    }
+    return results;
+}
+
+// CMS Pages
+async function getCMSPages() {
+    return cmsPageModel.listAll();
+}
+
+async function getCMSPage(id) {
+    return cmsPageModel.findById(id);
+}
+
+async function createCMSPage(data) {
+    return cmsPageModel.create(data);
+}
+
+async function updateCMSPage(id, updates) {
+    return cmsPageModel.update(id, updates);
+}
+
+async function deleteCMSPage(id) {
+    return cmsPageModel.remove(id);
 }
 
 // Student progress
@@ -161,10 +224,18 @@ module.exports = {
     getPaymentStats,
     getSettings,
     updateSetting,
+    bulkUpdateSettings,
+    getCMSPages,
+    getCMSPage,
+    createCMSPage,
+    updateCMSPage,
+    deleteCMSPage,
     getStudentProgress,
     getStudentDetail,
     getQuizzes,
     getQuizDetail,
+    getLessons,
+    getAttempts,
     getCertificates,
     issueCertificate,
     setCoursePublished,

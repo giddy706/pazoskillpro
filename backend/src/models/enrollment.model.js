@@ -56,6 +56,18 @@ const getRevenue = async () => {
     return row.total || 0;
 };
 
+const getEnrollTrend = async (days = 7) => {
+    const db = await getDB();
+    return db.all(
+        `SELECT date(enrolled_at) as date, COUNT(*) as count
+         FROM enrollments
+         WHERE enrolled_at >= datetime('now', '-' || ? || ' days')
+         GROUP BY date(enrolled_at)
+         ORDER BY date(enrolled_at) ASC`,
+        [parseInt(days)]
+    );
+};
+
 const getEnrollmentLessons = async (enrollmentId, courseId) => {
     const db = await getDB();
     const lessons = await db.all(
@@ -78,5 +90,6 @@ module.exports = {
     updateProgress,
     countAll,
     getRevenue,
+    getEnrollTrend,
     getEnrollmentLessons,
 };

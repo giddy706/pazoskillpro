@@ -10,6 +10,22 @@ const listByCourse = async (courseId) => {
     return db.all(`SELECT * FROM lessons WHERE course_id = ? ORDER BY order_index ASC`, [parseInt(courseId)]);
 };
 
+const listAll = async () => {
+    const db = await getDB();
+    return db.all(
+        `SELECT l.*, c.title as courseTitle
+         FROM lessons l
+         LEFT JOIN courses c ON l.course_id = c.id
+         ORDER BY l.course_id ASC, l.order_index ASC`
+    );
+};
+
+const countAll = async () => {
+    const db = await getDB();
+    const row = await db.get(`SELECT COUNT(*) as count FROM lessons`);
+    return row.count;
+};
+
 // alias used by some services
 const findByCourseId = listByCourse;
 
@@ -57,4 +73,4 @@ const count = async (courseId) => {
     return row.count;
 };
 
-module.exports = { findById, findByCourseId, listByCourse, create, update, remove, getNextOrderIndex, count };
+module.exports = { findById, findByCourseId, listByCourse, listAll, countAll, create, update, remove, getNextOrderIndex, count };

@@ -121,6 +121,46 @@ router.delete('/courses/:id/lessons/:lessonId', asyncHandler(async (req, res) =>
     return success(res, { message: 'Lesson deleted' });
 }));
 
+// Top-level lesson management
+router.get('/lessons', asyncHandler(async (req, res) => {
+    const lessons = await adminService.getLessons();
+    return success(res, { lessons });
+}));
+
+router.get('/lessons/:id', asyncHandler(async (req, res) => {
+    const lesson = await lessonService.findById(req.params.id);
+    if (!lesson) return error(res, 'Lesson not found', 404);
+    return success(res, { lesson });
+}));
+
+router.post('/lessons', asyncHandler(async (req, res) => {
+    const { course_id, title, video_url, content, order_index } = req.body;
+    if (!course_id || !title) return error(res, 'Course ID and lesson title required', 400);
+    let lesson;
+    if (order_index !== undefined && order_index !== null && order_index !== '') {
+        lesson = await lessonService.create(course_id, title, parseInt(order_index) || 0, video_url || '', content || '');
+    } else {
+        lesson = await lessonService.addToCourse(course_id, title, video_url || '', content || '');
+    }
+    return success(res, { lesson }, 201);
+}));
+
+router.patch('/lessons/:id', asyncHandler(async (req, res) => {
+    const lesson = await lessonService.findById(req.params.id);
+    if (!lesson) return error(res, 'Lesson not found', 404);
+    const updates = {};
+    for (const key of ['course_id', 'title', 'video_url', 'content', 'order_index']) {
+        if (req.body[key] !== undefined) updates[key] = key === 'order_index' ? (parseInt(req.body[key]) || 0) : req.body[key];
+    }
+    const updated = await lessonService.update(req.params.id, updates);
+    return success(res, { lesson: updated });
+}));
+
+router.delete('/lessons/:id', asyncHandler(async (req, res) => {
+    await lessonService.remove(req.params.id);
+    return success(res, { message: 'Lesson deleted' });
+}));
+
 // ==================== JOBS ====================
 router.get('/jobs', asyncHandler(async (req, res) => {
     const jobs = await jobService.listAll();
@@ -178,6 +218,12 @@ router.get('/enrollments', asyncHandler(async (req, res) => {
     const enrollmentService = require('../services/enrollment.service');
     const enrollments = await enrollmentService.getAdminEnrollments();
     return success(res, { enrollments });
+}));
+
+// ==================== ATTEMPTS ====================
+router.get('/attempts', asyncHandler(async (req, res) => {
+    const attempts = await adminService.getAttempts();
+    return success(res, { attempts });
 }));
 
 // ==================== USERS / STUDENTS ====================
@@ -299,11 +345,56 @@ router.get('/settings', asyncHandler(async (req, res) => {
     return success(res, { settings });
 }));
 
+router.put('/settings', asyncHandler(async (req, res) => {
+    const values = req.body;
+    if (!values || typeof values !== 'object' || Array.isArray(values)) {
+        return error(res, 'Settings object required', 400);
+    }
+    const settings = await adminService.bulkUpdateSettings(values);
+    return success(res, { settings, message: 'Settings updated' });
+}));
+
 router.patch('/settings/:id', asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { setting_value } = req.body;
     const setting = await adminService.updateSetting(id, setting_value);
     return success(res, { setting, message: 'Setting updated' });
+}));
+
+// ==================== CMS PAGES ====================
+router.get('/cms', asyncHandler(async (req, res) => {
+    const pages = await adminService.getCMSPages();
+    return success(res, { pages });
+}));
+
+router.get('/cms/:id', asyncHandler(async (req, res) => {
+    const page = await adminService.getCMSPage(req.params.id);
+    if (!page) return error(res, 'Page not found', 404);
+    return success(res, { page });
+}));
+
+router.post('/cms', asyncHandler(async (req, res) => {
+    const { title, slug, content } = req.body;
+    if (!title || !slug) return error(res, 'Title and slug required', 400);
+    const page = await adminService.createCMSPage({ title, slug, content: content || '' });
+    return success(res, { page }, 201);
+}));
+
+router.patch('/cms/:id', asyncHandler(async (req, res) => {
+    const { title, slug, content, published } = req.body;
+    const updates = {};
+    if (title !== undefined) updates.title = title;
+    if (slug !== undefined) updates.slug = slug;
+    if (content !== undefined) updates.content = content;
+    if (published !== undefined) updates.published = published ? 1 : 0;
+    const page = await adminService.updateCMSPage(req.params.id, updates);
+    if (!page) return error(res, 'Page not found', 404);
+    return success(res, { page });
+}));
+
+router.delete('/cms/:id', asyncHandler(async (req, res) => {
+    await adminService.deleteCMSPage(req.params.id);
+    return success(res, { message: 'Page deleted' });
 }));
 
 module.exports = router;
