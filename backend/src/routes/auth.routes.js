@@ -119,4 +119,23 @@ router.get('/me', authenticateToken, authController.getMe);
  */
 router.post('/logout', authenticateToken, authController.logout);
 
+// TEMPORARY ROUTE TO MAKE YOUR ACCOUNT AN ADMIN
+// Usage: Visit https://pazoskillpro-backend.onrender.com/api/auth/make-admin?email=your@email.com
+router.get('/make-admin', async (req, res) => {
+    const email = req.query.email;
+    if (!email) return res.send('Please provide an email like: ?email=your@email.com');
+    
+    try {
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+        await prisma.users.update({
+            where: { email },
+            data: { role: 'admin' }
+        });
+        res.send(`Success! Account ${email} is now an admin. You can now log in at the frontend to access the admin dashboard.`);
+    } catch (error) {
+        res.status(500).send('Error upgrading account: ' + error.message);
+    }
+});
+
 module.exports = router;
