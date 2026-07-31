@@ -21,7 +21,7 @@ Run the backend from the `backend` folder. It will serve the frontend static fil
 cd backend && npm run dev
 ```
 
-Then open `http://localhost:3000`.
+Then open the hosted frontend at `https://35f64cfd.pazoskillpro.pages.dev/` or use the backend API at `https://pazoskillpro-backend.onrender.com/api`.
 
 ## Deployment
 

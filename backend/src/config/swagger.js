@@ -11,8 +11,8 @@ const options = {
         },
         servers: [
             {
-                url: 'http://localhost:3000/api',
-                description: 'Development server',
+                url: 'https://pazoskillpro-backend.onrender.com/api',
+                description: 'Production server',
             },
         ],
         components: {
