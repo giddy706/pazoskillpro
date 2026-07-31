@@ -78,6 +78,25 @@ app.get('/admin-dashboard.html', (req, res) => {
 async function start() {
     await initDB();
     logger.info('Database initialized successfully.');
+    
+    // Auto-create default admin account
+    try {
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+        const bcrypt = require('bcryptjs');
+        const adminEmail = 'admin@pazoskill.com';
+        const existingAdmin = await prisma.users.findUnique({ where: { email: adminEmail } });
+        if (!existingAdmin) {
+            const hash = await bcrypt.hash('admin123', 10);
+            await prisma.users.create({
+                data: { name: 'Admin', email: adminEmail, password_hash: hash, role: 'admin' }
+            });
+            logger.info('Created default admin: admin@pazoskill.com / admin123');
+        }
+    } catch (e) {
+        logger.error('Failed to create default admin:', e);
+    }
+
     app.use('/api', routes);
 
     // Serve frontend static files EXCEPT index.html so API doesn't serve the website
