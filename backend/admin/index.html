@@ -432,7 +432,7 @@ function apiUrl(path) {
     function checkAuth() {
     var token = localStorage.getItem('authToken');
     if (!token) {
-        window.location.href = '/login.html';
+        window.location.href = 'https://pazoskillpro.pages.dev/login.html';
 
         return false;
     }
@@ -441,7 +441,7 @@ function apiUrl(path) {
 
 function adminLogout() {
     localStorage.removeItem('authToken');
-    window.location.href = '/login.html';
+    window.location.href = 'https://pazoskillpro.pages.dev/login.html';
 }
 
   function getEmail() {
