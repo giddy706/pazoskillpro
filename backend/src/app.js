@@ -80,17 +80,16 @@ async function start() {
     logger.info('Database initialized successfully.');
     app.use('/api', routes);
 
-    // Serve frontend static files (after API routes)
-    const publicPath = path.join(__dirname, '..', '..', 'frontend', 'public');
-    app.use(express.static(publicPath));
-
-    // Serve admin dashboard at /admin-panel
-    const adminPanelPath = path.join(__dirname, '..', '..', 'frontend', 'admin');
-    app.use('/admin-panel', express.static(adminPanelPath));
-
+    // Serve frontend static files EXCEPT index.html so API doesn't serve the website
+    // We only serve assets if really needed by some endpoints, but let's just serve /js for now.
+    
     // Serve /js from frontend/public/js (needed by admin panel for auth.js)
     const publicJsPath = path.join(__dirname, '..', '..', 'frontend', 'public', 'js');
     app.use('/js', express.static(publicJsPath));
+    
+    // Serve admin dashboard at /admin-panel
+    const adminPanelPath = path.join(__dirname, '..', 'admin');
+    app.use('/admin-panel', express.static(adminPanelPath));
 
     // Admin panel fallback — any unmatched /admin-panel* path serves index.html
     app.get('/admin-panel*', (req, res) => {
@@ -98,11 +97,8 @@ async function start() {
     });
 
     app.get("/", (req, res) => {
-    res.json({
-        message: "PazoSkillPro API is running",
-        status: "online"
+        res.redirect('/admin-panel/');
     });
-});
 
     app.use(notFoundHandler);
     app.use(errorHandler);
