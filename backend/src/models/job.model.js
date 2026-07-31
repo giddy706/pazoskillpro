@@ -1,67 +1,76 @@
-const prisma = require('../config/prisma');
+const { getDB } = require('../config/database');
 
 const listAll = async () => {
-    return prisma.jobs.findMany({
-        include: { courses: { select: { title: true } } },
-        orderBy: { created_at: 'desc' }
-    });
+    const db = await getDB();
+    const jobs = await db.all(`SELECT * FROM jobs ORDER BY created_at DESC`);
+    return jobs.map(j => ({
+        ...j,
+        requirements: _parse(j.requirements),
+        responsibilities: _parse(j.responsibilities),
+        benefits: _parse(j.benefits),
+    }));
 };
 
 const findById = async (id) => {
-    return prisma.jobs.findUnique({
-        where: { id: parseInt(id) },
-        include: { courses: { select: { title: true } } }
-    });
+    const db = await getDB();
+    const j = await db.get(`SELECT * FROM jobs WHERE id = ?`, [parseInt(id)]);
+    if (!j) return null;
+    return {
+        ...j,
+        requirements: _parse(j.requirements),
+        responsibilities: _parse(j.responsibilities),
+        benefits: _parse(j.benefits),
+    };
 };
 
 const create = async (data) => {
-    return prisma.jobs.create({
-        data: {
-            title: data.title,
-            company: data.company,
-            location: data.location,
-            type: data.type,
-            salary: data.salary,
-            category: data.category,
-            description: data.description,
-            requirements: JSON.stringify(data.requirements || []),
-            responsibilities: JSON.stringify(data.responsibilities || []),
-            benefits: JSON.stringify(data.benefits || []),
-            required_course_id: data.requiredCourseId ? parseInt(data.requiredCourseId) : null,
-        }
-    });
+    const db = await getDB();
+    const result = await db.run(
+        `INSERT INTO jobs (title, company, location, type, salary, category, description, requirements, responsibilities, benefits, required_course_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+            data.title, data.company, data.location, data.type, data.salary,
+            data.category, data.description,
+            JSON.stringify(data.requirements || []),
+            JSON.stringify(data.responsibilities || []),
+            JSON.stringify(data.benefits || []),
+            data.requiredCourseId ? parseInt(data.requiredCourseId) : null,
+        ]
+    );
+    return findById(result.lastID);
 };
 
 const update = async (id, updates) => {
-    const data = { ...updates };
-    if (updates.requirements) data.requirements = JSON.stringify(updates.requirements);
-    if (updates.responsibilities) data.responsibilities = JSON.stringify(updates.responsibilities);
-    if (updates.benefits) data.benefits = JSON.stringify(updates.benefits);
-    if (updates.required_course_id !== undefined) {
-        data.required_course_id = updates.required_course_id ? parseInt(updates.required_course_id) : null;
+    const db = await getDB();
+    const fields = [];
+    const values = [];
+    for (const [key, value] of Object.entries(updates)) {
+        if (['requirements', 'responsibilities', 'benefits'].includes(key)) {
+            fields.push(`${key} = ?`);
+            values.push(JSON.stringify(value));
+        } else {
+            fields.push(`${key} = ?`);
+            values.push(value);
+        }
     }
-
-    return prisma.jobs.update({
-        where: { id: parseInt(id) },
-        data
-    });
+    values.push(parseInt(id));
+    await db.run(`UPDATE jobs SET ${fields.join(', ')} WHERE id = ?`, values);
+    return findById(id);
 };
 
 const remove = async (id) => {
-    return prisma.jobs.delete({
-        where: { id: parseInt(id) }
-    });
+    const db = await getDB();
+    await db.run(`DELETE FROM jobs WHERE id = ?`, [parseInt(id)]);
 };
 
 const countAll = async () => {
-    return prisma.jobs.count();
+    const db = await getDB();
+    const row = await db.get(`SELECT COUNT(*) as count FROM jobs`);
+    return row.count;
 };
 
-module.exports = {
-    listAll,
-    findById,
-    create,
-    update,
-    remove,
-    countAll,
-};
+function _parse(val) {
+    try { return JSON.parse(val || '[]'); } catch { return []; }
+}
+
+module.exports = { listAll, findById, create, update, remove, countAll };

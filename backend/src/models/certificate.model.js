@@ -1,5 +1,4 @@
 const { getDB } = require('../config/database');
-const prisma = require('../config/prisma');
 const crypto = require('crypto');
 
 function generateCertificateCode() {

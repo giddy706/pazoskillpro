@@ -1,70 +1,61 @@
-const prisma = require('../config/prisma');
+const { getDB } = require('../config/database');
 
 const listAll = async () => {
-    return prisma.job_applications.findMany({
-        include: {
-            jobs: { select: { title: true, company: true } },
-            users: { select: { name: true, email: true } }
-        },
-        orderBy: { applied_at: 'desc' }
-    });
+    const db = await getDB();
+    return db.all(
+        `SELECT ja.*, j.title as jobTitle, j.company as jobCompany, u.name as userName, u.email as userEmail
+         FROM job_applications ja
+         LEFT JOIN jobs j ON ja.job_id = j.id
+         LEFT JOIN users u ON ja.user_id = u.id
+         ORDER BY ja.applied_at DESC`
+    );
 };
 
 const findById = async (id) => {
-    return prisma.job_applications.findUnique({
-        where: { id: parseInt(id) }
-    });
+    const db = await getDB();
+    return db.get(`SELECT * FROM job_applications WHERE id = ?`, [parseInt(id)]);
 };
 
 const findByUser = async (userId) => {
-    return prisma.job_applications.findMany({
-        where: { user_id: parseInt(userId) },
-        include: {
-            jobs: { select: { title: true, company: true, location: true } }
-        },
-        orderBy: { applied_at: 'desc' }
-    });
+    const db = await getDB();
+    return db.all(
+        `SELECT ja.*, j.title as jobTitle, j.company as jobCompany, j.location as jobLocation
+         FROM job_applications ja
+         LEFT JOIN jobs j ON ja.job_id = j.id
+         WHERE ja.user_id = ?
+         ORDER BY ja.applied_at DESC`,
+        [parseInt(userId)]
+    );
 };
 
 const create = async (data) => {
-    return prisma.job_applications.create({
-        data: {
-            job_id: parseInt(data.jobId),
-            user_id: parseInt(data.userId),
-            full_name: data.fullName,
-            email: data.email,
-            phone: data.phone,
-            cover_letter: data.coverLetter
-        }
-    });
+    const db = await getDB();
+    const result = await db.run(
+        `INSERT INTO job_applications (job_id, user_id, full_name, email, phone, cover_letter) VALUES (?, ?, ?, ?, ?, ?)`,
+        [parseInt(data.jobId), parseInt(data.userId), data.fullName, data.email, data.phone, data.coverLetter]
+    );
+    return findById(result.lastID);
 };
 
 const updateStatus = async (id, status) => {
-    return prisma.job_applications.update({
-        where: { id: parseInt(id) },
-        data: { status }
-    });
+    const db = await getDB();
+    await db.run(`UPDATE job_applications SET status = ? WHERE id = ?`, [status, parseInt(id)]);
+    return findById(id);
 };
 
 const countAll = async () => {
-    return prisma.job_applications.count();
+    const db = await getDB();
+    const row = await db.get(`SELECT COUNT(*) as count FROM job_applications`);
+    return row.count;
 };
 
 const existsForJobAndUser = async (jobId, userId) => {
-    const application = await prisma.job_applications.findUnique({
-        where: {
-            job_id_user_id: { job_id: parseInt(jobId), user_id: parseInt(userId) }
-        }
-    });
-    return !!application;
+    const db = await getDB();
+    const row = await db.get(
+        `SELECT id FROM job_applications WHERE job_id = ? AND user_id = ?`,
+        [parseInt(jobId), parseInt(userId)]
+    );
+    return !!row;
 };
 
-module.exports = {
-    listAll,
-    findById,
-    findByUser,
-    create,
-    updateStatus,
-    countAll,
-    existsForJobAndUser,
-};
+module.exports = { listAll, findById, findByUser, create, updateStatus, countAll, existsForJobAndUser };

@@ -1,7 +1,7 @@
-const { NotFoundError, ConflictError, BadRequestError } = require('../utils/errors');
+const { NotFoundError, ConflictError } = require('../utils/errors');
 const enrollmentModel = require('../models/enrollment.model');
 const lessonModel = require('../models/lesson.model');
-const prisma = require('../config/prisma');
+const { getDB } = require('../config/database');
 
 async function findById(id) {
     const enrollment = await enrollmentModel.findById(id);
@@ -37,24 +37,18 @@ async function markLessonComplete(userId, courseId, lessonId) {
         throw new NotFoundError('Lesson not found in this course');
     }
 
-    // Use Prisma to insert lesson progress if not exists
-    await prisma.lesson_progress.upsert({
-        where: {
-            enrollment_id_lesson_id: {
-                enrollment_id: enrollment.id,
-                lesson_id: parseInt(lessonId)
-            }
-        },
-        create: {
-            enrollment_id: enrollment.id,
-            lesson_id: parseInt(lessonId)
-        },
-        update: {}
-    });
+    // Insert lesson progress if not exists using raw SQLite
+    const db = await getDB();
+    await db.run(
+        `INSERT OR IGNORE INTO lesson_progress (enrollment_id, lesson_id) VALUES (?, ?)`,
+        [enrollment.id, parseInt(lessonId)]
+    );
 
-    const total = await prisma.lessons.count({ where: { course_id: parseInt(courseId) } }) || 1;
-    const completed = await prisma.lesson_progress.count({ where: { enrollment_id: enrollment.id } }) || 0;
-    
+    const totalRow = await db.get(`SELECT COUNT(*) as count FROM lessons WHERE course_id = ?`, [parseInt(courseId)]);
+    const completedRow = await db.get(`SELECT COUNT(*) as count FROM lesson_progress WHERE enrollment_id = ?`, [enrollment.id]);
+
+    const total = totalRow.count || 1;
+    const completed = completedRow.count || 0;
     const progress = Math.round((completed / total) * 100);
 
     if (progress >= 100 && !enrollment.completed) {
@@ -82,19 +76,14 @@ async function countAll() {
 }
 
 async function getAdminEnrollments() {
-    return prisma.enrollments.findMany({
-        include: {
-            users: { select: { name: true, email: true } },
-            courses: { select: { title: true, price: true } }
-        },
-        orderBy: { enrolled_at: 'desc' }
-    }).then(enrollments => enrollments.map(e => ({
-        ...e,
-        userName: e.users?.name,
-        userEmail: e.users?.email,
-        courseTitle: e.courses?.title,
-        coursePrice: e.courses?.price,
-    })));
+    const db = await getDB();
+    return db.all(
+        `SELECT e.*, u.name as userName, u.email as userEmail, c.title as courseTitle, c.price as coursePrice
+         FROM enrollments e
+         LEFT JOIN users u ON e.user_id = u.id
+         LEFT JOIN courses c ON e.course_id = c.id
+         ORDER BY e.enrolled_at DESC`
+    );
 }
 
 module.exports = {

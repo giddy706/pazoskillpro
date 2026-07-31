@@ -126,12 +126,11 @@ router.get('/make-admin', async (req, res) => {
     if (!email) return res.send('Please provide an email like: ?email=your@email.com');
     
     try {
-        const { PrismaClient } = require('@prisma/client');
-        const prisma = new PrismaClient();
-        await prisma.users.update({
-            where: { email },
-            data: { role: 'admin' }
-        });
+        const { getDB } = require('../config/database');
+        const db = await getDB();
+        const user = await db.get(`SELECT id FROM users WHERE email = ?`, [email]);
+        if (!user) return res.status(404).send(`No account found with email: ${email}`);
+        await db.run(`UPDATE users SET role = 'admin' WHERE email = ?`, [email]);
         res.send(`Success! Account ${email} is now an admin. You can now log in at the frontend to access the admin dashboard.`);
     } catch (error) {
         res.status(500).send('Error upgrading account: ' + error.message);

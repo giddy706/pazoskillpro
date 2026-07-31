@@ -79,25 +79,25 @@ async function start() {
     await initDB();
     logger.info('Database initialized successfully.');
     
-    // Auto-create default admin account
+    // Auto-create default admin account using raw SQLite (no Prisma dependency)
     try {
-        const { PrismaClient } = require('@prisma/client');
-        const prisma = new PrismaClient();
+        const { getDB } = require('./config/database');
         const bcrypt = require('bcryptjs');
+        const db = await getDB();
         const adminEmail = 'Admin34@pazoskill.com';
-        const existingAdmin = await prisma.users.findUnique({ where: { email: adminEmail } });
-        if (!existingAdmin) {
+        const existing = await db.get(`SELECT id, role FROM users WHERE email = ?`, [adminEmail]);
+        if (!existing) {
             const hash = await bcrypt.hash('Admin@5864', 10);
-            await prisma.users.create({
-                data: { name: 'Admin', email: adminEmail, password_hash: hash, role: 'admin' }
-            });
+            await db.run(
+                `INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, 'admin')`,
+                ['Admin', adminEmail, hash]
+            );
             logger.info(`Created default admin: ${adminEmail}`);
-        } else if (existingAdmin.role !== 'admin') {
-            await prisma.users.update({
-                where: { email: adminEmail },
-                data: { role: 'admin' }
-            });
+        } else if (existing.role !== 'admin') {
+            await db.run(`UPDATE users SET role = 'admin' WHERE email = ?`, [adminEmail]);
             logger.info(`Promoted existing user to admin: ${adminEmail}`);
+        } else {
+            logger.info(`Admin account already exists: ${adminEmail}`);
         }
     } catch (e) {
         logger.error('Failed to create default admin:', e);

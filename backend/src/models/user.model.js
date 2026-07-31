@@ -1,53 +1,69 @@
-const prisma = require('../config/prisma');
+const { getDB } = require('../config/database');
 
 const findByEmail = async (email) => {
-    return prisma.users.findUnique({ where: { email } });
+    const db = await getDB();
+    return db.get(`SELECT * FROM users WHERE email = ?`, [email]);
 };
 
 const findById = async (id) => {
-    return prisma.users.findUnique({
-        where: { id: parseInt(id) },
-        select: { id: true, name: true, email: true, role: true, created_at: true }
-    });
+    const db = await getDB();
+    return db.get(
+        `SELECT id, name, email, role, created_at FROM users WHERE id = ?`,
+        [parseInt(id)]
+    );
 };
 
 const create = async ({ name, email, passwordHash }) => {
-    return prisma.users.create({
-        data: {
-            name,
-            email,
-            password_hash: passwordHash
-        },
-        select: { id: true, name: true, email: true, role: true, created_at: true }
-    });
+    const db = await getDB();
+    const result = await db.run(
+        `INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, 'student')`,
+        [name, email, passwordHash]
+    );
+    return findById(result.lastID);
 };
 
 const update = async (id, updates) => {
-    return prisma.users.update({
-        where: { id: parseInt(id) },
-        data: updates,
-        select: { id: true, name: true, email: true, role: true, created_at: true }
-    });
+    const db = await getDB();
+    const fields = [];
+    const values = [];
+    for (const [key, value] of Object.entries(updates)) {
+        fields.push(`${key} = ?`);
+        values.push(value);
+    }
+    values.push(parseInt(id));
+    await db.run(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+    return findById(id);
 };
 
 const remove = async (id) => {
-    return prisma.users.delete({ where: { id: parseInt(id) } });
+    const db = await getDB();
+    await db.run(`DELETE FROM users WHERE id = ?`, [parseInt(id)]);
 };
 
 const listStudents = async () => {
-    return prisma.users.findMany({
-        where: { role: 'student' },
-        select: { id: true, name: true, email: true, role: true, created_at: true },
-        orderBy: { id: 'desc' }
-    });
+    const db = await getDB();
+    return db.all(
+        `SELECT id, name, email, role, created_at FROM users WHERE role = 'student' ORDER BY id DESC`
+    );
 };
 
 const listAdmins = async () => {
-    return prisma.users.findMany({
-        where: { role: 'admin' },
-        select: { id: true, name: true, email: true, role: true, created_at: true },
-        orderBy: { id: 'desc' }
-    });
+    const db = await getDB();
+    return db.all(
+        `SELECT id, name, email, role, created_at FROM users WHERE role = 'admin' ORDER BY id DESC`
+    );
+};
+
+const countAll = async () => {
+    const db = await getDB();
+    const row = await db.get(`SELECT COUNT(*) as count FROM users`);
+    return row.count;
+};
+
+const setRole = async (id, role) => {
+    const db = await getDB();
+    await db.run(`UPDATE users SET role = ? WHERE id = ?`, [role, parseInt(id)]);
+    return findById(id);
 };
 
 module.exports = {
@@ -58,4 +74,6 @@ module.exports = {
     remove,
     listStudents,
     listAdmins,
+    countAll,
+    setRole,
 };
