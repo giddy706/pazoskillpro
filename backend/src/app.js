@@ -96,8 +96,12 @@ async function start() {
         res.sendFile(path.join(adminPanelPath, 'index.html'));
     });
 
-    app.get("/", (req, res) => {
+    app.get(["/", "/admin", "/admin.html"], (req, res) => {
         res.redirect('/admin-panel/');
+    });
+    
+    app.get("/api", (req, res) => {
+        res.json({ message: "PazoSkillPro API is running", status: "online" });
     });
 
     app.use(notFoundHandler);
