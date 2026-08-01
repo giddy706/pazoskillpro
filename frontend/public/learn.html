@@ -17,7 +17,6 @@
         <div class="navbar-container">
             <a href="dashboard.html" class="logo"><img src="images/logo.png" alt="pazoskill logo"><span>pazoskill</span></a>
             <div style="display: flex; gap: 0.5rem;">
-                <a href="ai-tutor.html" class="btn btn-outline btn-small">AI Tutor</a>
                 <a href="dashboard.html" class="btn btn-outline btn-small">← Back to Dashboard</a>
             </div>
         </div>
@@ -42,51 +41,40 @@
                     </div>
                 </div>
 
-                <!-- Video Player -->
+                <!-- Lesson Content -->
                 <div style="grid-column: span 2;">
                     <div class="card mb-3">
                         <div class="card-body">
                             <h2 id="currentLessonTitle"></h2>
-                            <div
-                                style="background: #000; aspect-ratio: 16/9; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; margin: 1rem 0;">
-                                📹 Video Player
-                                <p style="font-size: 0.875rem; margin-top: 1rem;">In a real implementation, embed video
-                                    here</p>
-                            </div>
+                            <div id="lessonNotes" style="line-height:1.8; color:#334155; margin:1rem 0; white-space:pre-wrap;"></div>
                             <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                                 <button id="completeBtn" class="btn btn-secondary btn-large">Mark as Complete</button>
-                                <button onclick="teachLesson()" class="btn btn-primary btn-large">🎓 Teach me this lesson</button>
+                                <button onclick="teachLesson()" class="btn btn-primary btn-large">👨‍🏫 Start the lesson with Mr. John</button>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h3>Lesson Resources</h3>
-                            <p>Download course materials and resources for this lesson.</p>
-                            <button class="btn btn-outline">Download Resources</button>
                         </div>
                     </div>
 
                     <div class="card">
                         <div class="card-body">
                             <div class="flex-between" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-                                <h3>🤖 AI Lecturer</h3>
-                                <span style="font-size:0.75rem; color:var(--gray);">Ask the AI to teach this lesson like a live class</span>
+                                <h3>👨‍🏫 Mr. John</h3>
+                                <span style="font-size:0.75rem; color:var(--gray);">Your teacher — he will guide you through every lesson</span>
                             </div>
-                            <div id="aiTeacherMessages" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:0.9rem; min-height:120px; max-height:340px; overflow-y:auto; display:flex; flex-direction:column; gap:0.75rem; margin-bottom:0.75rem;">
+                            <div id="aiTeacherMessages" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:0.9rem; min-height:120px; max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:0.75rem; margin-bottom:0.75rem;">
                                 <div class="msg bot" style="max-width:92%; padding:0.7rem 0.9rem; border-radius:12px; background:#fff; border:1px solid #e2e8f0; line-height:1.55; font-size:0.92rem; align-self:flex-start;">
-                                    Hi! I'm your AI lecturer. Click <strong>Teach me this lesson</strong> and I'll walk you through it step by step like a live class. You can also ask me questions about it below.
+                                    Hello there! I'm Mr. John, and I'll be your teacher. Click <strong>Start the lesson</strong> and I'll teach it to you step by step, just like in class. You can also ask me to explain things differently, quiz you, or help with your code below.
                                 </div>
                             </div>
                             <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.75rem;">
-                                <button class="btn btn-outline btn-small" onclick="quickAI('lecture','Teach me this lesson now, step by step.')">🎓 Teach me</button>
-                                <button class="btn btn-outline btn-small" onclick="quickAI('explain','Explain this lesson in simple terms.')">💡 Explain</button>
-                                <button class="btn btn-outline btn-small" onclick="quickAI('summarize','Summarize this lesson into key points.')">📄 Summarize</button>
-                                <button class="btn btn-outline btn-small" onclick="quickAI('practice','Give me 10 practice questions for this lesson.')">📝 Practice</button>
+                                <button class="btn btn-outline btn-small" onclick="teachLesson()">👨‍🏫 Teach this lesson</button>
+                                <button class="btn btn-outline btn-small" onclick="quickAI('explain','Please explain this lesson in simpler language.')">📚 Explain simply</button>
+                                <button class="btn btn-outline btn-small" onclick="generateQuizFromLesson()">📝 Generate quiz</button>
+                                <button class="btn btn-outline btn-small" onclick="openCodeModal()">💻 Review my code</button>
+                                <button class="btn btn-outline btn-small" onclick="quickAI('summarize','Please summarize this lesson into key points.')">📄 Summarize</button>
+                                <button class="btn btn-outline btn-small" onclick="studyPlan()">🎯 Study plan</button>
                             </div>
                             <div style="display:flex; gap:0.5rem;">
-                                <input type="text" id="aiTeacherInput" placeholder="Ask about this lesson..." autocomplete="off"
+                                <input type="text" id="aiTeacherInput" placeholder="Ask Mr. John anything about this lesson..." autocomplete="off"
                                     style="flex:1; padding:0.6rem 0.9rem; border:1px solid #e2e8f0; border-radius:8px; font-size:0.92rem;">
                                 <button class="btn btn-primary" onclick="sendAITeacher()">Send</button>
                             </div>
@@ -96,6 +84,24 @@
             </div>
         </div>
     </section>
+
+    <!-- Code Review Modal -->
+    <div id="codeModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
+        <div style="background:#fff; border-radius:14px; max-width:560px; width:100%; padding:1.5rem;">
+            <h4>Review my code</h4>
+            <p style="font-size:0.85rem; color:var(--gray); margin-bottom:1rem;">Mr. John will look at your code, explain what's wrong and show you how to fix it.</p>
+            <label style="font-size:0.85rem; font-weight:600;">Language (e.g. javascript, python)</label>
+            <input type="text" id="codeLang" placeholder="javascript" style="width:100%; padding:0.6rem 0.8rem; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:1rem;">
+            <label style="font-size:0.85rem; font-weight:600;">What's the problem? (optional)</label>
+            <input type="text" id="codeQuestion" placeholder="It keeps throwing an error..." style="width:100%; padding:0.6rem 0.8rem; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:1rem;">
+            <label style="font-size:0.85rem; font-weight:600;">Your code</label>
+            <textarea id="codeInput" style="width:100%; min-height:160px; font-family:Consolas, monospace; font-size:0.85rem; padding:0.6rem 0.8rem; border:1px solid #e2e8f0; border-radius:8px;"></textarea>
+            <div style="display:flex; gap:0.6rem; justify-content:flex-end; margin-top:1rem;">
+                <button class="btn btn-outline" onclick="closeCodeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitCodeReview()">Ask Mr. John</button>
+            </div>
+        </div>
+    </div>
 
     <script src="js/data.js"></script>
     <script src="js/main.js"></script>
@@ -125,6 +131,18 @@
             currentLessonIndex = index;
             const lesson = enrollment.lessons[index];
             document.getElementById('currentLessonTitle').textContent = lesson.title;
+
+            const aiLesson = currentAILesson();
+            const notesEl = document.getElementById('lessonNotes');
+            const notes = aiLesson && aiLesson.content ? aiLesson.content.trim() : '';
+            if (notes) {
+                notesEl.textContent = notes;
+                notesEl.style.display = 'block';
+            } else {
+                notesEl.textContent = 'There are no written notes for this lesson yet. Click "Start the lesson with Mr. John" and he will teach you the whole thing here.';
+                notesEl.style.color = '#64748b';
+                notesEl.style.fontStyle = 'italic';
+            }
 
             const completeBtn = document.getElementById('completeBtn');
             if (lesson.completed) {
@@ -275,18 +293,101 @@
                 }
             } catch (e) {
                 aiHideTyping();
-                aiTeacherBubble('bot', '⚠️ Could not reach the AI lecturer. Please check your connection and try again.');
+                aiTeacherBubble('bot', '⚠️ Sorry, could not reach Mr. John right now. Please check your connection and try again.');
             } finally {
                 aiBusy = false;
             }
         }
 
         function teachLesson() {
-            askAI('Teach me this lesson now, step by step, like a live lecture.', 'lecture');
+            askAI('Please teach me this lesson now, step by step, just like in class.', 'lecture');
         }
 
         function quickAI(mode, message) {
             askAI(message, mode);
+        }
+
+        async function generateQuizFromLesson() {
+            const aiLesson = currentAILesson();
+            if (!aiLesson) {
+                aiTeacherBubble('user', '📝 Generate a quiz for this lesson');
+                aiTeacherBubble('bot', '⚠️ I need the lesson to be ready first. Please try again in a moment.');
+                return;
+            }
+            aiTeacherBubble('user', '📝 Please generate a practice quiz for this lesson.');
+            aiShowTyping();
+            aiBusy = true;
+            try {
+                const res = await authFetch('/api/ai/quiz', {
+                    method: 'POST',
+                    body: JSON.stringify({ course_id: courseId, lesson_id: aiLesson.id, count: 10, difficulty: 'mixed' })
+                });
+                const data = await res.json();
+                aiHideTyping();
+                if (data.success) {
+                    aiTeacherBubble('bot', '✅ Done! I have prepared a **' + data.questions.length + '-question practice quiz** for you on *' + aiLesson.title + '*. Your teacher has saved it, and you can take it from the admin / quiz section. Ask me for practice questions here any time too!');
+                } else {
+                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'I could not create the quiz. Please try again.'));
+                }
+            } catch (e) {
+                aiHideTyping();
+                aiTeacherBubble('bot', '⚠️ Sorry, I could not create the quiz right now. Please try again.');
+            } finally {
+                aiBusy = false;
+            }
+        }
+
+        function studyPlan() {
+            const done = enrollment.lessons.filter(function(l) { return l.completed; }).length;
+            const total = enrollment.lessons.length;
+            const message = 'Create a personalized study plan for me. I am studying ' + enrollment.courseTitle +
+                ', I have completed ' + done + ' of ' + total + ' lessons (' + Math.round((done / (total || 1)) * 100) + '%). ' +
+                'I am currently on lesson: ' + (enrollment.lessons[currentLessonIndex] ? enrollment.lessons[currentLessonIndex].title : 'unknown') + '. Please give me a realistic weekly plan to finish strong.';
+            askAI(message, 'study-plan');
+        }
+
+        // ---- Code review ----
+        function openCodeModal() {
+            document.getElementById('codeModal').style.display = 'flex';
+        }
+
+        function closeCodeModal() {
+            document.getElementById('codeModal').style.display = 'none';
+        }
+
+        document.getElementById('codeModal').addEventListener('click', function (e) {
+            if (e.target.id === 'codeModal') closeCodeModal();
+        });
+
+        async function submitCodeReview() {
+            const code = document.getElementById('codeInput').value.trim();
+            if (!code) return;
+            closeCodeModal();
+            aiTeacherBubble('user', '💻 Please review my code and explain what is wrong.');
+            aiShowTyping();
+            aiBusy = true;
+            try {
+                const res = await authFetch('/api/ai/code-review', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        code: code,
+                        language: document.getElementById('codeLang').value.trim() || undefined,
+                        question: document.getElementById('codeQuestion').value.trim() || undefined,
+                    })
+                });
+                const data = await res.json();
+                aiHideTyping();
+                if (data.success) {
+                    aiTeacherBubble('bot', data.reply);
+                } else {
+                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'I could not review the code. Please try again.'));
+                }
+            } catch (e) {
+                aiHideTyping();
+                aiTeacherBubble('bot', '⚠️ Sorry, I could not review your code right now. Please try again.');
+            } finally {
+                aiBusy = false;
+            }
         }
 
         function sendAITeacher() {
