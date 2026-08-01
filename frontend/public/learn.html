@@ -9,6 +9,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <style>@keyframes aiBlink { 0%,80%,100% { opacity:0.2; } 40% { opacity:1; } }</style>
 </head>
 
 <body>
@@ -52,15 +53,43 @@
                                 <p style="font-size: 0.875rem; margin-top: 1rem;">In a real implementation, embed video
                                     here</p>
                             </div>
-                            <button id="completeBtn" class="btn btn-secondary btn-large">Mark as Complete</button>
+                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                <button id="completeBtn" class="btn btn-secondary btn-large">Mark as Complete</button>
+                                <button onclick="teachLesson()" class="btn btn-primary btn-large">🎓 Teach me this lesson</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h3>Lesson Resources</h3>
+                            <p>Download course materials and resources for this lesson.</p>
+                            <button class="btn btn-outline">Download Resources</button>
                         </div>
                     </div>
 
                     <div class="card">
                         <div class="card-body">
-                            <h3>Lesson Resources</h3>
-                            <p>Download course materials and resources for this lesson.</p>
-                            <button class="btn btn-outline">Download Resources</button>
+                            <div class="flex-between" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                                <h3>🤖 AI Lecturer</h3>
+                                <span style="font-size:0.75rem; color:var(--gray);">Ask the AI to teach this lesson like a live class</span>
+                            </div>
+                            <div id="aiTeacherMessages" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:0.9rem; min-height:120px; max-height:340px; overflow-y:auto; display:flex; flex-direction:column; gap:0.75rem; margin-bottom:0.75rem;">
+                                <div class="msg bot" style="max-width:92%; padding:0.7rem 0.9rem; border-radius:12px; background:#fff; border:1px solid #e2e8f0; line-height:1.55; font-size:0.92rem; align-self:flex-start;">
+                                    Hi! I'm your AI lecturer. Click <strong>Teach me this lesson</strong> and I'll walk you through it step by step like a live class. You can also ask me questions about it below.
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.75rem;">
+                                <button class="btn btn-outline btn-small" onclick="quickAI('lecture','Teach me this lesson now, step by step.')">🎓 Teach me</button>
+                                <button class="btn btn-outline btn-small" onclick="quickAI('explain','Explain this lesson in simple terms.')">💡 Explain</button>
+                                <button class="btn btn-outline btn-small" onclick="quickAI('summarize','Summarize this lesson into key points.')">📄 Summarize</button>
+                                <button class="btn btn-outline btn-small" onclick="quickAI('practice','Give me 10 practice questions for this lesson.')">📝 Practice</button>
+                            </div>
+                            <div style="display:flex; gap:0.5rem;">
+                                <input type="text" id="aiTeacherInput" placeholder="Ask about this lesson..." autocomplete="off"
+                                    style="flex:1; padding:0.6rem 0.9rem; border:1px solid #e2e8f0; border-radius:8px; font-size:0.92rem;">
+                                <button class="btn btn-primary" onclick="sendAITeacher()">Send</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -77,6 +106,8 @@
 
         let enrollment = null;
         let currentLessonIndex = 0;
+        let aiLessons = [];
+        let aiBusy = false;
 
         function renderLessonsList() {
             const lessonsList = document.getElementById('lessonsList');
@@ -118,6 +149,158 @@
             }
         }
 
+        async function loadAIContext() {
+            try {
+                const res = await authFetch('/api/courses/' + courseId);
+                const data = await res.json();
+                if (data.success && data.course && data.course.curriculum) {
+                    aiLessons = data.course.curriculum;
+                }
+            } catch (e) {
+                console.warn('Could not load AI lesson context:', e);
+            }
+        }
+
+        function currentAILesson() {
+            const lesson = enrollment.lessons[currentLessonIndex];
+            if (!lesson) return null;
+            return aiLessons.find(l => l.id == lesson.id) || null;
+        }
+
+        function escapeHtml(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function aiInline(s) {
+            let t = s;
+            t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+            t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            t = t.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            return t;
+        }
+
+        function renderAIMarkdown(text) {
+            const lines = escapeHtml(text).split('\n');
+            let html = '';
+            let inList = false;
+            let inCode = false;
+            for (const rawLine of lines) {
+                const line = rawLine.trim();
+                if (/^```/.test(line)) {
+                    if (inCode) { html += '</code></pre>'; inCode = false; }
+                    else { html += '<pre><code>'; inCode = true; }
+                    continue;
+                }
+                if (inCode) { html += rawLine + '\n'; continue; }
+                let out = '';
+                if (/^###/.test(line)) out = '<h4>' + aiInline(line.replace(/^#+\s*/, '')) + '</h4>';
+                else if (/^##/.test(line)) out = '<h4>' + aiInline(line.replace(/^#+\s*/, '')) + '</h4>';
+                else if (/^#/.test(line)) out = '<h4>' + aiInline(line.replace(/^#+\s*/, '')) + '</h4>';
+                else if (/^[-*]\s+/.test(line)) out = '<li>' + aiInline(line.replace(/^[-*]\s+/, '')) + '</li>';
+                else if (line === '') out = '';
+                else out = '<p>' + aiInline(line) + '</p>';
+                if (out.startsWith('<li>') && !inList) { html += '<ul>'; inList = true; }
+                else if (!out.startsWith('<li>') && inList) { html += '</ul>'; inList = false; }
+                if (out) html += out;
+            }
+            if (inCode) html += '</code></pre>';
+            if (inList) html += '</ul>';
+            return html;
+        }
+
+        function aiTeacherBubble(role, content) {
+            const box = document.getElementById('aiTeacherMessages');
+            const div = document.createElement('div');
+            div.style.maxWidth = '92%';
+            div.style.padding = '0.7rem 0.9rem';
+            div.style.borderRadius = '12px';
+            div.style.lineHeight = '1.55';
+            div.style.fontSize = '0.92rem';
+            if (role === 'user') {
+                div.style.alignSelf = 'flex-end';
+                div.style.background = 'linear-gradient(135deg, var(--primary-color), var(--secondary-color))';
+                div.style.color = '#fff';
+                div.textContent = content;
+            } else {
+                div.style.alignSelf = 'flex-start';
+                div.style.background = '#fff';
+                div.style.border = '1px solid #e2e8f0';
+                div.innerHTML = renderAIMarkdown(content);
+                div.querySelectorAll('h4').forEach(function(h) { h.style.margin = '0.4rem 0 0.2rem'; });
+            }
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function aiShowTyping() {
+            const box = document.getElementById('aiTeacherMessages');
+            const div = document.createElement('div');
+            div.id = 'aiTyping';
+            div.style.alignSelf = 'flex-start';
+            div.style.padding = '0.7rem 0.9rem';
+            div.style.borderRadius = '12px';
+            div.style.background = '#fff';
+            div.style.border = '1px solid #e2e8f0';
+            div.innerHTML = '<span style="display:inline-flex;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:#94a3b8;animation:aiBlink 1.2s infinite;"></span><span style="width:7px;height:7px;border-radius:50%;background:#94a3b8;animation:aiBlink 1.2s infinite 0.2s;"></span><span style="width:7px;height:7px;border-radius:50%;background:#94a3b8;animation:aiBlink 1.2s infinite 0.4s;"></span></span>';
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function aiHideTyping() {
+            const el = document.getElementById('aiTyping');
+            if (el) el.remove();
+        }
+
+        async function askAI(message, mode) {
+            const aiLesson = currentAILesson();
+            aiTeacherBubble('user', message);
+            aiShowTyping();
+            aiBusy = true;
+            try {
+                const res = await authFetch('/api/ai/chat', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        message,
+                        mode: mode || 'lecture',
+                        course_id: courseId,
+                        lesson_id: aiLesson ? aiLesson.id : undefined,
+                    })
+                });
+                const data = await res.json();
+                aiHideTyping();
+                if (data.success) {
+                    aiTeacherBubble('bot', data.reply || 'Hmm, I got nothing back. Try again.');
+                } else {
+                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'Something went wrong. Please try again.'));
+                }
+            } catch (e) {
+                aiHideTyping();
+                aiTeacherBubble('bot', '⚠️ Could not reach the AI lecturer. Please check your connection and try again.');
+            } finally {
+                aiBusy = false;
+            }
+        }
+
+        function teachLesson() {
+            askAI('Teach me this lesson now, step by step, like a live lecture.', 'lecture');
+        }
+
+        function quickAI(mode, message) {
+            askAI(message, mode);
+        }
+
+        function sendAITeacher() {
+            const input = document.getElementById('aiTeacherInput');
+            const message = input.value.trim();
+            if (!message || aiBusy) return;
+            input.value = '';
+            askAI(message, 'lecture');
+        }
+
+        document.getElementById('aiTeacherInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') sendAITeacher();
+        });
+
         async function initLearnPage() {
             const user = await syncUserSession();
             if (!user) {
@@ -140,6 +323,7 @@
             document.getElementById('courseTitle').textContent = enrollment.courseTitle;
             updateProgress();
             renderLessonsList();
+            loadAIContext();
 
             // Load first incomplete lesson or first lesson
             const firstIncomplete = enrollment.lessons.findIndex(l => !l.completed);

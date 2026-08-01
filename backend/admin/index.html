@@ -212,6 +212,7 @@ window.API_BASE_URL = "https://pazoskillpro-backend.onrender.com";
             <button class="nav-item" data-section="attempts"><span class="icon">&#128200;</span><span>Attempts</span></button>
             <button class="nav-item" data-section="settings"><span class="icon">&#9881;</span><span>Settings</span></button>
             <button class="nav-item" data-section="cms"><span class="icon">&#128240;</span><span>CMS Pages</span></button>
+            <button class="nav-item" data-section="ai"><span class="icon">&#129302;</span><span>AI Tutor</span></button>
         </nav>
         <div class="sidebar-footer">
             <button class="nav-item btn-logout" onclick="adminLogout()"><span class="icon">&#128682;</span><span>Logout</span></button>
@@ -408,6 +409,70 @@ window.API_BASE_URL = "https://pazoskillpro-backend.onrender.com";
                 </div>
             </div>
 
+            <!-- ===== AI TUTOR ===== -->
+            <div class="section" id="section-ai">
+                <div class="toolbar">
+                    <h3>AI Tutor</h3>
+                    <button class="btn btn-primary" onclick="saveAISettings()">Save Settings</button>
+                </div>
+                <div class="msg" id="aiMsg"></div>
+
+                <div class="stats-grid">
+                    <div class="stat-card"><span class="label">Total Calls</span><span class="value" id="aiTotalCalls">-</span></div>
+                    <div class="stat-card"><span class="label">Total Tokens</span><span class="value" id="aiTotalTokens">-</span></div>
+                    <div class="stat-card"><span class="label">Successful</span><span class="value" id="aiSuccess" style="color:var(--secondary);">-</span></div>
+                    <div class="stat-card"><span class="label">Failed</span><span class="value" id="aiFailed" style="color:var(--danger);">-</span></div>
+                    <div class="stat-card"><span class="label">Today</span><span class="value" id="aiTodayCalls">-</span></div>
+                </div>
+
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <h3>AI Settings</h3>
+                        <div class="form-group">
+                            <label>Model</label>
+                            <select id="aiModel">
+                                <option value="gemini-flash-latest">gemini-flash-latest</option>
+                                <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
+                                <option value="gemini-3.6-flash">gemini-3.6-flash</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Temperature (0.0 - 1.0, higher = more creative)</label>
+                            <input type="number" id="aiTemperature" min="0" max="1" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Max Tokens per Response</label>
+                            <input type="number" id="aiMaxTokens" min="64" max="8192" step="64">
+                        </div>
+                        <div class="form-group">
+                            <label>Lecturer Style</label>
+                            <select id="aiLecturerStyle">
+                                <option value="warm_professor">Warm Professor (encouraging)</option>
+                                <option value="strict_professor">Strict Professor (challenging)</option>
+                                <option value="fun_mentor">Fun Mentor (casual &amp; fun)</option>
+                            </select>
+                        </div>
+                        <div class="toggle-wrap">
+                            <input type="checkbox" id="aiEnabled"> <label for="aiEnabled">Enable AI Tutor</label>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Tokens by Mode</h3>
+                        <div class="table-container" id="aiModeTable"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+
+                <div class="chart-card" style="margin-bottom:24px;">
+                    <h3>Tokens by User</h3>
+                    <div class="table-container" id="aiUsersTable"><div class="loading">Loading...</div></div>
+                </div>
+
+                <div class="chart-card">
+                    <h3>Recent AI Calls</h3>
+                    <div class="table-container" id="aiRecentTable"><div class="loading">Loading...</div></div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -544,6 +609,7 @@ function adminLogout() {
             case 'attempts': loadAttempts(); break;
             case 'settings': loadSettings(); break;
             case 'cms': loadCMS(); break;
+            case 'ai': loadAI(); break;
         }
     }
 
@@ -1019,6 +1085,80 @@ function adminLogout() {
                 tbody.innerHTML = html;
             })
             .catch(function(err) { tbody.innerHTML = '<div class="error">Error loading CMS pages.</div>'; console.error(err); });
+    }
+
+    // ---- AI Tutor ----
+    function loadAI() {
+        if (!checkAuth()) return;
+        authFetch(apiUrl('/ai/usage'))
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (!d.success) { document.getElementById('aiRecentTable').innerHTML = '<div class="error">' + esc(d.message || 'Failed to load AI usage.') + '</div>'; return; }
+                var u = d.usage || {};
+                var t = u.totals || {};
+                document.getElementById('aiTotalCalls').textContent = t.total_calls || 0;
+                document.getElementById('aiTotalTokens').textContent = (t.total_tokens || 0).toLocaleString();
+                document.getElementById('aiSuccess').textContent = t.successful || 0;
+                document.getElementById('aiFailed').textContent = t.failed || 0;
+                var today = (u.daily && u.daily[0]) ? u.daily[0] : null;
+                document.getElementById('aiTodayCalls').textContent = today ? today.calls : 0;
+
+                var modes = u.byMode || [];
+                var mh = '<table><thead><tr><th>Mode</th><th>Calls</th><th>Tokens</th></tr></thead><tbody>';
+                if (!modes.length) mh += '<tr><td colspan="3" class="empty">No usage yet.</td></tr>';
+                modes.forEach(function(m) { mh += '<tr><td>' + esc(m.mode) + '</td><td>' + m.calls + '</td><td>' + (m.tokens || 0).toLocaleString() + '</td></tr>'; });
+                mh += '</tbody></table>';
+                document.getElementById('aiModeTable').innerHTML = mh;
+
+                var users = u.perUser || [];
+                var uh = '<table><thead><tr><th>User</th><th>Calls</th><th>Successful</th><th>Tokens</th></tr></thead><tbody>';
+                if (!users.length) uh += '<tr><td colspan="4" class="empty">No usage yet.</td></tr>';
+                users.forEach(function(x) { uh += '<tr><td>' + esc(x.user_name) + '</td><td>' + x.calls + '</td><td>' + x.successful + '</td><td>' + (x.tokens || 0).toLocaleString() + '</td></tr>'; });
+                uh += '</tbody></table>';
+                document.getElementById('aiUsersTable').innerHTML = uh;
+
+                var recent = u.recent || [];
+                var rh = '<table><thead><tr><th>When</th><th>User</th><th>Mode</th><th>Tokens</th><th>Status</th></tr></thead><tbody>';
+                if (!recent.length) rh += '<tr><td colspan="5" class="empty">No AI calls yet.</td></tr>';
+                recent.forEach(function(r2) {
+                    var badge = r2.status === 'success' ? '<span class="badge badge-green">success</span>' : '<span class="badge badge-red">' + esc(r2.status) + '</span>';
+                    rh += '<tr><td>' + esc(r2.created_at || '') + '</td><td>' + esc(r2.user_name || '-') + '</td><td>' + esc(r2.mode || '') + '</td><td>' + (r2.total_tokens || 0).toLocaleString() + '</td><td>' + badge + '</td></tr>';
+                });
+                rh += '</tbody></table>';
+                document.getElementById('aiRecentTable').innerHTML = rh;
+            })
+            .catch(function(err) { document.getElementById('aiRecentTable').innerHTML = '<div class="error">Error loading AI usage.</div>'; console.error(err); });
+
+        authFetch(apiUrl('/ai/settings'))
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (!d.success || !d.settings) return;
+                var s = d.settings;
+                document.getElementById('aiModel').value = s.ai_model || 'gemini-flash-latest';
+                document.getElementById('aiTemperature').value = s.ai_temperature || '0.7';
+                document.getElementById('aiMaxTokens').value = s.ai_max_tokens || '4096';
+                document.getElementById('aiLecturerStyle').value = s.ai_lecturer_style || 'warm_professor';
+                document.getElementById('aiEnabled').checked = s.ai_enabled === '1' || s.ai_enabled === 'true';
+            })
+            .catch(function(err) { console.error('AI settings load error:', err); });
+    }
+
+    function saveAISettings() {
+        if (!checkAuth()) return;
+        var data = {
+            ai_model: document.getElementById('aiModel').value,
+            ai_temperature: document.getElementById('aiTemperature').value,
+            ai_max_tokens: document.getElementById('aiMaxTokens').value,
+            ai_lecturer_style: document.getElementById('aiLecturerStyle').value,
+            ai_enabled: document.getElementById('aiEnabled').checked ? '1' : '0'
+        };
+        authFetch(apiUrl('/ai/settings'), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (d.success) { showMsg('aiMsg', 'success', 'AI settings saved'); loadAI(); }
+                else { showMsg('aiMsg', 'error', d.message || 'Failed to save AI settings'); }
+            })
+            .catch(function(err) { showMsg('aiMsg', 'error', 'Failed to save AI settings'); });
     }
 
     function showCMSPageForm(data) {
