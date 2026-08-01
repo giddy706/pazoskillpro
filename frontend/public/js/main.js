@@ -149,7 +149,10 @@ document.addEventListener('DOMContentLoaded', updateNavigation);
 
 // ============================================
 // Tawk.to Live Chat Widget
+// (disabled on the lesson page so it never covers the chat send button)
 // ============================================
+var isLessonPage = /learn\.html/.test(window.location.pathname);
+if (!isLessonPage) {
 var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
 (function(){
 var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
@@ -160,11 +163,14 @@ s1.setAttribute('crossorigin','*');
 if(s0) { s0.parentNode.insertBefore(s1,s0); }
 else { document.head.appendChild(s1); }
 })();
+}
 
 // ============================================
 // Dark / Light Theme Toggle Widget
+// (disabled on the lesson page so it never covers the chat send button)
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
+    if (isLessonPage) return;
     const savedTheme = localStorage.getItem('themePreference');
     if (savedTheme === 'dark') {
         document.body.classList.add('dark-theme');
