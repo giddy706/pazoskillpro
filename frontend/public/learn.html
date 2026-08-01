@@ -5,45 +5,307 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learn - pazoskill</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        @keyframes aiBlink { 0%,80%,100% { opacity:0.2; } 40% { opacity:1; } }
-        @keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0.85; } }
-        #lessonNotes { color:#1e293b !important; }
-        #lessonNotes.placeholder { color:#64748b !important; font-style: italic; }
-        #aiTeacherMessages .mrjohn-bubble,
-        #aiTeacherMessages .mrjohn-bubble p,
-        #aiTeacherMessages .mrjohn-bubble li,
-        #aiTeacherMessages .mrjohn-bubble h2,
-        #aiTeacherMessages .mrjohn-bubble h3,
-        #aiTeacherMessages .mrjohn-bubble h4,
-        #aiTeacherMessages .mrjohn-bubble strong,
-        #aiTeacherMessages .mrjohn-bubble em {
-            color:#1e293b !important;
+        /* ============================================
+           LESSON PAGE - PROFESSIONAL DARK THEME
+           ============================================ */
+        .learn-page {
+            background: #0A0E17;
+            min-height: calc(100vh - 72px);
+            padding: 1.5rem max(1rem, calc((100vw - 1240px) / 2));
         }
-        #aiTeacherMessages .mrjohn-bubble code { color:#0f766e !important; }
-        #aiTeacherMessages .mrjohn-bubble pre,
-        #aiTeacherMessages .mrjohn-bubble pre code { color:#e2e8f0 !important; }
-        .mode-pill.active {
-            background: var(--primary-color);
-            color: #fff;
-            border-color: var(--primary-color);
+
+        .learn-layout {
+            display: grid;
+            grid-template-columns: minmax(260px, 27%) 1fr;
+            gap: 1.25rem;
+            align-items: start;
         }
-        .mrjohn-bubble .quiz-opt-label {
+
+        /* ---------- Cards ---------- */
+        .lp-card {
+            background: #12182A;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .learn-sidebar {
             display: flex;
-            gap: 0.5rem;
-            align-items: flex-start;
-            font-size: 0.88rem;
-            cursor: pointer;
-            color: #1e293b;
-            padding: 0.3rem 0.5rem;
-            border-radius: 8px;
+            flex-direction: column;
+            gap: 1.25rem;
+            position: sticky;
+            top: 88px;
         }
-        .mrjohn-bubble .quiz-opt-label:hover { background: #f1f5f9; }
-        .mrjohn-bubble input[type="radio"] { margin-top: 3px; accent-color: var(--primary-color); }
+
+        /* ---------- Instructor card ---------- */
+        .instructor-card {
+            padding: 1.25rem 1.25rem 1.1rem;
+            background: linear-gradient(165deg, #171F35 0%, #12182A 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .instructor-card::after {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(124, 111, 239, 0.25), transparent 70%);
+            pointer-events: none;
+        }
+        .instructor-top { display: flex; gap: 0.9rem; align-items: center; }
+        .instructor-avatar {
+            width: 54px; height: 54px; border-radius: 50%;
+            background: linear-gradient(135deg, #7C6FEF, #4FD1E8);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.1rem; color: #0A0E17;
+            flex-shrink: 0;
+            box-shadow: 0 6px 16px -6px rgba(124, 111, 239, 0.7);
+        }
+        .instructor-info { min-width: 0; }
+        .instructor-name { font-size: 1.05rem; font-weight: 700; color: #EAEDF5; line-height: 1.2; }
+        .instructor-role { font-size: 0.78rem; color: #8993AC; margin-top: 2px; }
+        .instructor-rating {
+            display: flex; align-items: center; gap: 0.35rem;
+            margin-top: 4px; font-size: 0.85rem;
+        }
+        .instructor-rating .stars { color: #F5B942; letter-spacing: 1px; }
+        .instructor-rating .score { color: #EAEDF5; font-weight: 600; }
+        .instructor-tagline {
+            margin: 0.8rem 0 0; font-size: 0.82rem; color: #A9B4D0;
+            line-height: 1.5; border-top: 1px solid rgba(255, 255, 255, 0.07);
+            padding-top: 0.8rem;
+        }
+
+        /* ---------- Progress card ---------- */
+        .progress-card { padding: 1.1rem 1.25rem; }
+        .progress-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem; }
+        .progress-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8993AC; font-weight: 600; }
+        .progress-pct { font-size: 1.3rem; font-weight: 700; color: #EAEDF5; }
+        .progress-track { height: 8px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #7C6FEF, #4FD1E8); border-radius: 999px; transition: width 0.5s ease; width: 0; }
+        .progress-meta { font-size: 0.8rem; color: #8993AC; margin: 0.55rem 0 0; }
+        .progress-nudge { font-size: 0.8rem; color: #A9B4D0; margin: 0.3rem 0 0; font-style: italic; }
+        .cert-cta { margin-top: 0.8rem; }
+
+        /* ---------- Lessons list ---------- */
+        .lesson-list-card { padding: 1rem 1.25rem 1.1rem; }
+        .lp-card-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8993AC; font-weight: 600; margin-bottom: 0.4rem; }
+        .lessons-list { max-height: 46vh; overflow-y: auto; }
+        .lesson-item {
+            display: flex; align-items: center; gap: 0.6rem;
+            padding: 0.6rem 0.6rem; margin: 0.25rem 0;
+            border-radius: 10px; cursor: pointer;
+            border: 1px solid transparent;
+            transition: background 0.15s ease;
+        }
+        .lesson-item:hover { background: rgba(255, 255, 255, 0.04); }
+        .lesson-item.current { background: rgba(124, 111, 239, 0.14); border-color: rgba(124, 111, 239, 0.4); }
+        .lesson-num {
+            width: 22px; height: 22px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08); color: #8993AC;
+            font-size: 0.7rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .lesson-item.current .lesson-num { background: #7C6FEF; color: #fff; }
+        .lesson-item.done .lesson-num { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .lesson-name { flex: 1; font-size: 0.86rem; color: #D6DEF5; line-height: 1.3; }
+        .lesson-item.done .lesson-name { color: #22c55e; }
+        .lesson-item .done-mark { color: #22c55e; font-weight: 700; flex-shrink: 0; }
+
+        /* ---------- Lesson intro ---------- */
+        .learn-main { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+        .lesson-intro { padding: 1.5rem 1.5rem 1.25rem; }
+        .lesson-breadcrumb { font-size: 0.78rem; color: #7C6FEF; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+        .lesson-title { font-size: 1.55rem; font-weight: 700; color: #EAEDF5; margin: 0.35rem 0 0.7rem; line-height: 1.25; }
+        .lesson-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .meta-chip {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: #171F35; border: 1px solid rgba(255, 255, 255, 0.09);
+            color: #A9B4D0; padding: 0.32rem 0.75rem; border-radius: 999px;
+            font-size: 0.8rem; font-weight: 500;
+        }
+        .meta-chip .dot { width: 7px; height: 7px; border-radius: 50%; }
+        .meta-chip.time .dot { background: #4FD1E8; }
+        .meta-chip.level .dot { background: #F5B942; }
+        .meta-chip.goals .dot { background: #22c55e; }
+
+        .objectives { margin-top: 1.1rem; }
+        .objectives-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8993AC; font-weight: 600; margin-bottom: 0.3rem; }
+        .objectives-list { list-style: none; margin: 0; }
+        .objectives-list li {
+            display: flex; gap: 0.55rem; padding: 0.22rem 0;
+            color: #C3CCE4; font-size: 0.9rem; line-height: 1.45;
+        }
+        .objectives-list li::before { content: '✓'; color: #22c55e; font-weight: 700; flex-shrink: 0; }
+        .lesson-notes-write {
+            margin-top: 1rem; padding: 0.9rem 1rem;
+            background: #0D1322; border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 10px; color: #D6DEF5; font-size: 0.88rem;
+            line-height: 1.7; white-space: pre-wrap; display: none;
+        }
+        .lesson-notes-write .notes-head { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8993AC; font-weight: 600; margin-bottom: 0.4rem; }
+
+        .lesson-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.2rem; align-items: center; }
+
+        /* ---------- Buttons (color coded) ---------- */
+        .lp-btn {
+            border: none; border-radius: 10px; font-family: inherit; font-weight: 600;
+            cursor: pointer; transition: all 0.15s ease;
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
+            text-decoration: none; line-height: 1;
+        }
+        .lp-btn-lg { padding: 0.85rem 1.5rem; font-size: 0.95rem; }
+        .lp-btn-md { padding: 0.65rem 1.1rem; font-size: 0.88rem; }
+        .lp-btn-sm { padding: 0.5rem 0.9rem; font-size: 0.8rem; }
+        .lp-btn-block { display: flex; width: 100%; }
+        .lp-btn-primary { background: #7C6FEF; color: #fff; box-shadow: 0 8px 20px -8px rgba(124, 111, 239, 0.7); }
+        .lp-btn-primary:hover { background: #8D82F4; transform: translateY(-1px); }
+        .lp-btn-success { background: #22c55e; color: #052e16; }
+        .lp-btn-success:hover { background: #2fd06a; transform: translateY(-1px); }
+        .lp-btn-success:disabled { background: #1a3b26; color: #86efac; cursor: default; transform: none; box-shadow: none; }
+        .lp-btn-voice { background: rgba(20, 184, 166, 0.12); color: #2dd4bf; border: 1px solid rgba(20, 184, 166, 0.35); }
+        .lp-btn-voice:hover { background: rgba(20, 184, 166, 0.22); }
+        .lp-btn-notes { background: #1f2738; color: #9aa7c4; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .lp-btn-notes:hover { background: #27324a; color: #d6def5; }
+        .lp-btn-quiz { background: #f59e0b; color: #2a1603; }
+        .lp-btn-quiz:hover { background: #fbbf24; }
+        .lp-btn-challenge { background: #ef4444; color: #fff; }
+        .lp-btn-challenge:hover { background: #f25656; }
+        .lp-btn-send { background: #7C6FEF; color: #fff; padding: 0 1.1rem; border-radius: 10px; }
+        .lp-btn-send:hover { background: #8D82F4; }
+        .lp-btn-mic {
+            background: #1f2738; border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px; padding: 0 0.7rem; color: #2dd4bf; display: flex; align-items: center;
+        }
+        .lp-btn-mic:hover { background: #27324a; }
+
+        /* ---------- Chat ---------- */
+        .chat-card { display: flex; flex-direction: column; overflow: hidden; }
+        .chat-header {
+            display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+            padding: 0.9rem 1.1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            flex-wrap: wrap;
+        }
+        .chat-title { display: flex; align-items: center; gap: 0.55rem; }
+        .online-dot { width: 9px; height: 9px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2); }
+        .chat-title strong { color: #EAEDF5; font-size: 0.98rem; }
+        .chat-sub { color: #8993AC; font-size: 0.78rem; }
+        .chat-controls { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+
+        .tone-select { display: flex; background: #171F35; border: 1px solid rgba(255, 255, 255, 0.09); border-radius: 999px; padding: 3px; }
+        .tone-select .tone-pill {
+            background: transparent; border: none; color: #8993AC;
+            padding: 0.32rem 0.8rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600;
+            cursor: pointer; transition: all 0.15s ease; font-family: inherit;
+        }
+        .tone-select .tone-pill:hover { color: #EAEDF5; }
+        .tone-select .tone-pill.active { background: #7C6FEF; color: #fff; }
+
+        .chat-body {
+            display: flex; flex-direction: column; gap: 0.85rem;
+            padding: 1.1rem; max-height: 54vh; overflow-y: auto;
+            background: #0D1322;
+        }
+
+        /* ---------- Chat bubbles ---------- */
+        .lp-msg { max-width: 88%; padding: 0.8rem 1rem; border-radius: 14px; line-height: 1.6; font-size: 0.93rem; }
+        .lp-msg-bot { align-self: flex-start; background: #1A2238; border: 1px solid rgba(255, 255, 255, 0.06); border-bottom-left-radius: 5px; color: #D6DEF5; }
+        .lp-msg-user { align-self: flex-end; background: linear-gradient(135deg, #7C6FEF, #6a5ce0); color: #fff; border-bottom-right-radius: 5px; }
+        .lp-msg-user:empty { display: none; }
+
+        .lp-msg-bot p { margin: 0 0 0.55rem; }
+        .lp-msg-bot p:last-child { margin-bottom: 0; }
+        .lp-msg-bot strong { color: #fff; }
+        .lp-msg-bot em { color: #c7d2fe; }
+        .lp-msg-bot code { background: rgba(79, 209, 232, 0.14); color: #7dd3fc; padding: 1px 5px; border-radius: 5px; font-size: 0.88em; }
+        .lp-msg-bot pre { background: #0D1526; border: 1px solid rgba(255, 255, 255, 0.09); padding: 0.7rem; border-radius: 10px; overflow: auto; margin: 0.5rem 0; }
+        .lp-msg-bot pre code { background: transparent; color: #b6d4ff; padding: 0; }
+        .lp-msg-bot h4 { color: #fff; margin: 0.6rem 0 0.3rem; font-size: 1rem; }
+        .lp-msg-bot ul, .lp-msg-bot ol { margin: 0.25rem 0 0.55rem; padding-left: 1.3rem; }
+        .lp-msg-bot li { margin: 0.15rem 0; }
+        .lp-msg-bot blockquote { border-left: 3px solid #7C6FEF; margin: 0.5rem 0; padding: 0.1rem 0.8rem; color: #A9B4D0; }
+
+        .msg-listen {
+            margin-top: 0.6rem; background: rgba(20, 184, 166, 0.12); color: #2dd4bf;
+            border: 1px solid rgba(20, 184, 166, 0.35); border-radius: 8px;
+            padding: 0.32rem 0.8rem; font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: inherit;
+        }
+        .msg-listen:hover { background: rgba(20, 184, 166, 0.22); }
+
+        .typing-dots { display: inline-flex; gap: 4px; align-items: center; }
+        .typing-dots span { width: 7px; height: 7px; border-radius: 50%; background: #64748b; animation: lpBlink 1.2s infinite; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes lpBlink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+
+        /* ---------- Quiz form in bubble ---------- */
+        .lp-msg-bot .quiz-opt-label { display: flex; gap: 0.55rem; align-items: flex-start; font-size: 0.88rem; cursor: pointer; color: #D6DEF5; padding: 0.35rem 0.55rem; border-radius: 8px; }
+        .lp-msg-bot .quiz-opt-label:hover { background: rgba(255, 255, 255, 0.06); }
+        .lp-msg-bot input[type="radio"] { margin-top: 3px; accent-color: #7C6FEF; }
+        .lp-msg-bot .quiz-q { font-weight: 600; color: #fff; margin: 0 0 0.35rem; }
+
+        /* ---------- Suggestion chips ---------- */
+        .chat-suggestions { display: flex; gap: 0.5rem; flex-wrap: wrap; padding: 0.7rem 1.1rem 0; background: #12182A; }
+        .chip {
+            background: #171F35; border: 1px solid rgba(255, 255, 255, 0.09); color: #A9B4D0;
+            border-radius: 999px; padding: 0.35rem 0.9rem; font-size: 0.8rem; font-weight: 500;
+            cursor: pointer; font-family: inherit; transition: all 0.15s ease;
+        }
+        .chip:hover { border-color: #7C6FEF; color: #EAEDF5; }
+        .chip.chip-quiz { color: #fbbf24; border-color: rgba(245, 158, 11, 0.35); background: rgba(245, 158, 11, 0.1); }
+        .chip.chip-quiz:hover { background: rgba(245, 158, 11, 0.2); }
+        .chip.chip-challenge { color: #f87171; border-color: rgba(239, 68, 68, 0.35); background: rgba(239, 68, 68, 0.1); }
+        .chip.chip-challenge:hover { background: rgba(239, 68, 68, 0.2); }
+
+        /* ---------- Chat input ---------- */
+        .chat-input-row { display: flex; gap: 0.6rem; padding: 0.9rem 1.1rem 1.1rem; border-top: 1px solid rgba(255, 255, 255, 0.07); background: #12182A; }
+        .chat-input {
+            flex: 1; background: #0D1322; border: 1px solid rgba(255, 255, 255, 0.11);
+            border-radius: 10px; padding: 0.7rem 0.95rem; color: #EAEDF5;
+            font-size: 0.92rem; font-family: inherit;
+        }
+        .chat-input:focus { outline: none; border-color: #7C6FEF; }
+        .chat-input::placeholder { color: #64748b; }
+
+        /* ---------- Modals ---------- */
+        .lp-modal { display: none; position: fixed; inset: 0; background: rgba(2, 6, 16, 0.74); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; }
+        .lp-modal.open { display: flex; }
+        .lp-modal-box { background: #12182A; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; max-width: 560px; width: 100%; padding: 1.5rem; max-height: 90vh; overflow-y: auto; }
+        .lp-modal-box h4 { color: #EAEDF5; margin: 0 0 0.35rem; font-size: 1.05rem; }
+        .lp-modal-box .modal-hint { font-size: 0.85rem; color: #8993AC; margin: 0 0 1rem; line-height: 1.5; }
+        .lp-field {
+            width: 100%; background: #0D1322; border: 1px solid rgba(255, 255, 255, 0.11);
+            border-radius: 10px; padding: 0.7rem 0.85rem; color: #EAEDF5; font-size: 0.9rem;
+            margin: 0.35rem 0 0.9rem; font-family: inherit;
+        }
+        .lp-field:focus { outline: none; border-color: #7C6FEF; }
+        .lp-field::placeholder { color: #64748b; }
+        textarea.lp-field { resize: vertical; }
+        .lp-field-label { font-size: 0.82rem; font-weight: 600; color: #C3CCE4; display: block; }
+        .lp-field-file { font-size: 0.82rem; color: #A9B4D0; margin: 0.3rem 0 0.8rem; }
+        .lp-field-file::-webkit-file-upload-button {
+            background: #171F35; color: #EAEDF5; border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 8px; padding: 0.4rem 0.8rem; font-weight: 600; cursor: pointer; margin-right: 0.5rem;
+        }
+        .modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 0.4rem; }
+        .lp-btn-ghost { background: #1f2738; color: #A9B4D0; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .lp-btn-ghost:hover { background: #27324a; color: #EAEDF5; }
+
+        /* ---------- Confetti ---------- */
+        @keyframes lpConfettiFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0.85; } }
+
+        /* ---------- Responsive ---------- */
+        @media (max-width: 920px) {
+            .learn-layout { grid-template-columns: 1fr; }
+            .learn-sidebar { position: static; }
+            .lessons-list { max-height: 34vh; }
+        }
     </style>
 </head>
 
@@ -57,121 +319,139 @@
         </div>
     </nav>
 
-    <section class="section">
-        <div class="container-wide">
-            <div class="grid grid-3" style="gap: 2rem;">
-                <!-- Lessons Sidebar -->
-                <div>
-                    <div class="card">
-                        <div class="card-body">
-                            <h3 id="courseTitle"></h3>
-                            <div class="progress mb-3">
-                                <div class="progress-bar" id="progressBar"></div>
+    <main class="learn-page">
+        <div class="learn-layout">
+
+            <!-- ============ SIDEBAR (25%) ============ -->
+            <aside class="learn-sidebar">
+                <div class="lp-card instructor-card">
+                    <div class="instructor-top">
+                        <div class="instructor-avatar" id="instructorAvatar">–</div>
+                        <div class="instructor-info">
+                            <div class="instructor-name" id="instructorName">Your instructor</div>
+                            <div class="instructor-role" id="instructorRole">Senior Instructor</div>
+                            <div class="instructor-rating">
+                                <span class="stars" id="instructorStars">★★★★★</span>
+                                <span class="score" id="instructorScore">5.0</span>
                             </div>
-                            <p id="progressText" class="mb-3"></p>
-                            <hr>
-                            <h4>Lessons</h4>
-                            <div id="lessonsList"></div>
                         </div>
+                    </div>
+                    <p class="instructor-tagline" id="instructorTagline">Clear, friendly and practical teaching for every level.</p>
+                </div>
+
+                <div class="lp-card progress-card">
+                    <div class="progress-row">
+                        <span class="progress-label">Course progress</span>
+                        <span class="progress-pct" id="progressPct">0%</span>
+                    </div>
+                    <div class="progress-track"><div class="progress-fill" id="progressBar"></div></div>
+                    <p class="progress-meta" id="progressMeta">0 of 0 lessons complete</p>
+                    <p class="progress-nudge" id="progressNudge"></p>
+                    <div class="cert-cta" id="certCta"></div>
+                </div>
+
+                <div class="lp-card lesson-list-card">
+                    <div class="lp-card-title">Lessons</div>
+                    <div id="lessonsList" class="lessons-list"></div>
+                </div>
+            </aside>
+
+            <!-- ============ MAIN (75%) ============ -->
+            <section class="learn-main">
+
+                <div class="lp-card lesson-intro">
+                    <div class="lesson-breadcrumb" id="courseBreadcrumb">Course</div>
+                    <h1 class="lesson-title" id="currentLessonTitle">Lesson</h1>
+                    <div class="lesson-meta">
+                        <span class="meta-chip time"><span class="dot"></span><span id="lessonDuration">Self-paced</span></span>
+                        <span class="meta-chip level"><span class="dot"></span><span id="lessonLevel">All levels</span></span>
+                        <span class="meta-chip goals"><span class="dot"></span><span id="objectiveCount">Practical outcomes</span></span>
+                    </div>
+                    <div class="objectives">
+                        <div class="objectives-title">What you will learn in this course</div>
+                        <ul class="objectives-list" id="objectivesList"></ul>
+                    </div>
+                    <div class="lesson-notes-write" id="lessonNotes"><div class="notes-head">Written notes</div></div>
+                    <div class="lesson-actions">
+                        <button id="teachBtn" class="lp-btn lp-btn-primary lp-btn-lg" onclick="teachLesson()">Start lesson</button>
+                        <button id="completeBtn" class="lp-btn lp-btn-success lp-btn-lg">Mark as complete</button>
+                        <button class="lp-btn lp-btn-voice lp-btn-sm" onclick="speakLesson()">Listen</button>
+                        <button class="lp-btn lp-btn-notes lp-btn-sm" onclick="downloadNotes()">Study notes</button>
                     </div>
                 </div>
 
-                <!-- Lesson Content -->
-                <div style="grid-column: span 2;">
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h2 id="currentLessonTitle"></h2>
-                            <div id="lessonNotes" style="line-height:1.8; color:#334155; margin:1rem 0; white-space:pre-wrap;"></div>
-                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                                <button id="completeBtn" class="btn btn-secondary btn-large">Mark as Complete</button>
-                                <button onclick="teachLesson()" class="btn btn-primary btn-large">👨‍🏫 Start the lesson with Mr. John</button>
-                                <button class="btn btn-outline" onclick="speakLesson()">🔊 Listen to lesson</button>
-                                <button class="btn btn-outline" onclick="downloadNotes()">📄 Download notes</button>
+                <div class="lp-card chat-card">
+                    <div class="chat-header">
+                        <div class="chat-title">
+                            <span class="online-dot"></span>
+                            <strong id="chatTeacherName">Your instructor</strong>
+                            <span class="chat-sub">teaching this lesson</span>
+                        </div>
+                        <div class="chat-controls">
+                            <div class="tone-select" id="toneSelect">
+                                <button class="tone-pill active" data-tone="normal" onclick="setTeachingTone('normal', this)">Standard</button>
+                                <button class="tone-pill" data-tone="beginner" onclick="setTeachingTone('beginner', this)">Beginner</button>
+                                <button class="tone-pill" data-tone="advanced" onclick="setTeachingTone('advanced', this)">Advanced</button>
+                                <button class="tone-pill" data-tone="quick" onclick="setTeachingTone('quick', this)">Quick</button>
+                                <button class="tone-pill" data-tone="detailed" onclick="setTeachingTone('detailed', this)">Detailed</button>
                             </div>
+                            <button id="voiceToggle" class="lp-btn lp-btn-voice lp-btn-sm" onclick="toggleVoice()">Voice: On</button>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="flex-between" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; flex-wrap:wrap; gap:0.5rem;">
-                                <h3 style="margin:0;">👨‍🏫 Mr. John</h3>
-                                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                                    <button id="voiceToggle" class="btn btn-outline btn-small" onclick="toggleVoice()">🔊 Voice: On</button>
-                                    <span style="font-size:0.75rem; color:var(--gray);">Your teacher — he will guide you through every lesson</span>
-                                </div>
-                            </div>
+                    <div class="chat-body" id="aiTeacherMessages">
+                        <div id="welcomeBubble" class="lp-msg lp-msg-bot"></div>
+                    </div>
 
-                            <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.6rem; align-items:center;">
-                                <span style="font-size:0.8rem; color:var(--gray);">Teach me like:</span>
-                                <button class="btn btn-outline btn-small mode-pill active" data-tone="normal" onclick="setTeachingTone('normal', this)">📖 Standard</button>
-                                <button class="btn btn-outline btn-small mode-pill" data-tone="beginner" onclick="setTeachingTone('beginner', this)">🧒 Beginner</button>
-                                <button class="btn btn-outline btn-small mode-pill" data-tone="advanced" onclick="setTeachingTone('advanced', this)">🎓 Advanced</button>
-                                <button class="btn btn-outline btn-small mode-pill" data-tone="quick" onclick="setTeachingTone('quick', this)">⚡ Quick</button>
-                                <button class="btn btn-outline btn-small mode-pill" data-tone="detailed" onclick="setTeachingTone('detailed', this)">📚 Detailed</button>
-                            </div>
+                    <div class="chat-suggestions">
+                        <button class="chip" onclick="quickAI('explain','Please explain this again in a different way — I did not fully understand the first time.')">Explain again</button>
+                        <button class="chip" onclick="quickAI('explain','Please give me a concrete example to illustrate this lesson.')">Give an example</button>
+                        <button class="chip chip-quiz" onclick="startInlineQuiz(5)">Practice quiz</button>
+                        <button class="chip chip-challenge" onclick="startChallenge()">Try a challenge</button>
+                        <button class="chip" onclick="openCodeModal()">Review my code</button>
+                    </div>
 
-                            <div id="aiTeacherMessages" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:0.9rem; min-height:120px; max-height:420px; overflow-y:auto; display:flex; flex-direction:column; gap:0.75rem; margin-bottom:0.75rem;">
-                                <div id="welcomeBubble" class="msg bot mrjohn-bubble" style="max-width:92%; padding:0.7rem 0.9rem; border-radius:12px; background:#fff; border:1px solid #e2e8f0; line-height:1.55; font-size:0.92rem; align-self:flex-start;">
-                                    Hello there! I'm Mr. John, and I'll be your teacher. Click <strong>Start the lesson</strong> and I'll teach it to you step by step, just like in class. You can also ask me to explain things differently, quiz you, or help with your code below.
-                                </div>
-                            </div>
-
-                            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.75rem;">
-                                <button class="btn btn-outline btn-small" onclick="teachLesson()">👨‍🏫 Teach this lesson</button>
-                                <button class="btn btn-outline btn-small" onclick="quickAI('explain','Please explain this lesson in simpler language.')">📚 Explain simply</button>
-                                <button class="btn btn-outline btn-small" onclick="quickAI('explain','Please explain this again in a different way — I did not fully understand the first time.')">🔄 Explain again</button>
-                                <button class="btn btn-outline btn-small" onclick="quickAI('explain','Please give me a concrete example to illustrate this lesson.')">💡 Give an example</button>
-                                <button class="btn btn-outline btn-small" onclick="quickAI('explain','Please show me how this lesson applies in the real world.')">🌍 Real-world example</button>
-                            </div>
-                            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.75rem;">
-                                <button class="btn btn-outline btn-small" onclick="startInlineQuiz(10)">📝 Practice quiz</button>
-                                <button class="btn btn-outline btn-small" onclick="openCodeModal()">💻 Review my code</button>
-                                <button class="btn btn-outline btn-small" onclick="downloadNotes()">📄 Download notes</button>
-                                <button class="btn btn-outline btn-small" onclick="startChallenge()">🧠 Mr. John's challenge</button>
-                                <button class="btn btn-outline btn-small" onclick="studyPlan()">🎯 Study plan</button>
-                            </div>
-                            <div style="display:flex; gap:0.5rem;">
-                                <button id="micBtn" class="btn btn-outline" onclick="toggleMic()" title="Ask by voice" style="display:none;">🎤</button>
-                                <input type="text" id="aiTeacherInput" placeholder="Ask Mr. John anything about this lesson..." autocomplete="off"
-                                    style="flex:1; padding:0.6rem 0.9rem; border:1px solid #e2e8f0; border-radius:8px; font-size:0.92rem; background:#fff; color:#1e293b;">
-                                <button class="btn btn-primary" onclick="sendAITeacher()">Send</button>
-                            </div>
-                        </div>
+                    <div class="chat-input-row">
+                        <button id="micBtn" class="lp-btn lp-btn-mic" onclick="toggleMic()" title="Ask by voice" style="display:none;">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a1 1 0 0 1 2 0 9 9 0 0 1-8 8.94V22h3a1 1 0 0 1 0 2H8a1 1 0 0 1 0-2h3v-2.06A9 9 0 0 1 3 11a1 1 0 1 1 2 0 7 7 0 0 0 14 0z"/></svg>
+                        </button>
+                        <input type="text" id="aiTeacherInput" class="chat-input" placeholder="Ask anything about this lesson..." autocomplete="off">
+                        <button class="lp-btn lp-btn-send" onclick="sendAITeacher()">Send</button>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
-    </section>
+    </main>
 
     <!-- Code Review Modal -->
-    <div id="codeModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
-        <div style="background:#fff; border-radius:14px; max-width:560px; width:100%; padding:1.5rem;">
+    <div id="codeModal" class="lp-modal">
+        <div class="lp-modal-box">
             <h4>Review my code</h4>
-            <p style="font-size:0.85rem; color:var(--gray); margin-bottom:1rem;">Mr. John will look at your code, explain what's wrong and show you how to fix it.</p>
-            <label style="font-size:0.85rem; font-weight:600;">Language (e.g. javascript, python)</label>
-            <input type="text" id="codeLang" placeholder="javascript" style="width:100%; padding:0.6rem 0.8rem; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:1rem;">
-            <label style="font-size:0.85rem; font-weight:600;">What's the problem? (optional)</label>
-            <input type="text" id="codeQuestion" placeholder="It keeps throwing an error..." style="width:100%; padding:0.6rem 0.8rem; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:1rem;">
-            <label style="font-size:0.85rem; font-weight:600;">Your code</label>
-            <textarea id="codeInput" style="width:100%; min-height:160px; font-family:Consolas, monospace; font-size:0.85rem; padding:0.6rem 0.8rem; border:1px solid #e2e8f0; border-radius:8px;"></textarea>
-            <div style="display:flex; gap:0.6rem; justify-content:flex-end; margin-top:1rem;">
-                <button class="btn btn-outline" onclick="closeCodeModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="submitCodeReview()">Ask Mr. John</button>
+            <p class="modal-hint">Paste your code and your instructor will explain what is wrong and how to fix it.</p>
+            <label class="lp-field-label" for="codeLang">Language (e.g. javascript, python)</label>
+            <input type="text" id="codeLang" class="lp-field" placeholder="javascript">
+            <label class="lp-field-label" for="codeQuestion">What is the problem? (optional)</label>
+            <input type="text" id="codeQuestion" class="lp-field" placeholder="It keeps throwing an error...">
+            <label class="lp-field-label" for="codeInput">Your code</label>
+            <textarea id="codeInput" class="lp-field" style="min-height:160px; font-family:Consolas, monospace;"></textarea>
+            <div class="modal-actions">
+                <button class="lp-btn lp-btn-ghost" onclick="closeCodeModal()">Cancel</button>
+                <button class="lp-btn lp-btn-primary" onclick="submitCodeReview()">Ask my instructor</button>
             </div>
         </div>
     </div>
 
-    <!-- Assignment Modal -->
-    <div id="assignmentModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
-        <div style="background:#fff; border-radius:14px; max-width:560px; width:100%; padding:1.5rem; max-height:90vh; overflow-y:auto;">
-            <h4>🧠 My challenge answer</h4>
-            <p style="font-size:0.85rem; color:var(--gray); margin-bottom:1rem;">Write your answer to Mr. John's challenge. You can also attach a photo of your work (a design, a drawing, a project).</p>
-            <textarea id="assignmentAnswer" placeholder="Type your answer here..." style="width:100%; min-height:140px; padding:0.6rem 0.8rem; border:1px solid #e2e8f0; border-radius:8px; font-size:0.9rem;"></textarea>
-            <label style="font-size:0.85rem; font-weight:600; display:block; margin-top:0.8rem;">Attach a photo (optional, max ~3.5MB)</label>
-            <input type="file" id="assignmentImage" accept="image/*" style="width:100%; margin:0.4rem 0 0.6rem;">
-            <div style="display:flex; gap:0.6rem; justify-content:flex-end; margin-top:1rem;">
-                <button class="btn btn-outline" onclick="closeAssignmentModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="submitAssignment()">Submit to Mr. John</button>
+    <!-- Assignment (Challenge) Modal -->
+    <div id="assignmentModal" class="lp-modal">
+        <div class="lp-modal-box">
+            <h4>My challenge answer</h4>
+            <p class="modal-hint">Write your answer to the challenge. You can also attach a photo of your work (a design, a drawing, a project).</p>
+            <textarea id="assignmentAnswer" class="lp-field" placeholder="Type your answer here..." style="min-height:140px;"></textarea>
+            <label class="lp-field-label" for="assignmentImage">Attach a photo (optional, max ~3.5MB)</label>
+            <input type="file" id="assignmentImage" class="lp-field-file" accept="image/*">
+            <div class="modal-actions">
+                <button class="lp-btn lp-btn-ghost" onclick="closeAssignmentModal()">Cancel</button>
+                <button class="lp-btn lp-btn-challenge" onclick="submitAssignment()">Submit to my instructor</button>
             </div>
         </div>
     </div>
@@ -184,6 +464,8 @@
         const courseId = parseInt(urlParams.get('id'));
 
         let enrollment = null;
+        let courseInfo = null;
+        let instructorDisplayName = 'Mr. John';
         let currentLessonIndex = 0;
         let aiLessons = [];
         let aiBusy = false;
@@ -193,18 +475,91 @@
         let quizSession = null;
         let mic = null;
 
+        // ==================== INSTRUCTOR IDENTITY ====================
+
+        function resolveInstructorName(raw) {
+            const name = (raw || '').trim();
+            if (!name) return 'Mr. John';
+            if (/academy|institute|school|university|college|training|team|skills/i.test(name)) return 'Mr. John';
+            return name;
+        }
+
+        const INSTRUCTOR_TAGLINES = {
+            'David Kariuki': 'Hands-on and patient — you will build real projects from week one.',
+            'Grace Wanjiru': 'High-energy lessons built around real campaigns and live briefs.',
+            'Peter Ochieng': 'Clear, methodical and full of aha moments with real datasets.',
+            'Ann Muthoni': 'Your creative partner — every project teaches a practical design skill.',
+            'Michael Kimani': 'Big ideas, small steps — you will ship working apps as you learn.',
+            'John Mwangi': 'A friendly guide who makes security concepts feel simple and practical.'
+        };
+
+        function instructorInitials(name) {
+            const parts = name.trim().split(/\s+/);
+            if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            return name.slice(0, 2).toUpperCase();
+        }
+
+        function starRating(value) {
+            const r = Math.max(0, Math.min(5, Math.round(value || 0)));
+            return '★'.repeat(r) + '☆'.repeat(5 - r);
+        }
+
+        function renderInstructorCard() {
+            instructorDisplayName = resolveInstructorName(courseInfo && courseInfo.instructor);
+            document.getElementById('instructorName').textContent = instructorDisplayName;
+            document.getElementById('instructorAvatar').textContent = instructorInitials(instructorDisplayName);
+            document.getElementById('chatTeacherName').textContent = instructorDisplayName;
+
+            const category = (courseInfo && courseInfo.category) || '';
+            document.getElementById('instructorRole').textContent = category
+                ? ('Senior ' + category + ' Instructor')
+                : 'Senior Instructor';
+
+            const rating = courseInfo && courseInfo.rating ? parseFloat(courseInfo.rating) : 5;
+            document.getElementById('instructorStars').textContent = starRating(rating);
+            document.getElementById('instructorScore').textContent = rating.toFixed(1);
+
+            document.getElementById('instructorTagline').textContent =
+                INSTRUCTOR_TAGLINES[instructorDisplayName] || 'Clear, friendly and practical teaching for every level.';
+        }
+
+        function renderLessonMeta() {
+            if (!courseInfo) return;
+            document.getElementById('lessonDuration').textContent = courseInfo.duration
+                ? ('Estimated time: ' + courseInfo.duration)
+                : 'Self-paced';
+            document.getElementById('lessonLevel').textContent = courseInfo.level || 'All levels';
+
+            let outcomes = courseInfo.outcomes || [];
+            if (typeof outcomes === 'string') {
+                try { outcomes = JSON.parse(outcomes || '[]'); } catch (e) { outcomes = []; }
+            }
+            const list = document.getElementById('objectivesList');
+            const listItems = (Array.isArray(outcomes) ? outcomes : []).slice(0, 6);
+            if (listItems.length) {
+                list.innerHTML = listItems.map(function (o) { return '<li>' + escapeHtml(String(o)) + '</li>'; }).join('');
+                document.getElementById('objectiveCount').textContent = listItems.length + ' learning outcomes';
+            } else {
+                list.innerHTML = '';
+                document.getElementById('objectiveCount').textContent = 'Practical outcomes';
+            }
+        }
+
         // ==================== LESSON UI ====================
 
         function renderLessonsList() {
             const lessonsList = document.getElementById('lessonsList');
-            lessonsList.innerHTML = enrollment.lessons.map((lesson, index) => `
-                <div class="lesson-item" style="padding: 0.75rem; margin: 0.5rem 0; border-radius: var(--radius-md); cursor: pointer; background: ${index === currentLessonIndex ? 'var(--light-bg)' : 'transparent'}; border: 1px solid #e5e7eb;" onclick="loadLesson(${index})">
-                    <div class="flex-between">
-                        <span>${lesson.title}</span>
-                        ${lesson.completed ? '<span style="color: var(--success);">✓</span>' : ''}
-                    </div>
-                </div>
-            `).join('');
+            lessonsList.innerHTML = enrollment.lessons.map(function (lesson, index) {
+                const isCurrent = index === currentLessonIndex;
+                const isDone = !!lesson.completed;
+                return (
+                    '<div class="lesson-item' + (isCurrent ? ' current' : '') + (isDone ? ' done' : '') + '" onclick="loadLesson(' + index + ')">' +
+                        '<span class="lesson-num">' + (isDone ? '✓' : (index + 1)) + '</span>' +
+                        '<span class="lesson-name">' + escapeHtml(lesson.title) + '</span>' +
+                        (isDone ? '<span class="done-mark">✓</span>' : '') +
+                    '</div>'
+                );
+            }).join('');
         }
 
         function loadLesson(index) {
@@ -213,38 +568,51 @@
             quizSession = null;
             const lesson = enrollment.lessons[index];
             document.getElementById('currentLessonTitle').textContent = lesson.title;
+            document.getElementById('courseBreadcrumb').textContent = enrollment.courseTitle;
 
             const aiLesson = currentAILesson();
             const notesEl = document.getElementById('lessonNotes');
             const notes = aiLesson && aiLesson.content ? aiLesson.content.trim() : '';
             if (notes) {
-                notesEl.textContent = notes;
-                notesEl.className = '';
+                notesEl.innerHTML = '<div class="notes-head">Written notes</div>' + renderAIMarkdown(notes);
+                notesEl.style.display = 'block';
             } else {
-                notesEl.textContent = 'There are no written notes for this lesson yet. Click "Start the lesson with Mr. John" and he will teach you the whole thing here.';
-                notesEl.className = 'placeholder';
+                notesEl.style.display = 'none';
             }
 
             const completeBtn = document.getElementById('completeBtn');
             if (lesson.completed) {
-                completeBtn.textContent = 'Completed ✓';
-                completeBtn.classList.add('btn-success');
-                completeBtn.classList.remove('btn-secondary');
+                completeBtn.textContent = 'Completed';
+                completeBtn.disabled = true;
             } else {
-                completeBtn.textContent = 'Mark as Complete';
-                completeBtn.classList.add('btn-secondary');
-                completeBtn.classList.remove('btn-success');
+                completeBtn.textContent = 'Mark as complete';
+                completeBtn.disabled = false;
             }
+
+            renderLessonsList();
+        }
+
+        function progressNudge(p) {
+            if (p <= 0) return 'Start the first lesson to begin your journey.';
+            if (p < 50) return 'Great start — keep the momentum going.';
+            if (p < 100) return 'More than halfway there. Stay consistent!';
+            return 'Course complete — congratulations!';
         }
 
         function updateProgress() {
-            const progress = enrollment.progress;
+            const progress = enrollment.progress || 0;
             document.getElementById('progressBar').style.width = progress + '%';
-            document.getElementById('progressText').textContent = `${progress}% Complete`;
+            document.getElementById('progressPct').textContent = progress + '%';
 
+            const done = enrollment.lessons.filter(function (l) { return l.completed; }).length;
+            document.getElementById('progressMeta').textContent = done + ' of ' + enrollment.lessons.length + ' lessons complete';
+            document.getElementById('progressNudge').textContent = progressNudge(progress);
+
+            const certCta = document.getElementById('certCta');
             if (enrollment.completed || progress >= 100) {
-                const certBtnContainer = document.getElementById('progressText');
-                certBtnContainer.innerHTML = `${progress}% Complete <br/><a href="certificate.html?courseId=${courseId}" class="btn btn-primary btn-small mt-2" style="display:inline-block; margin-top:0.5rem;">🎓 View Certificate</a>`;
+                certCta.innerHTML = '<a href="certificate.html?courseId=' + courseId + '" class="lp-btn lp-btn-success lp-btn-block lp-btn-md">View certificate</a>';
+            } else {
+                certCta.innerHTML = '';
             }
         }
 
@@ -252,8 +620,11 @@
             try {
                 const res = await authFetch('/api/courses/' + courseId);
                 const data = await res.json();
-                if (data.success && data.course && data.course.curriculum) {
-                    aiLessons = data.course.curriculum;
+                if (data.success && data.course) {
+                    courseInfo = data.course;
+                    aiLessons = data.course.curriculum || [];
+                    renderInstructorCard();
+                    renderLessonMeta();
                 }
             } catch (e) {
                 console.warn('Could not load AI lesson context:', e);
@@ -263,7 +634,7 @@
         function currentAILesson() {
             const lesson = enrollment.lessons[currentLessonIndex];
             if (!lesson) return null;
-            return aiLessons.find(l => l.id == lesson.id) || null;
+            return aiLessons.find(function (l) { return String(l.id) === String(lesson.id); }) || null;
         }
 
         function getFirstName() {
@@ -286,10 +657,10 @@
             const firstName = getFirstName();
             const lesson = enrollment.lessons[currentLessonIndex];
             const last = getLastCompletedLesson();
-            let msg = 'Hello ' + firstName + "! I'm Mr. John, and I'll be your teacher. ";
+            let msg = 'Hello ' + firstName + '! I\'m **' + instructorDisplayName + '**, your instructor for this course. ';
             if (last) msg += 'Last time you finished **' + last.title + '**. ';
             msg += 'Today we\'re learning **' + (lesson ? lesson.title : 'this lesson') + '**. ';
-            msg += 'Click **Start the lesson with Mr. John** and I\'ll teach it to you step by step, just like in class. You can also ask me to explain things differently, quiz you, or help with your code below.';
+            msg += 'Press **Start lesson** and I\'ll teach it to you step by step, just like in class. You can also ask me anything, take a quiz, or try a challenge.';
             el.innerHTML = renderAIMarkdown(msg);
         }
 
@@ -301,7 +672,7 @@
                     const weak = data.weak_areas.filter(function (w) { return w.total > 0 && (w.correct_count / w.total) < 0.7; });
                     if (weak.length) {
                         const names = weak.map(function (w) { return '**' + w.topic + '**'; }).join(', ');
-                        aiTeacherBubble('bot', '💡 I noticed you found these areas tricky in your recent quiz: ' + names + '. Don\'t worry — that\'s totally normal. Whenever you\'re ready, ask me to **explain** any of them and we\'ll go over it together.');
+                        aiTeacherBubble('bot', 'I noticed you found these topics tricky in your recent quiz: ' + names + '. That is totally normal — whenever you are ready, ask me to explain any of them and we will go over them together.');
                     }
                 }
             } catch (e) {
@@ -357,23 +728,20 @@
         function aiTeacherBubble(role, content) {
             const box = document.getElementById('aiTeacherMessages');
             const div = document.createElement('div');
-            div.style.maxWidth = '92%';
-            div.style.padding = '0.7rem 0.9rem';
-            div.style.borderRadius = '12px';
-            div.style.lineHeight = '1.55';
-            div.style.fontSize = '0.92rem';
+            div.style.maxWidth = '88%';
+            div.style.padding = '0.8rem 1rem';
+            div.style.borderRadius = '14px';
+            div.style.lineHeight = '1.6';
+            div.style.fontSize = '0.93rem';
             if (role === 'user') {
+                div.className = 'lp-msg lp-msg-user';
                 div.style.alignSelf = 'flex-end';
-                div.style.background = 'linear-gradient(135deg, var(--primary-color), var(--secondary-color))';
-                div.style.color = '#fff';
                 div.textContent = content;
             } else {
-                div.className = 'mrjohn-bubble';
+                div.className = 'lp-msg lp-msg-bot';
                 div.style.alignSelf = 'flex-start';
-                div.style.background = '#fff';
-                div.style.border = '1px solid #e2e8f0';
                 div.innerHTML = renderAIMarkdown(content);
-                div.querySelectorAll('h4').forEach(function(h) { h.style.margin = '0.4rem 0 0.2rem'; });
+                div.querySelectorAll('h4').forEach(function (h) { h.style.margin = '0.55rem 0 0.25rem'; });
                 const plain = plainText(div.textContent || '');
                 attachListenButton(div, plain);
             }
@@ -382,30 +750,21 @@
         }
 
         function attachListenButton(div, plain) {
-            const foot = document.createElement('div');
-            foot.style.marginTop = '0.5rem';
-            foot.style.display = 'flex';
-            foot.style.gap = '0.5rem';
-            foot.style.alignItems = 'center';
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'btn btn-outline btn-small';
-            btn.textContent = '🔊 Listen';
+            btn.className = 'msg-listen';
+            btn.textContent = 'Listen';
             btn.onclick = function () { speak(plain); };
-            foot.appendChild(btn);
-            div.appendChild(foot);
+            div.appendChild(btn);
         }
 
         function aiShowTyping() {
             const box = document.getElementById('aiTeacherMessages');
             const div = document.createElement('div');
             div.id = 'aiTyping';
+            div.className = 'lp-msg lp-msg-bot';
             div.style.alignSelf = 'flex-start';
-            div.style.padding = '0.7rem 0.9rem';
-            div.style.borderRadius = '12px';
-            div.style.background = '#fff';
-            div.style.border = '1px solid #e2e8f0';
-            div.innerHTML = '<span style="display:inline-flex;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:#94a3b8;animation:aiBlink 1.2s infinite;"></span><span style="width:7px;height:7px;border-radius:50%;background:#94a3b8;animation:aiBlink 1.2s infinite 0.2s;"></span><span style="width:7px;height:7px;border-radius:50%;background:#94a3b8;animation:aiBlink 1.2s infinite 0.4s;"></span></span>';
+            div.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         }
@@ -455,7 +814,7 @@
         function toggleVoice() {
             voiceMode = !voiceMode;
             const b = document.getElementById('voiceToggle');
-            if (b) b.textContent = voiceMode ? '🔊 Voice: On' : '🔈 Voice: Off';
+            if (b) b.textContent = voiceMode ? 'Voice: On' : 'Voice: Off';
             if (!voiceMode) stopSpeaking();
         }
 
@@ -465,7 +824,7 @@
             if (notes) {
                 speak(notes);
             } else {
-                speak('This lesson has no written notes yet. Click Start the lesson with Mr. John, and he will teach you the whole lesson out loud.');
+                speak('This lesson has no written notes yet. Press Start lesson, and ' + instructorDisplayName + ' will teach you the whole lesson out loud.');
             }
         }
 
@@ -476,7 +835,7 @@
             if (!SR) return;
             const btn = document.getElementById('micBtn');
             if (!btn) return;
-            btn.style.display = '';
+            btn.style.display = 'flex';
             mic = new SR();
             mic.lang = 'en-US';
             mic.interimResults = false;
@@ -493,7 +852,9 @@
 
         function setMicBtn(active) {
             const btn = document.getElementById('micBtn');
-            if (btn) btn.textContent = active ? '🎤 Listening…' : '🎤';
+            if (btn) btn.innerHTML = active
+                ? 'Listening…'
+                : '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a1 1 0 0 1 2 0 9 9 0 0 1-8 8.94V22h3a1 1 0 0 1 0 2H8a1 1 0 0 1 0-2h3v-2.06A9 9 0 0 1 3 11a1 1 0 1 1 2 0 7 7 0 0 0 14 0z"/></svg>';
         }
 
         function toggleMic() {
@@ -507,7 +868,7 @@
 
         function setTeachingTone(tone, el) {
             teachingTone = tone;
-            document.querySelectorAll('.mode-pill').forEach(function (p) { p.classList.remove('active'); });
+            document.querySelectorAll('.tone-pill').forEach(function (p) { p.classList.remove('active'); });
             if (el) el.classList.add('active');
         }
 
@@ -541,11 +902,11 @@
                     pushHistory('assistant', reply);
                     if (voiceMode) speak(reply);
                 } else {
-                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'Something went wrong. Please try again.'));
+                    aiTeacherBubble('bot', (data.message || 'Something went wrong. Please try again.'));
                 }
             } catch (e) {
                 aiHideTyping();
-                aiTeacherBubble('bot', '⚠️ Sorry, could not reach Mr. John right now. Please check your connection and try again.');
+                aiTeacherBubble('bot', 'Sorry, could not reach ' + instructorDisplayName + ' right now. Please check your connection and try again.');
             } finally {
                 aiBusy = false;
             }
@@ -576,29 +937,29 @@
         function startInlineQuiz(count) {
             const aiLesson = currentAILesson();
             if (!aiLesson) {
-                aiTeacherBubble('bot', '⚠️ I need the lesson to be ready first. Please try again in a moment.');
+                aiTeacherBubble('bot', 'The lesson needs to be ready first. Please try again in a moment.');
                 return;
             }
-            aiTeacherBubble('user', '📝 Please give me a practice quiz for this lesson.');
+            aiTeacherBubble('user', 'Please give me a practice quiz for this lesson.');
             aiShowTyping();
             aiBusy = true;
             authFetch('/api/ai/quiz', {
                 method: 'POST',
-                body: JSON.stringify({ course_id: courseId, lesson_id: aiLesson.id, count: count || 10, difficulty: 'mixed' })
+                body: JSON.stringify({ course_id: courseId, lesson_id: aiLesson.id, count: count || 5, difficulty: 'mixed' })
             })
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 aiHideTyping();
                 if (!data.success) {
-                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'I could not create the quiz. Please try again.'));
+                    aiTeacherBubble('bot', data.message || 'I could not create the quiz. Please try again.');
                     return;
                 }
-                aiTeacherBubble('bot', "Great job getting through the material! Let's see if you understood — answer the questions below, then press **Submit answers**. I'll grade you right away.");
+                aiTeacherBubble('bot', "Good progress through the material! Let's see if you understood — answer the questions below, then press **Submit answers**. I'll grade you right away.");
                 renderQuizForm(data.quiz_id, data.questions);
             })
             .catch(function () {
                 aiHideTyping();
-                aiTeacherBubble('bot', '⚠️ Sorry, I could not create the quiz right now. Please try again.');
+                aiTeacherBubble('bot', 'Sorry, I could not create the quiz right now. Please try again.');
             })
             .finally(function () { aiBusy = false; });
         }
@@ -609,8 +970,8 @@
             if (old) old.remove();
 
             const div = document.createElement('div');
-            div.className = 'mrjohn-bubble quiz-bubble';
-            div.style.cssText = 'align-self:flex-start; width:100%; background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:0.9rem 1rem; color:#1e293b; box-sizing:border-box;';
+            div.className = 'lp-msg lp-msg-bot quiz-bubble';
+            div.style.cssText = 'align-self:flex-start; width:100%; box-sizing:border-box;';
             div.dataset.quizId = quizId;
 
             const form = document.createElement('form');
@@ -620,9 +981,7 @@
             (questions || []).forEach(function (q, qi) {
                 const qdiv = document.createElement('div');
                 const title = document.createElement('div');
-                title.style.fontWeight = '600';
-                title.style.marginBottom = '0.4rem';
-                title.style.color = '#1e293b';
+                title.className = 'quiz-q';
                 title.textContent = 'Q' + (qi + 1) + '. ' + q.question;
                 qdiv.appendChild(title);
                 const opts = document.createElement('div');
@@ -646,7 +1005,7 @@
 
             const btn = document.createElement('button');
             btn.type = 'submit';
-            btn.className = 'btn btn-primary';
+            btn.className = 'lp-btn lp-btn-quiz';
             btn.textContent = 'Submit answers';
             btn.style.alignSelf = 'flex-start';
             form.appendChild(btn);
@@ -669,12 +1028,12 @@
                 if (sel) { answers[q.question_id] = parseInt(sel.value, 10); selectedCount++; }
             });
             if (selectedCount < quizSession.questions.length) {
-                aiTeacherBubble('bot', '⚠️ You answered ' + selectedCount + ' of ' + quizSession.questions.length + ' questions. Please answer them all before submitting.');
+                aiTeacherBubble('bot', 'You answered ' + selectedCount + ' of ' + quizSession.questions.length + ' questions. Please answer them all before submitting.');
                 return;
             }
             const submitBtn = form.querySelector('button[type=submit]');
             if (submitBtn) submitBtn.disabled = true;
-            aiTeacherBubble('user', '📝 Here are my answers.');
+            aiTeacherBubble('user', 'Here are my answers.');
             aiShowTyping();
             aiBusy = true;
             try {
@@ -687,11 +1046,11 @@
                 if (data.success) {
                     showQuizResult(data, quizSession.questions);
                 } else {
-                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'I could not grade your quiz. Please try again.'));
+                    aiTeacherBubble('bot', data.message || 'I could not grade your quiz. Please try again.');
                 }
             } catch (e) {
                 aiHideTyping();
-                aiTeacherBubble('bot', '⚠️ Sorry, I could not grade your quiz right now.');
+                aiTeacherBubble('bot', 'Sorry, I could not grade your quiz right now.');
             } finally {
                 aiBusy = false;
                 quizSession = null;
@@ -705,10 +1064,10 @@
             const lines = [];
             lines.push('**Your score: ' + data.correct + ' / ' + data.total + ' (' + data.score + '%)**');
             if (data.passed) {
-                lines.push(data.score >= 100 ? '🎉 **Perfect! Absolutely outstanding work!**' : '🎉 **Well done — you passed!**');
+                lines.push(data.score >= 100 ? '**Perfect score — absolutely outstanding work.**' : '**Well done — you passed.**');
                 confetti();
             } else {
-                lines.push('💪 Good effort! Review the ones you missed below — that is where the real learning happens.');
+                lines.push('Good effort. Review the questions you missed below — that is where the real learning happens.');
             }
 
             let wrongShown = 0;
@@ -718,7 +1077,7 @@
                     const q = qmap[d.question_id];
                     if (!q) continue;
                     const correctText = q.options && q.options[d.correct_answer] != null ? q.options[d.correct_answer] : '?';
-                    lines.push('- ❌ **' + q.question + '**');
+                    lines.push('- **Q: ' + q.question + '**');
                     lines.push('  Correct answer: *' + correctText + '*');
                     if (q.explanation) lines.push('  ' + q.explanation);
                     wrongShown++;
@@ -726,27 +1085,16 @@
             }
             if (data.correct === data.total) {
                 lines.push('');
-                lines.push('You got every single one right. I am genuinely impressed!');
+                lines.push('You got every single one right. Genuinely impressive.');
             }
             if (wrongShown === 0 && data.correct < data.total) {
                 lines.push('');
-                lines.push('Keep practising — you are close!');
+                lines.push('Keep practising — you are close.');
             }
             aiTeacherBubble('bot', lines.join('\n'));
             if (voiceMode) {
-                speak('You scored ' + data.correct + ' out of ' + data.total + ', which is ' + data.score + ' percent. ' + (data.passed ? 'Well done, you passed!' : 'Keep practicing, you are getting there!'));
+                speak('You scored ' + data.correct + ' out of ' + data.total + ', which is ' + data.score + ' percent. ' + (data.passed ? 'Well done, you passed!' : 'Keep practicing, you are getting there.'));
             }
-        }
-
-        // ==================== STUDY PLAN ====================
-
-        function studyPlan() {
-            const done = enrollment.lessons.filter(function (l) { return l.completed; }).length;
-            const total = enrollment.lessons.length;
-            const message = 'Create a personalized study plan for me. I am studying ' + enrollment.courseTitle +
-                ', I have completed ' + done + ' of ' + total + ' lessons (' + Math.round((done / (total || 1)) * 100) + '%). ' +
-                'I am currently on lesson: ' + (enrollment.lessons[currentLessonIndex] ? enrollment.lessons[currentLessonIndex].title : 'unknown') + '. Please give me a realistic weekly plan to finish strong.';
-            askAI(message, 'study-plan');
         }
 
         // ==================== DOWNLOAD NOTES ====================
@@ -754,8 +1102,8 @@
         async function downloadNotes() {
             const aiLesson = currentAILesson();
             const lessonTitle = document.getElementById('currentLessonTitle').textContent;
-            const courseTitleEl = document.getElementById('courseTitle').textContent;
-            aiTeacherBubble('user', '📄 Please create study notes for this lesson.');
+            const courseTitleEl = enrollment.courseTitle;
+            aiTeacherBubble('user', 'Please create study notes for this lesson.');
             aiShowTyping();
             aiBusy = true;
             try {
@@ -771,14 +1119,14 @@
                 const data = await res.json();
                 aiHideTyping();
                 if (!data.success) {
-                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'I could not create your notes. Please try again.'));
+                    aiTeacherBubble('bot', data.message || 'I could not create your notes. Please try again.');
                     return;
                 }
                 aiTeacherBubble('bot', data.reply);
                 openPrintNotes(courseTitleEl, lessonTitle, data.reply, aiLesson);
             } catch (e) {
                 aiHideTyping();
-                aiTeacherBubble('bot', '⚠️ Sorry, I could not create your notes right now.');
+                aiTeacherBubble('bot', 'Sorry, I could not create your notes right now.');
             } finally {
                 aiBusy = false;
             }
@@ -793,8 +1141,8 @@
             w.document.write('<h1>Study Notes</h1>');
             w.document.write('<div class="meta"><strong>Course:</strong> ' + escapeHtml(courseTitle) + '<br><strong>Lesson:</strong> ' + escapeHtml(lessonTitle) + '</div>');
             if (notes) w.document.write('<h2>Written notes</h2><div>' + renderAIMarkdown(notes) + '</div>');
-            w.document.write('<h2>Mr. John\'s summary</h2><div>' + renderAIMarkdown(summaryText) + '</div>');
-            w.document.write('<p class="foot">Generated by pazoskill — Mr. John. Use your browser\'s "Save as PDF" to keep a copy.</p>');
+            w.document.write('<h2>' + escapeHtml(instructorDisplayName) + '\'s summary</h2><div>' + renderAIMarkdown(summaryText) + '</div>');
+            w.document.write('<p class="foot">Generated by pazoskill — ' + escapeHtml(instructorDisplayName) + '. Use your browser\'s "Save as PDF" to keep a copy.</p>');
             w.document.write('</body></html>');
             w.document.close();
             setTimeout(function () { w.focus(); w.print(); }, 600);
@@ -804,7 +1152,7 @@
 
         async function startChallenge() {
             const aiLesson = currentAILesson();
-            aiTeacherBubble('user', '🧠 Please give me a practical challenge for this lesson.');
+            aiTeacherBubble('user', 'Please give me a practical challenge for this lesson.');
             aiShowTyping();
             aiBusy = true;
             try {
@@ -815,25 +1163,25 @@
                 const data = await res.json();
                 aiHideTyping();
                 if (!data.success) {
-                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'I could not create a challenge right now. Please try again.'));
+                    aiTeacherBubble('bot', data.message || 'I could not create a challenge right now. Please try again.');
                     return;
                 }
                 aiTeacherBubble('bot', data.assignment);
                 openAssignmentModal();
             } catch (e) {
                 aiHideTyping();
-                aiTeacherBubble('bot', '⚠️ Sorry, I could not create your challenge right now.');
+                aiTeacherBubble('bot', 'Sorry, I could not create your challenge right now.');
             } finally {
                 aiBusy = false;
             }
         }
 
         function openAssignmentModal() {
-            document.getElementById('assignmentModal').style.display = 'flex';
+            document.getElementById('assignmentModal').classList.add('open');
         }
 
         function closeAssignmentModal() {
-            document.getElementById('assignmentModal').style.display = 'none';
+            document.getElementById('assignmentModal').classList.remove('open');
         }
 
         document.getElementById('assignmentModal').addEventListener('click', function (e) {
@@ -861,18 +1209,18 @@
             if (fileInput && fileInput.files && fileInput.files[0]) {
                 const f = fileInput.files[0];
                 if (f.size > 3.5 * 1024 * 1024) {
-                    aiTeacherBubble('bot', '⚠️ That photo is too large. Please choose one under about 3.5MB.');
+                    aiTeacherBubble('bot', 'That photo is too large. Please choose one under about 3.5MB.');
                     return;
                 }
                 image_base64 = await readFileAsBase64(f);
                 image_mime = f.type || 'image/jpeg';
             }
             if (!answer && !image_base64) {
-                aiTeacherBubble('bot', '⚠️ Please write an answer or attach a photo of your work.');
+                aiTeacherBubble('bot', 'Please write an answer or attach a photo of your work.');
                 return;
             }
             closeAssignmentModal();
-            aiTeacherBubble('user', '🧠 Here is my answer to your challenge.');
+            aiTeacherBubble('user', 'Here is my answer to your challenge.');
             aiShowTyping();
             aiBusy = true;
             try {
@@ -892,11 +1240,11 @@
                 if (data.success) {
                     aiTeacherBubble('bot', data.reply);
                 } else {
-                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'Mr. John could not review your answer right now.'));
+                    aiTeacherBubble('bot', data.message || 'Your instructor could not review your answer right now.');
                 }
             } catch (e) {
                 aiHideTyping();
-                aiTeacherBubble('bot', '⚠️ Sorry, Mr. John could not review your answer right now.');
+                aiTeacherBubble('bot', 'Sorry, your instructor could not review your answer right now.');
             } finally {
                 aiBusy = false;
             }
@@ -907,11 +1255,11 @@
         // ==================== CODE REVIEW ====================
 
         function openCodeModal() {
-            document.getElementById('codeModal').style.display = 'flex';
+            document.getElementById('codeModal').classList.add('open');
         }
 
         function closeCodeModal() {
-            document.getElementById('codeModal').style.display = 'none';
+            document.getElementById('codeModal').classList.remove('open');
         }
 
         document.getElementById('codeModal').addEventListener('click', function (e) {
@@ -922,7 +1270,7 @@
             const code = document.getElementById('codeInput').value.trim();
             if (!code) return;
             closeCodeModal();
-            aiTeacherBubble('user', '💻 Please review my code and explain what is wrong.');
+            aiTeacherBubble('user', 'Please review my code and explain what is wrong.');
             aiShowTyping();
             aiBusy = true;
             try {
@@ -931,7 +1279,8 @@
                     body: JSON.stringify({
                         code: code,
                         language: document.getElementById('codeLang').value.trim() || undefined,
-                        question: document.getElementById('codeQuestion').value.trim() || undefined
+                        question: document.getElementById('codeQuestion').value.trim() || undefined,
+                        tutor: instructorDisplayName
                     })
                 });
                 const data = await res.json();
@@ -939,11 +1288,11 @@
                 if (data.success) {
                     aiTeacherBubble('bot', data.reply);
                 } else {
-                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'I could not review the code. Please try again.'));
+                    aiTeacherBubble('bot', data.message || 'I could not review the code. Please try again.');
                 }
             } catch (e) {
                 aiHideTyping();
-                aiTeacherBubble('bot', '⚠️ Sorry, I could not review your code right now. Please try again.');
+                aiTeacherBubble('bot', 'Sorry, I could not review your code right now. Please try again.');
             } finally {
                 aiBusy = false;
             }
@@ -961,7 +1310,7 @@
             for (let i = 0; i < 120; i++) {
                 const c = document.createElement('div');
                 const size = 6 + Math.random() * 8;
-                c.style.cssText = 'position:absolute; top:-20px; left:' + (Math.random() * 100) + 'vw; width:' + size + 'px; height:' + (size * 0.6) + 'px; background:' + colors[i % colors.length] + '; border-radius:2px; animation: confettiFall ' + (2.4 + Math.random() * 2) + 's linear forwards; animation-delay:' + (Math.random() * 0.5) + 's;';
+                c.style.cssText = 'position:absolute; top:-20px; left:' + (Math.random() * 100) + 'vw; width:' + size + 'px; height:' + (size * 0.6) + 'px; background:' + colors[i % colors.length] + '; border-radius:2px; animation: lpConfettiFall ' + (2.4 + Math.random() * 2) + 's linear forwards; animation-delay:' + (Math.random() * 0.5) + 's;';
                 layer.appendChild(c);
             }
             setTimeout(function () {
@@ -979,29 +1328,26 @@
                 return;
             }
 
-            enrollment = user.enrolledCourses && user.enrolledCourses.find(e => e.course_id == courseId);
-            if (!enrollment) {
-                enrollment = user.enrolledCourses && user.enrolledCourses.find(e => String(e.course_id) === String(courseId));
-            }
+            enrollment = user.enrolledCourses && user.enrolledCourses.find(function (e) { return String(e.course_id) === String(courseId); });
             if (!enrollment) {
                 alert('You are not enrolled in this course. Please enroll first.');
                 window.location.href = 'courses.html';
                 return;
             }
 
-            document.getElementById('courseTitle').textContent = enrollment.courseTitle;
+            document.getElementById('courseBreadcrumb').textContent = enrollment.courseTitle;
             updateProgress();
             renderLessonsList();
-            loadAIContext();
+            await loadAIContext();
 
-            const firstIncomplete = enrollment.lessons.findIndex(l => !l.completed);
+            const firstIncomplete = enrollment.lessons.findIndex(function (l) { return !l.completed; });
             loadLesson(firstIncomplete >= 0 ? firstIncomplete : 0);
 
             personalizeWelcome();
             loadWeakAreas();
             initMic();
 
-            document.getElementById('voiceToggle').textContent = voiceMode ? '🔊 Voice: On' : '🔈 Voice: Off';
+            document.getElementById('voiceToggle').textContent = voiceMode ? 'Voice: On' : 'Voice: Off';
 
             document.getElementById('completeBtn').addEventListener('click', async function () {
                 const lesson = enrollment.lessons[currentLessonIndex];
@@ -1019,11 +1365,11 @@
                     const firstName = getFirstName();
                     confetti();
                     if (enrollment.completed || result.progress >= 100) {
-                        const msg = '🎉 **Outstanding, ' + firstName + '!** You finished the final lesson — you completed **' + enrollment.courseTitle + '**! Your certificate is ready below. I am so proud of you!';
+                        const msg = '**Outstanding, ' + firstName + '!** You finished the final lesson — you completed **' + enrollment.courseTitle + '**! Your certificate is ready below. I am so proud of you.';
                         aiTeacherBubble('bot', msg);
-                        if (voiceMode) speak('Outstanding ' + firstName + '! You finished the final lesson and completed the whole course. Your certificate is ready. I am so proud of you!');
+                        if (voiceMode) speak('Outstanding ' + firstName + '! You finished the final lesson and completed the whole course. Your certificate is ready. I am so proud of you.');
                     } else {
-                        const msg = '🎉 **Excellent work, ' + firstName + '!** You finished *"' + lesson.title + '"* and you are now **' + result.progress + '%** through **' + enrollment.courseTitle + '**. Give me a moment — I have a short quiz to check your understanding.';
+                        const msg = '**Excellent work, ' + firstName + '!** You finished *"' + lesson.title + '"* and you are now **' + result.progress + '%** through **' + enrollment.courseTitle + '**. Give me a moment — I have a short quiz to check your understanding.';
                         aiTeacherBubble('bot', msg);
                         if (voiceMode) speak('Excellent work, ' + firstName + '! You finished the lesson and you are now ' + result.progress + ' percent through the course. I have a short quiz for you.');
                         startInlineQuiz(5);

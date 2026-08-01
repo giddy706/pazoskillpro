@@ -310,12 +310,12 @@ router.post('/quiz/:id/submit', authenticateToken, asyncHandler(async (req, res)
  *               question: { type: string }
  */
 router.post('/code-review', authenticateToken, asyncHandler(async (req, res) => {
-    const { code, language, question } = req.body;
+    const { code, language, question, tutor } = req.body;
     if (!code || !String(code).trim()) return error(res, 'Code is required', 400);
     if (!(await aiEnabledOrError(res))) return;
     try {
         const reply = await aiService.reviewCode({
-            code: String(code), language, question,
+            code: String(code), language, question, tutor,
             userId: req.user.id,
             userName: req.user.name,
         });
@@ -343,10 +343,10 @@ router.post('/code-review', authenticateToken, asyncHandler(async (req, res) => 
  *               extra: { type: string }
  */
 router.post('/career', authenticateToken, asyncHandler(async (req, res) => {
-    const { topic, field, extra } = req.body;
+    const { topic, field, extra, tutor } = req.body;
     if (!(await aiEnabledOrError(res))) return;
     try {
-        const reply = await aiService.careerCoach({ topic, field, extra, userId: req.user.id, userName: req.user.name });
+        const reply = await aiService.careerCoach({ topic, field, extra, tutor, userId: req.user.id, userName: req.user.name });
         return success(res, { reply });
     } catch (err) {
         return aiError(res, req, 'career', 'career', err);
