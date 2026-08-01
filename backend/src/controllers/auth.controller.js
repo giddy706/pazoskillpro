@@ -4,11 +4,11 @@ const authService = require('../services/auth.service');
 const { BadRequestError } = require('../utils/errors');
 
 exports.register = asyncHandler(async (req, res) => {
-    const { fullName, email, password } = req.body;
+    const { fullName, email, password, promo_code } = req.body;
     if (!fullName || !email || !password) {
         throw new BadRequestError('All fields are required');
     }
-    const result = await authService.register({ name: fullName, email, password });
+    const result = await authService.register({ name: fullName, email, password, promoCode: promo_code });
     return success(res, { user: result.user, token: result.token }, 201);
 });
 

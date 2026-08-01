@@ -3,8 +3,9 @@ const { success, error } = require('../utils/response');
 const enrollmentService = require('../services/enrollment.service');
 
 exports.enroll = asyncHandler(async (req, res) => {
-    const result = await enrollmentService.create(req.user.id, req.params.id);
-    return success(res, { enrollment: result }, 201);
+    const promoCode = req.body.promo_code || req.body.promoCode || null;
+    const result = await enrollmentService.create(req.user.id, req.params.id, promoCode);
+    return success(res, { enrollment: result.enrollment, promo: result.promo || null }, 201);
 });
 
 exports.getMyEnrollments = asyncHandler(async (req, res) => {

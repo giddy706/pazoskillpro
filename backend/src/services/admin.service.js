@@ -146,6 +146,7 @@ async function deleteCMSPage(id) {
 // Student progress
 async function getStudentProgress() {
     const students = await userModel.listStudents();
+    const referrals = await require('../models/affiliate.model').listAllReferrals();
     const result = [];
     for (const student of students) {
         const enrollments = await enrollmentModel.findAllByUser(student.id);
@@ -156,11 +157,16 @@ async function getStudentProgress() {
             if (e.completed) completed++;
         }
         const avgProgress = enrollments.length > 0 ? Math.round(totalProgress / enrollments.length) : 0;
+        const referral = referrals.find((r) => r.user_id === student.id);
         result.push({
             ...student,
             enrolledCourses: enrollments.length,
             completedCourses: completed,
             averageProgress: avgProgress,
+            referredBy: referral ? referral.code : null,
+            referrerName: referral ? referral.affiliateName : null,
+            referralJoinedAt: referral ? referral.created_at : null,
+            referralStatus: referral ? referral.status : null,
         });
     }
     return result.sort((a, b) => b.enrolledCourses - a.enrolledCourses);

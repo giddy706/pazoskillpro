@@ -4,7 +4,7 @@ const { config } = require('../config/env');
 const { BadRequestError, UnauthorizedError } = require('../utils/errors');
 const userModel = require('../models/user.model');
 
-async function register({ name, email, password }) {
+async function register({ name, email, password, promoCode }) {
     const existing = await userModel.findByEmail(email);
     if (existing) {
         throw new BadRequestError('Email already registered');
@@ -12,13 +12,19 @@ async function register({ name, email, password }) {
 
     const passwordHash = await bcrypt.hash(password, config.bcryptRounds);
     const user = await userModel.create({ name, email, passwordHash });
+
+    let promoApplied = null;
+    if (promoCode && String(promoCode).trim()) {
+        promoApplied = await require('./affiliate.service').applyAtRegistration(user.id, promoCode);
+    }
+
     const token = jwt.sign(
         { id: user.id, name: user.name, email: user.email, role: user.role },
         config.jwtSecret,
         { expiresIn: config.jwtExpiresIn }
     );
 
-    return { user: { id: user.id, name: user.name, email: user.email, role: user.role }, token };
+    return { user: { id: user.id, name: user.name, email: user.email, role: user.role, promoApplied }, token };
 }
 
 async function login({ email, password }) {

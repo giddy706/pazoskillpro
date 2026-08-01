@@ -11,6 +11,8 @@ const userService = require('../services/user.service');
 const adminService = require('../services/admin.service');
 const authService = require('../services/auth.service');
 const quizModel = require('../models/quiz.model');
+const affiliateService = require('../services/affiliate.service');
+const affiliateModel = require('../models/affiliate.model');
 const { authenticateToken, authorizeAdmin } = require('../middlewares/auth.middleware');
 
 router.post('/login', asyncHandler(async (req, res) => {
@@ -395,6 +397,102 @@ router.patch('/cms/:id', asyncHandler(async (req, res) => {
 router.delete('/cms/:id', asyncHandler(async (req, res) => {
     await adminService.deleteCMSPage(req.params.id);
     return success(res, { message: 'Page deleted' });
+}));
+
+// ==================== AFFILIATES / REFERRALS ====================
+router.get('/affiliates', asyncHandler(async (req, res) => {
+    const affiliates = await affiliateService.getAffiliates();
+    return success(res, { affiliates });
+}));
+
+router.get('/affiliates/performance', asyncHandler(async (req, res) => {
+    const result = await affiliateService.getPerformance();
+    return success(res, result);
+}));
+
+router.get('/affiliates/:id', asyncHandler(async (req, res) => {
+    const detail = await affiliateService.getAffiliateDetail(req.params.id);
+    return success(res, detail);
+}));
+
+router.post('/affiliates', asyncHandler(async (req, res) => {
+    const { name, code, email, commission_percent, is_partner, discount_type, discount_value, course_id, expires_at, usage_limit } = req.body;
+    if (!name || !code) return error(res, 'Affiliate name and referral code required', 400);
+    const affiliate = await affiliateService.createAffiliate({
+        name,
+        code,
+        email,
+        commission_percent,
+        is_partner,
+        discount_type,
+        discount_value,
+        course_id,
+        expires_at,
+        usage_limit,
+    });
+    return success(res, { affiliate }, 201);
+}));
+
+router.patch('/affiliates/:id', asyncHandler(async (req, res) => {
+    const updates = {};
+    for (const key of ['name', 'email', 'code', 'commission_percent', 'is_partner']) {
+        if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
+    const affiliate = await affiliateModel.updateAffiliate(req.params.id, updates);
+    if (!affiliate) return error(res, 'Affiliate not found', 404);
+    const promoUpdates = {};
+    for (const key of ['discount_type', 'discount_value', 'course_id', 'expires_at', 'usage_limit']) {
+        if (req.body[key] !== undefined) promoUpdates[key] = req.body[key];
+    }
+    if (Object.keys(promoUpdates).length) {
+        const promo = await affiliateModel.findPromoByCode(affiliate.code);
+        if (promo) await affiliateModel.updatePromo(promo.id, promoUpdates);
+    }
+    const detail = await affiliateService.getAffiliateDetail(req.params.id);
+    return success(res, { affiliate: detail });
+}));
+
+router.delete('/affiliates/:id', asyncHandler(async (req, res) => {
+    await affiliateModel.deleteAffiliate(req.params.id);
+    return success(res, { message: 'Affiliate deleted' });
+}));
+
+router.post('/affiliates/:id/mark-paid', asyncHandler(async (req, res) => {
+    const detail = await affiliateService.markPaid(req.params.id);
+    return success(res, { affiliate: detail, message: 'Commissions marked as paid' });
+}));
+
+// ==================== PROMO CODES ====================
+router.get('/promo-codes', asyncHandler(async (req, res) => {
+    const promos = await affiliateModel.listPromos();
+    return success(res, { promos });
+}));
+
+router.post('/promo-codes', asyncHandler(async (req, res) => {
+    const { code, discount_type, discount_value, course_id, expires_at, usage_limit, active, affiliate_id } = req.body;
+    if (!code) return error(res, 'Promo code required', 400);
+    const promo = await affiliateModel.createPromo({
+        code,
+        discount_type,
+        discount_value,
+        course_id,
+        expires_at,
+        usage_limit,
+        affiliate_id,
+        active,
+    });
+    return success(res, { promo }, 201);
+}));
+
+router.patch('/promo-codes/:id', asyncHandler(async (req, res) => {
+    const promo = await affiliateModel.updatePromo(req.params.id, req.body);
+    if (!promo) return error(res, 'Promo code not found', 404);
+    return success(res, { promo });
+}));
+
+router.delete('/promo-codes/:id', asyncHandler(async (req, res) => {
+    await affiliateModel.deletePromo(req.params.id);
+    return success(res, { message: 'Promo code deleted' });
 }));
 
 module.exports = router;

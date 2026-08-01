@@ -30,6 +30,19 @@
                             <h4 id="courseName"></h4>
                             <p id="courseDuration"></p>
                             <hr>
+                            <div class="form-group">
+                                <label for="promoCode" class="form-label">Referral / Promo Code</label>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <input type="text" id="promoCode" class="form-input" placeholder="e.g. JOHN50" autocomplete="off">
+                                    <button id="applyPromoBtn" class="btn btn-secondary" style="white-space: nowrap;">Apply</button>
+                                </div>
+                                <p class="form-help" id="promoHint"></p>
+                            </div>
+                            <div class="flex-between" id="discountRow" style="display: none;">
+                                <strong>Discount:</strong>
+                                <strong id="discountAmount" style="color: #16a34a;"></strong>
+                            </div>
+                            <hr>
                             <div class="flex-between">
                                 <strong>Total:</strong>
                                 <strong id="coursePrice"
@@ -97,6 +110,32 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const courseId = parseInt(urlParams.get('courseId'));
+        const refParam = urlParams.get('ref');
+
+        let course = null;
+        let appliedPromo = null;
+
+        function formatKSH(n) {
+            return 'KSH ' + (n || 0).toLocaleString();
+        }
+
+        function renderTotals() {
+            const priceEl = document.getElementById('coursePrice');
+            const discEl = document.getElementById('discountAmount');
+            const discRow = document.getElementById('discountRow');
+            const hintEl = document.getElementById('promoHint');
+            if (appliedPromo) {
+                discRow.style.display = 'flex';
+                discEl.textContent = '-' + formatKSH(appliedPromo.discountAmount);
+                priceEl.textContent = formatKSH(appliedPromo.paidAmount);
+                hintEl.textContent = 'Applied ' + appliedPromo.code + ' (' + appliedPromo.discountLabel + ') — you get ' + formatKSH(appliedPromo.discountAmount) + ' off!';
+                hintEl.style.color = '#16a34a';
+            } else {
+                discRow.style.display = 'none';
+                priceEl.textContent = formatKSH(course ? course.price : 0);
+                hintEl.textContent = '';
+            }
+        }
 
         async function initCheckout() {
             try {
@@ -104,10 +143,15 @@
                 if (!res.ok) throw new Error('Fetch failed');
                 const data = await res.json();
                 if (data.success && data.course) {
-                    const course = data.course;
+                    course = data.course;
                     document.getElementById('courseName').textContent = course.title;
                     document.getElementById('courseDuration').textContent = course.duration;
-                    document.getElementById('coursePrice').textContent = `KSH ${course.price.toLocaleString()}`;
+                    if (refParam) {
+                        document.getElementById('promoCode').value = refParam;
+                        applyPromo();
+                    } else {
+                        renderTotals();
+                    }
                 } else {
                     alert('Course not found');
                     window.location.href = 'courses.html';
@@ -119,6 +163,47 @@
             }
         }
         initCheckout();
+
+        async function applyPromo() {
+            const code = document.getElementById('promoCode').value.trim();
+            const hintEl = document.getElementById('promoHint');
+            if (!code) { appliedPromo = null; renderTotals(); return; }
+            hintEl.textContent = 'Checking code...';
+            hintEl.style.color = '';
+            try {
+                const res = await fetch((window.API_BASE_URL || '') + '/api/affiliates/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code, courseId: courseId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const promo = data.promo;
+                    const price = course ? course.price : 0;
+                    const discountAmount = promo.discountType === 'fixed'
+                        ? Math.min(promo.discountValue, price)
+                        : Math.round((price * promo.discountValue) / 100);
+                    appliedPromo = {
+                        code: promo.code,
+                        discountLabel: promo.discountLabel,
+                        discountAmount: discountAmount,
+                        paidAmount: Math.max(price - discountAmount, 0)
+                    };
+                } else {
+                    appliedPromo = null;
+                    hintEl.textContent = data.message || 'Invalid referral / promo code';
+                    hintEl.style.color = '#dc2626';
+                }
+                renderTotals();
+            } catch (e) {
+                appliedPromo = null;
+                hintEl.textContent = 'Could not check code. It will be verified at payment.';
+                hintEl.style.color = '';
+                renderTotals();
+            }
+        }
+
+        document.getElementById('applyPromoBtn').addEventListener('click', applyPromo);
 
         // Payment method toggle
         document.getElementById('paymentMethod').addEventListener('change', function (e) {
@@ -139,7 +224,8 @@
             alert('Processing payment...');
 
             setTimeout(async () => {
-                const result = await enrollInCourse(courseId);
+                const promoCode = appliedPromo ? appliedPromo.code : (document.getElementById('promoCode').value.trim() || null);
+                const result = await enrollInCourse(courseId, promoCode);
 
                 if (result.success) {
                     alert('Payment successful! You are now enrolled in the course.');

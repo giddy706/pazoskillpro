@@ -43,6 +43,12 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="promoCode" class="form-label">Referral / Promo Code (optional)</label>
+                            <input type="text" id="promoCode" class="form-input" placeholder="e.g. JOHN50" autocomplete="off">
+                            <p class="form-help" id="promoHint">Have a referral code from a marketer or friend? Enter it here for a discount on your first course.</p>
+                        </div>
+
+                        <div class="form-group">
                             <label for="confirmPassword" class="form-label">Confirm Password *</label>
                             <input type="password" id="confirmPassword" class="form-input" required>
                         </div>
@@ -67,6 +73,52 @@
     <script src="js/main.js"></script>
     <script src="js/auth.js"></script>
     <script>
+        // Prefill referral code from ?ref=JOHN50 (marketer share links)
+        (function () {
+            var ref = new URLSearchParams(window.location.search).get('ref');
+            if (ref) {
+                document.getElementById('promoCode').value = ref;
+                document.getElementById('promoHint').textContent = 'Referral code from your marketer applied: ' + ref.toUpperCase();
+            }
+        })();
+
+        // Live-validate the referral code as the user types
+        var promoInput = document.getElementById('promoCode');
+        var promoHint = document.getElementById('promoHint');
+        var promoDebounce = null;
+        promoInput.addEventListener('input', function () {
+            clearTimeout(promoDebounce);
+            var code = promoInput.value.trim();
+            if (!code) {
+                promoHint.textContent = 'Have a referral code from a marketer or friend? Enter it here for a discount on your first course.';
+                promoHint.style.color = '';
+                return;
+            }
+            promoHint.textContent = 'Checking code...';
+            promoHint.style.color = '';
+            promoDebounce = setTimeout(function () {
+                fetch((window.API_BASE_URL || '') + '/api/affiliates/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.success) {
+                            promoHint.textContent = 'Valid! You get ' + data.promo.discountLabel + ' on your first course.';
+                            promoHint.style.color = '#16a34a';
+                        } else {
+                            promoHint.textContent = data.message || 'Invalid code';
+                            promoHint.style.color = '#dc2626';
+                        }
+                    })
+                    .catch(function () {
+                        promoHint.textContent = 'Could not check code (offline). It will be verified at registration.';
+                        promoHint.style.color = '';
+                    });
+            }, 400);
+        });
+
         document.getElementById('registerForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
@@ -74,6 +126,7 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+            const promoCode = document.getElementById('promoCode').value.trim();
 
             if (password.length < 6) {
                 alert('Password must be at least 6 characters');
@@ -85,7 +138,7 @@
                 return;
             }
 
-            const result = await registerUser({ fullName, email, password });
+            const result = await registerUser({ fullName, email, password, promo_code: promoCode || undefined });
 
             if (result.success) {
                 window.location.href = 'dashboard.html';

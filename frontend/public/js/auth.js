@@ -126,10 +126,13 @@ async function loginUser(email, password) {
 }
 
 // Enroll in course
-async function enrollInCourse(courseId) {
+async function enrollInCourse(courseId, promoCode) {
     try {
+        const body = promoCode ? { promo_code: promoCode } : {};
         const response = await authFetch(`/api/courses/${courseId}/enroll`, {
-            method: 'POST'
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
         });
         const result = await response.json();
         if (result.success) {

@@ -3,7 +3,18 @@ const userModel = require('../models/user.model');
 const { ROLES } = require('../constants');
 
 async function listAll() {
-    return userModel.listStudents();
+    const students = await userModel.listStudents();
+    const referrals = await require('../models/affiliate.model').listAllReferrals();
+    return students.map((student) => {
+        const referral = referrals.find((r) => r.user_id === student.id);
+        return {
+            ...student,
+            referredBy: referral ? referral.code : null,
+            referrerName: referral ? referral.affiliateName : null,
+            referralStatus: referral ? referral.status : null,
+            referralJoinedAt: referral ? referral.created_at : null,
+        };
+    });
 }
 
 async function findById(id) {

@@ -153,6 +153,11 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
         .badge-yellow { background: rgba(255,183,3,.15); color: var(--warning); }
         .badge-red { background: rgba(255,77,109,.15); color: var(--danger); }
         .badge-blue { background: rgba(108,99,255,.15); color: var(--primary-light); }
+        .badge-gray { background: rgba(148,163,184,.15); color: #94a3b8; }
+
+        /* Marketing tabs */
+        .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .form-modal-lg { max-width: 900px; }
 
         .empty { text-align: center; padding: 40px; color: var(--text2); }
         .loading { text-align: center; padding: 40px; color: var(--text2); }
@@ -183,6 +188,7 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
             <button class="nav-item" data-section="enrollments"><span class="icon">&#128101;</span><span>Enrollments</span></button>
             <button class="nav-item" data-section="users"><span class="icon">&#128100;</span><span>Users</span></button>
             <button class="nav-item" data-section="payments"><span class="icon">&#128176;</span><span>Payments</span></button>
+<button class="nav-item" data-section="marketing"><span class="icon">&#128640;</span><span>Marketing</span></button>
             <button class="nav-item" data-section="quizzes"><span class="icon">&#128221;</span><span>Quizzes</span></button>
             <button class="nav-item" data-section="attempts"><span class="icon">&#128200;</span><span>Attempts</span></button>
             <button class="nav-item" data-section="settings"><span class="icon">&#9881;</span><span>Settings</span></button>
@@ -303,6 +309,113 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
                 <div class="toolbar"><h3>Payments</h3></div>
                 <div class="msg" id="paymentMsg"></div>
                 <div class="table-container" id="paymentsTable"><div class="loading">Loading...</div></div>
+            </div>
+
+            <!-- ===== MARKETING (AFFILIATES & PROMO CODES) ===== -->
+            <div class="section" id="section-marketing">
+                <div class="toolbar" style="gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary tab-btn active" id="tab-affiliates" onclick="switchMarketingTab('affiliates')">Affiliates</button>
+                    <button class="btn btn-secondary tab-btn" id="tab-promocodes" onclick="switchMarketingTab('promocodes')">Promo Codes</button>
+                    <button class="btn btn-secondary tab-btn" id="tab-performance" onclick="switchMarketingTab('performance')">Performance</button>
+                </div>
+                <div class="msg" id="marketingMsg"></div>
+
+                <div id="mkt-affiliates">
+                    <div class="toolbar">
+                        <h3>Affiliates</h3>
+                        <button class="btn btn-primary" onclick="showAffiliateForm()">+ Add Affiliate</button>
+                    </div>
+                    <div class="msg" id="affiliateMsg"></div>
+                    <div class="table-container" id="affiliatesTable"><div class="loading">Loading...</div></div>
+                </div>
+
+                <div id="mkt-promocodes" style="display:none;">
+                    <div class="toolbar">
+                        <h3>Promo Codes</h3>
+                        <button class="btn btn-primary" onclick="showPromoForm()">+ Add Promo Code</button>
+                    </div>
+                    <div class="msg" id="promoMsg"></div>
+                    <div class="table-container" id="promoCodesTable"><div class="loading">Loading...</div></div>
+                </div>
+
+                <div id="mkt-performance" style="display:none;">
+                    <div class="stats-grid" id="perfStats"></div>
+                    <h3 style="margin-top: 1rem;">Top Marketers</h3>
+                    <div class="table-container" id="performanceTable"><div class="loading">Loading...</div></div>
+                </div>
+
+                <div class="form-overlay" id="affiliateFormOverlay">
+                    <div class="form-modal">
+                        <h3 id="affiliateFormTitle">Add Affiliate</h3>
+                        <div class="msg" id="affiliateFormMsg"></div>
+                        <form id="affiliateForm" onsubmit="saveAffiliate(event)">
+                            <input type="hidden" id="affiliateId">
+                            <div class="form-group"><label>Marketer Name *</label><input type="text" id="affName" required></div>
+                            <div class="form-group"><label>Email</label><input type="email" id="affEmail"></div>
+                            <div class="form-group"><label>Referral Code *</label><input type="text" id="affCode" placeholder="e.g. JOHN50" required></div>
+                            <div class="form-group"><label>Commission % (of what student pays)</label><input type="number" id="affCommission" step="0.5" value="5" min="0"></div>
+                            <div class="form-group"><label>Student Discount Type</label>
+                                <select id="affDiscountType"><option value="percentage">Percentage (%)</option><option value="fixed">Fixed (KSH)</option></select>
+                            </div>
+                            <div class="form-group"><label>Student Discount Value</label><input type="number" id="affDiscountValue" step="0.01" value="10" min="0"></div>
+                            <div class="form-group"><label>Restrict to Course (optional)</label>
+                                <select id="affCourseId"><option value="">All Courses</option></select>
+                            </div>
+                            <div class="form-group"><label>Expiry Date (optional)</label><input type="date" id="affExpiresAt"></div>
+                            <div class="form-group"><label>Usage Limit (optional, blank = unlimited)</label><input type="number" id="affUsageLimit" min="1"></div>
+                            <div class="form-group toggle-wrap">
+                                <input type="checkbox" id="affPartner"> <label for="affPartner">Partner (upgraded status)</label>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="closeForm('affiliateFormOverlay')">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Affiliate</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="form-overlay" id="affiliateDetailOverlay">
+                    <div class="form-modal form-modal-lg">
+                        <h3 id="affiliateDetailTitle">Affiliate</h3>
+                        <div class="msg" id="affiliateDetailMsg"></div>
+                        <div class="stats-grid" id="affiliateDetailStats"></div>
+                        <div class="table-container" id="affiliateDetailTable"><div class="loading">Loading...</div></div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeForm('affiliateDetailOverlay')">Close</button>
+                            <button type="button" class="btn btn-primary" id="markPaidBtn" onclick="markAffiliatePaid()">Mark Commissions Paid</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-overlay" id="promoFormOverlay">
+                    <div class="form-modal">
+                        <h3 id="promoFormTitle">Add Promo Code</h3>
+                        <div class="msg" id="promoFormMsg"></div>
+                        <form id="promoForm" onsubmit="savePromo(event)">
+                            <input type="hidden" id="promoId">
+                            <div class="form-group"><label>Code *</label><input type="text" id="pcCode" placeholder="e.g. WELCOME500" required></div>
+                            <div class="form-group"><label>Discount Type</label>
+                                <select id="pcDiscountType"><option value="percentage">Percentage (%)</option><option value="fixed">Fixed (KSH)</option></select>
+                            </div>
+                            <div class="form-group"><label>Discount Value</label><input type="number" id="pcDiscountValue" step="0.01" value="10" min="0"></div>
+                            <div class="form-group"><label>Restrict to Course (optional)</label>
+                                <select id="pcCourseId"><option value="">All Courses</option></select>
+                            </div>
+                            <div class="form-group"><label>Affiliate (optional)</label>
+                                <select id="pcAffiliateId"><option value="">No Affiliate</option></select>
+                            </div>
+                            <div class="form-group"><label>Expiry Date (optional)</label><input type="date" id="pcExpiresAt"></div>
+                            <div class="form-group"><label>Usage Limit (optional, blank = unlimited)</label><input type="number" id="pcUsageLimit" min="1"></div>
+                            <div class="form-group toggle-wrap">
+                                <input type="checkbox" id="pcActive" checked> <label for="pcActive">Active</label>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="closeForm('promoFormOverlay')">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Promo Code</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <!-- ===== QUIZZES ===== -->
@@ -472,6 +585,7 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
             case 'enrollments': loadEnrollments(); break;
             case 'users': loadUsers(); break;
             case 'payments': loadPayments(); break;
+            case 'marketing': loadMarketing(); break;
             case 'quizzes': loadQuizzes(); break;
             case 'attempts': loadAttempts(); break;
             case 'settings': loadSettings(); break;
@@ -718,10 +832,11 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
             .then(function(r) { return r.json(); })
             .then(function(users) {
                 if (!users || !users.length) { tbody.innerHTML = '<div class="empty">No users found.</div>'; return; }
-                var html = '<table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr></thead><tbody>';
+                var html = '<table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Referred By</th><th>Joined</th></tr></thead><tbody>';
                 users.forEach(function(u) {
                     var role = u.is_admin ? '<span class="badge badge-blue">Admin</span>' : '<span class="badge badge-green">User</span>';
-                    html += '<tr><td>' + u.id + '</td><td>' + esc(u.name||'') + '</td><td>' + esc(u.email) + '</td><td>' + role + '</td><td>' + (u.created_at||'') + '</td></tr>';
+                    var referred = u.referredBy ? esc(u.referredBy) + (u.referrerName ? ' <small>(' + esc(u.referrerName) + ')</small>' : '') : '<span style="color: var(--text2);">-</span>';
+                    html += '<tr><td>' + u.id + '</td><td>' + esc(u.name||'') + '</td><td>' + esc(u.email) + '</td><td>' + role + '</td><td>' + referred + '</td><td>' + (u.created_at||'') + '</td></tr>';
                 });
                 html += '</tbody></table>';
                 tbody.innerHTML = html;
@@ -749,9 +864,312 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
             .catch(function(err) { tbody.innerHTML = '<div class="error">Error loading payments.</div>'; console.error(err); });
     }
 
-    // ---- Quizzes ----
-    function loadQuizzes() {
+    // ==================== MARKETING (AFFILIATES & PROMO CODES) ====================
+    var mktAffiliatesCache = [];
+
+    function switchMarketingTab(name) {
+        document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.getElementById('tab-' + name).classList.add('active');
+        document.getElementById('mkt-affiliates').style.display = name === 'affiliates' ? '' : 'none';
+        document.getElementById('mkt-promocodes').style.display = name === 'promocodes' ? '' : 'none';
+        document.getElementById('mkt-performance').style.display = name === 'performance' ? '' : 'none';
+        if (name === 'affiliates') loadAffiliates();
+        else if (name === 'promocodes') loadPromoCodes();
+        else loadPerformance();
+    }
+
+    function loadMarketing() {
         if (!checkAuth()) return;
+        switchMarketingTab('affiliates');
+    }
+
+    function escKSH(n) {
+        return 'KSH ' + (n || 0).toLocaleString();
+    }
+
+    function loadAffiliates() {
+        if (!checkAuth()) return;
+        var tbody = document.getElementById('affiliatesTable');
+        tbody.innerHTML = '<div class="loading">Loading...</div>';
+        authFetch(apiUrl('/admin/affiliates'))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var affiliates = data.affiliates || [];
+                mktAffiliatesCache = affiliates;
+                if (!affiliates.length) { tbody.innerHTML = '<div class="empty">No affiliates yet. Add one to start the referral program.</div>'; return; }
+                var html = '<table><thead><tr><th>Marketer</th><th>Code</th><th>Type</th><th>Referrals</th><th>Paying</th><th>Revenue</th><th>Earned</th><th>Pending</th><th>Actions</th></tr></thead><tbody>';
+                affiliates.forEach(function(a) {
+                    var partner = a.is_partner ? '<span class="badge badge-yellow">Partner</span> ' : '';
+                    var status = a.pending > 0 ? '<span class="badge badge-yellow">KSH ' + (a.pending||0).toLocaleString() + '</span>' : '<span class="badge badge-green">Paid</span>';
+                    html += '<tr><td>' + partner + esc(a.name) + '<br><small>' + esc(a.email||'') + '</small></td><td><strong>' + esc(a.code) + '</strong></td><td>' + (a.commission_percent||0) + '% commission</td><td>' + a.referralCount + '</td><td>' + a.payingReferrals + '</td><td>' + escKSH(a.revenue) + '</td><td>' + escKSH(a.earned) + '</td><td>' + status + '</td><td>';
+                    html += '<button class="btn btn-sm btn-secondary" onclick="viewAffiliate(' + a.id + ')">View</button> ';
+                    html += '<button class="btn btn-sm btn-secondary" onclick="editAffiliate(' + a.id + ')">Edit</button> ';
+                    html += '<button class="btn btn-sm btn-danger" onclick="deleteAffiliate(' + a.id + ')">Del</button>';
+                    html += '</td></tr>';
+                });
+                html += '</tbody></table>';
+                tbody.innerHTML = html;
+            })
+            .catch(function(err) { tbody.innerHTML = '<div class="error">Error loading affiliates.</div>'; console.error(err); });
+    }
+
+    function loadCourseOptions(selectId) {
+        var sel = document.getElementById(selectId);
+        if (!sel) return;
+        authFetch(apiUrl('/admin/courses'))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var courses = data.courses || [];
+                sel.innerHTML = '<option value="">' + (selectId === 'affCourseId' ? 'All Courses' : 'All Courses') + '</option>';
+                courses.forEach(function(c) {
+                    sel.innerHTML += '<option value="' + c.id + '">' + esc(c.title) + '</option>';
+                });
+            })
+            .catch(function(err) { console.error(err); });
+    }
+
+    function loadAffiliateOptions(selectId) {
+        var sel = document.getElementById(selectId);
+        if (!sel) return;
+        authFetch(apiUrl('/admin/affiliates'))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var affiliates = data.affiliates || [];
+                sel.innerHTML = '<option value="">No Affiliate</option>';
+                affiliates.forEach(function(a) {
+                    sel.innerHTML += '<option value="' + a.id + '">' + esc(a.name) + ' (' + esc(a.code) + ')</option>';
+                });
+            })
+            .catch(function(err) { console.error(err); });
+    }
+
+    function showAffiliateForm(a) {
+        loadCourseOptions('affCourseId');
+        document.getElementById('affiliateFormTitle').textContent = a ? 'Edit Affiliate' : 'Add Affiliate';
+        document.getElementById('affiliateId').value = a ? a.id : '';
+        document.getElementById('affName').value = a ? a.name : '';
+        document.getElementById('affEmail').value = a ? (a.email || '') : '';
+        document.getElementById('affCode').value = a ? a.code : '';
+        document.getElementById('affCommission').value = a ? a.commission_percent : 5;
+        document.getElementById('affDiscountValue').value = a && a.promo ? a.promo.discount_value : 10;
+        document.getElementById('affDiscountType').value = a && a.promo ? a.promo.discount_type : 'percentage';
+        document.getElementById('affExpiresAt').value = a && a.promo && a.promo.expires_at ? a.promo.expires_at.substring(0, 10) : '';
+        document.getElementById('affUsageLimit').value = a && a.promo && a.promo.usage_limit != null ? a.promo.usage_limit : '';
+        document.getElementById('affPartner').checked = a ? !!a.is_partner : false;
+        document.getElementById('affiliateFormMsg').style.display = 'none';
+        if (a && a.promo && a.promo.course_id) document.getElementById('affCourseId').value = a.promo.course_id;
+        openForm('affiliateFormOverlay');
+    }
+
+    function editAffiliate(id) {
+        var a = mktAffiliatesCache.find(function(x) { return x.id === id; });
+        if (!a) { loadAffiliates(); return; }
+        showAffiliateForm(a);
+    }
+
+    function saveAffiliate(e) {
+        e.preventDefault();
+        var id = document.getElementById('affiliateId').value;
+        var data = {
+            name: document.getElementById('affName').value,
+            email: document.getElementById('affEmail').value,
+            code: document.getElementById('affCode').value,
+            commission_percent: parseFloat(document.getElementById('affCommission').value) || 0,
+            discount_type: document.getElementById('affDiscountType').value,
+            discount_value: parseFloat(document.getElementById('affDiscountValue').value) || 0,
+            course_id: document.getElementById('affCourseId').value || null,
+            expires_at: document.getElementById('affExpiresAt').value || null,
+            usage_limit: document.getElementById('affUsageLimit').value || null,
+            is_partner: document.getElementById('affPartner').checked
+        };
+        var method = id ? 'PATCH' : 'POST';
+        var url = apiUrl('/admin/affiliates' + (id ? '/' + id : ''));
+        authFetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to save');
+                showMsg('affiliateFormMsg', 'success', 'Saved successfully');
+                closeForm('affiliateFormOverlay');
+                loadAffiliates();
+            })
+            .catch(function(err) { showMsg('affiliateFormMsg', 'error', 'Failed to save affiliate'); });
+    }
+
+    function deleteAffiliate(id) {
+        if (!confirm('Delete this affiliate? Their promo code will be kept but unlinked.')) return;
+        authFetch(apiUrl('/admin/affiliates/' + id), { method: 'DELETE' })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to delete');
+                showMsg('affiliateMsg', 'success', 'Deleted');
+                loadAffiliates();
+            })
+            .catch(function(err) { showMsg('affiliateMsg', 'error', 'Failed to delete'); });
+    }
+
+    function viewAffiliate(id) {
+        authFetch(apiUrl('/admin/affiliates/' + id))
+            .then(function(r) { return r.json(); })
+            .then(function(a) {
+                document.getElementById('affiliateDetailTitle').textContent = a.name + ' (' + a.code + ')';
+                document.getElementById('affiliateDetailStats').innerHTML =
+                    '<div class="stat-card"><div class="label">Referrals</div><div class="value">' + a.referralCount + '</div></div>' +
+                    '<div class="stat-card"><div class="label">Paying</div><div class="value">' + a.payingReferrals + '</div></div>' +
+                    '<div class="stat-card"><div class="label">Revenue Generated</div><div class="value">' + escKSH(a.revenue) + '</div></div>' +
+                    '<div class="stat-card"><div class="label">Commission Earned</div><div class="value">' + escKSH(a.earned) + '</div></div>' +
+                    '<div class="stat-card"><div class="label">Paid Out</div><div class="value">' + escKSH(a.paid) + '</div></div>' +
+                    '<div class="stat-card"><div class="label">Pending</div><div class="value">' + escKSH(a.pending) + '</div></div>';
+                var tbl = document.getElementById('affiliateDetailTable');
+                if (!a.referrals.length) {
+                    tbl.innerHTML = '<div class="empty">No referrals yet for this marketer.</div>';
+                } else {
+                    var html = '<table><thead><tr><th>Student</th><th>Email</th><th>Course</th><th>Course Price</th><th>Discount</th><th>Paid</th><th>Commission</th><th>Status</th><th>Date</th></tr></thead><tbody>';
+                    a.referrals.forEach(function(r) {
+                        var badge = r.status === 'paid' ? 'badge-green' : (r.status === 'unpaid' ? 'badge-yellow' : 'badge-gray');
+                        html += '<tr><td>' + esc(r.studentName || '') + '</td><td>' + esc(r.studentEmail || '') + '</td><td>' + esc(r.courseTitle || '-') + '</td><td>' + escKSH(r.course_price) + '</td><td>' + escKSH(r.discount_amount) + '</td><td>' + escKSH(r.paid_amount) + '</td><td>' + escKSH(r.commission_amount) + '</td><td><span class="badge ' + badge + '">' + esc(r.status) + '</span></td><td>' + (r.created_at || '') + '</td></tr>';
+                    });
+                    html += '</tbody></table>';
+                    tbl.innerHTML = html;
+                }
+                document.getElementById('markPaidBtn').style.display = a.pending > 0 ? '' : 'none';
+                document.getElementById('markPaidBtn').dataset.id = a.id;
+                document.getElementById('affiliateDetailMsg').style.display = 'none';
+                openForm('affiliateDetailOverlay');
+            })
+            .catch(function(err) { showMsg('affiliateMsg', 'error', 'Failed to load affiliate'); console.error(err); });
+    }
+
+    function markAffiliatePaid() {
+        var id = document.getElementById('markPaidBtn').dataset.id;
+        if (!id) return;
+        if (!confirm('Mark all unpaid commissions of this affiliate as paid?')) return;
+        authFetch(apiUrl('/admin/affiliates/' + id + '/mark-paid'), { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                showMsg('affiliateDetailMsg', 'success', 'Commissions marked as paid');
+                viewAffiliate(id);
+                loadAffiliates();
+            })
+            .catch(function(err) { showMsg('affiliateDetailMsg', 'error', 'Failed to mark paid'); });
+    }
+
+    function loadPromoCodes() {
+        if (!checkAuth()) return;
+        var tbody = document.getElementById('promoCodesTable');
+        tbody.innerHTML = '<div class="loading">Loading...</div>';
+        authFetch(apiUrl('/admin/promo-codes'))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var promos = data.promos || [];
+                if (!promos.length) { tbody.innerHTML = '<div class="empty">No promo codes yet.</div>'; return; }
+                var html = '<table><thead><tr><th>Code</th><th>Discount</th><th>Course</th><th>Affiliate</th><th>Uses</th><th>Limit</th><th>Expires</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+                promos.forEach(function(p) {
+                    var label = p.discount_type === 'fixed' ? escKSH(p.discount_value) : (p.discount_value + '%');
+                    var active = p.active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-red">Inactive</span>';
+                    var expired = p.expires_at && new Date(p.expires_at).getTime() < Date.now() ? ' <span class="badge badge-red">Expired</span>' : '';
+                    html += '<tr><td><strong>' + esc(p.code) + '</strong></td><td>' + label + '</td><td>' + esc(p.courseTitle || 'All') + '</td><td>' + esc(p.affiliateName || '-') + '</td><td>' + (p.times_used || 0) + '</td><td>' + (p.usage_limit != null ? p.usage_limit : '&#8734;') + '</td><td>' + (p.expires_at ? p.expires_at.substring(0, 10) : '-') + '</td><td>' + active + expired + '</td><td>';
+                    html += '<button class="btn btn-sm btn-secondary" onclick="editPromo(' + p.id + ')">Edit</button> ';
+                    html += '<button class="btn btn-sm btn-danger" onclick="deletePromo(' + p.id + ')">Del</button>';
+                    html += '</td></tr>';
+                });
+                html += '</tbody></table>';
+                tbody.innerHTML = html;
+            })
+            .catch(function(err) { tbody.innerHTML = '<div class="error">Error loading promo codes.</div>'; console.error(err); });
+    }
+
+    function showPromoForm(p) {
+        loadCourseOptions('pcCourseId');
+        loadAffiliateOptions('pcAffiliateId');
+        document.getElementById('promoFormTitle').textContent = p ? 'Edit Promo Code' : 'Add Promo Code';
+        document.getElementById('promoId').value = p ? p.id : '';
+        document.getElementById('pcCode').value = p ? p.code : '';
+        document.getElementById('pcDiscountType').value = p ? p.discount_type : 'percentage';
+        document.getElementById('pcDiscountValue').value = p ? p.discount_value : 10;
+        document.getElementById('pcExpiresAt').value = p && p.expires_at ? p.expires_at.substring(0, 10) : '';
+        document.getElementById('pcUsageLimit').value = p && p.usage_limit != null ? p.usage_limit : '';
+        document.getElementById('pcActive').checked = p ? !!p.active : true;
+        document.getElementById('promoFormMsg').style.display = 'none';
+        openForm('promoFormOverlay');
+        if (p && p.course_id) document.getElementById('pcCourseId').value = p.course_id;
+        if (p && p.affiliate_id) document.getElementById('pcAffiliateId').value = p.affiliate_id;
+    }
+
+    function editPromo(id) {
+        authFetch(apiUrl('/admin/promo-codes'))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var p = (data.promos || []).find(function(x) { return x.id === id; });
+                if (p) showPromoForm(p);
+            })
+            .catch(function(err) { showMsg('promoMsg', 'error', 'Failed to load promo code'); });
+    }
+
+    function savePromo(e) {
+        e.preventDefault();
+        var id = document.getElementById('promoId').value;
+        var data = {
+            code: document.getElementById('pcCode').value,
+            discount_type: document.getElementById('pcDiscountType').value,
+            discount_value: parseFloat(document.getElementById('pcDiscountValue').value) || 0,
+            course_id: document.getElementById('pcCourseId').value || null,
+            affiliate_id: document.getElementById('pcAffiliateId').value || null,
+            expires_at: document.getElementById('pcExpiresAt').value || null,
+            usage_limit: document.getElementById('pcUsageLimit').value || null,
+            active: document.getElementById('pcActive').checked
+        };
+        var method = id ? 'PATCH' : 'POST';
+        var url = apiUrl('/admin/promo-codes' + (id ? '/' + id : ''));
+        authFetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to save');
+                showMsg('promoFormMsg', 'success', 'Saved successfully');
+                closeForm('promoFormOverlay');
+                loadPromoCodes();
+            })
+            .catch(function(err) { showMsg('promoFormMsg', 'error', 'Failed to save promo code'); });
+    }
+
+    function deletePromo(id) {
+        if (!confirm('Delete this promo code?')) return;
+        authFetch(apiUrl('/admin/promo-codes/' + id), { method: 'DELETE' })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to delete');
+                showMsg('promoMsg', 'success', 'Deleted');
+                loadPromoCodes();
+            })
+            .catch(function(err) { showMsg('promoMsg', 'error', 'Failed to delete'); });
+    }
+
+    function loadPerformance() {
+        if (!checkAuth()) return;
+        var statsEl = document.getElementById('perfStats');
+        var tbody = document.getElementById('performanceTable');
+        statsEl.innerHTML = '<div class="loading">Loading...</div>';
+        tbody.innerHTML = '<div class="loading">Loading...</div>';
+        authFetch(apiUrl('/admin/affiliates/performance'))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var t = data.totals || {};
+                statsEl.innerHTML =
+                    '<div class="stat-card"><div class="label">Affiliates</div><div class="value">' + t.affiliates + '</div></div>' +
+                    '<div class="stat-card"><div class="label">Total Referrals</div><div class="value">' + t.referrals + '</div></div>' +
+                    '<div class="stat-card"><div class="label">Paying Referrals</div><div class="value">' + t.payingReferrals + '</div></div>' +
+                    '<div class="stat-card"><div class="label">Revenue Generated</div><div class="value">' + escKSH(t.revenue) + '</div></div>' +
+                    '<div class="stat-card"><div class="label">Commissions Earned</div><div class="value">' + escKSH(t.earned) + '</div></div>' +
+                    '<div class="stat-card"><div class="label">Pending Payout</div><div class="value">' + escKSH(t.pending) + '</div></div>';
+                var leaderboard = data.leaderboard || [];
+                if (!leaderboard.length) { tbody.innerHTML = '<div class="empty">No marketing activity yet.</div>'; return; }
+                var html = '<table><thead><tr><th>#</th><th>Marketer</th><th>Code</th><th>Referrals</th><th>Paying</th><th>Revenue</th><th>Commission</th><th>Paid</th><th>Pending</th></tr></thead><tbody>';
+                leaderboard.forEach(function(a, i) {
+                    html += '<tr><td>' + (i + 1) + '</td><td>' + esc(a.name) + (a.is_partner ? ' <span class="badge badge-yellow">Partner</span>' : '') + '</td><td><strong>' + esc(a.code) + '</strong></td><td>' + a.referralCount + '</td><td>' + a.payingReferrals + '</td><td>' + escKSH(a.revenue) + '</td><td>' + escKSH(a.earned) + '</td><td>' + escKSH(a.paid) + '</td><td>' + escKSH(a.pending) + '</td></tr>';
+                });
+                html += '</tbody></table>';
+                tbody.innerHTML = html;
+            })
+            .catch(function(err) { statsEl.innerHTML = ''; tbody.innerHTML = '<div class="error">Error loading performance.</div>'; console.error(err); });
+    }
+
+    // ---- Quizzes ----
+    function loadQuizzes() {        if (!checkAuth()) return;
         var tbody = document.getElementById('quizzesTable');
         tbody.innerHTML = '<div class="loading">Loading...</div>';
         authFetch(apiUrl('/admin/quizzes'))

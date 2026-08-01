@@ -17,15 +17,37 @@ async function findAllByUser(userId) {
     return enrollmentModel.findAllByUser(userId);
 }
 
-async function create(userId, courseId) {
+async function create(userId, courseId, promoCode) {
     const existing = await enrollmentModel.findByUserAndCourse(userId, courseId);
     if (existing) {
         throw new ConflictError('Already enrolled in this course');
     }
 
+    const affiliateService = require('./affiliate.service');
+    const promo = await affiliateService.applyAtEnrollment(userId, courseId, promoCode);
+
     const enrollment = await enrollmentModel.create(userId, courseId);
     await require('../models/course.model').incrementStudents(courseId);
-    return enrollment;
+
+    if (promo && promo.applied) {
+        await affiliateService.linkEnrollment(userId, enrollment.id);
+    }
+    const paidAmount = promo && promo.applied && promo.paidAmount != null
+        ? promo.paidAmount
+        : (enrollment.coursePrice || 0);
+    const paymentModel = require('../models/payment.model');
+    const transactionRef = 'PAY-' + Date.now() + '-' + enrollment.id;
+    await paymentModel.create({
+        userId,
+        courseId,
+        amount: paidAmount,
+        currency: 'KSH',
+        status: 'completed',
+        paymentMethod: promo && promo.applied ? 'promo' : 'card',
+        transactionRef,
+    });
+
+    return { enrollment, promo };
 }
 
 async function markLessonComplete(userId, courseId, lessonId) {
