@@ -9,7 +9,42 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <style>@keyframes aiBlink { 0%,80%,100% { opacity:0.2; } 40% { opacity:1; } }</style>
+    <style>
+        @keyframes aiBlink { 0%,80%,100% { opacity:0.2; } 40% { opacity:1; } }
+        @keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0.85; } }
+        #lessonNotes { color:#1e293b !important; }
+        #lessonNotes.placeholder { color:#64748b !important; font-style: italic; }
+        #aiTeacherMessages .mrjohn-bubble,
+        #aiTeacherMessages .mrjohn-bubble p,
+        #aiTeacherMessages .mrjohn-bubble li,
+        #aiTeacherMessages .mrjohn-bubble h2,
+        #aiTeacherMessages .mrjohn-bubble h3,
+        #aiTeacherMessages .mrjohn-bubble h4,
+        #aiTeacherMessages .mrjohn-bubble strong,
+        #aiTeacherMessages .mrjohn-bubble em {
+            color:#1e293b !important;
+        }
+        #aiTeacherMessages .mrjohn-bubble code { color:#0f766e !important; }
+        #aiTeacherMessages .mrjohn-bubble pre,
+        #aiTeacherMessages .mrjohn-bubble pre code { color:#e2e8f0 !important; }
+        .mode-pill.active {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+        .mrjohn-bubble .quiz-opt-label {
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-start;
+            font-size: 0.88rem;
+            cursor: pointer;
+            color: #1e293b;
+            padding: 0.3rem 0.5rem;
+            border-radius: 8px;
+        }
+        .mrjohn-bubble .quiz-opt-label:hover { background: #f1f5f9; }
+        .mrjohn-bubble input[type="radio"] { margin-top: 3px; accent-color: var(--primary-color); }
+    </style>
 </head>
 
 <body>
@@ -50,32 +85,55 @@
                             <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                                 <button id="completeBtn" class="btn btn-secondary btn-large">Mark as Complete</button>
                                 <button onclick="teachLesson()" class="btn btn-primary btn-large">👨‍🏫 Start the lesson with Mr. John</button>
+                                <button class="btn btn-outline" onclick="speakLesson()">🔊 Listen to lesson</button>
+                                <button class="btn btn-outline" onclick="downloadNotes()">📄 Download notes</button>
                             </div>
                         </div>
                     </div>
 
                     <div class="card">
                         <div class="card-body">
-                            <div class="flex-between" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-                                <h3>👨‍🏫 Mr. John</h3>
-                                <span style="font-size:0.75rem; color:var(--gray);">Your teacher — he will guide you through every lesson</span>
+                            <div class="flex-between" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; flex-wrap:wrap; gap:0.5rem;">
+                                <h3 style="margin:0;">👨‍🏫 Mr. John</h3>
+                                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                                    <button id="voiceToggle" class="btn btn-outline btn-small" onclick="toggleVoice()">🔊 Voice: On</button>
+                                    <span style="font-size:0.75rem; color:var(--gray);">Your teacher — he will guide you through every lesson</span>
+                                </div>
                             </div>
-                            <div id="aiTeacherMessages" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:0.9rem; min-height:120px; max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:0.75rem; margin-bottom:0.75rem;">
-                                <div class="msg bot" style="max-width:92%; padding:0.7rem 0.9rem; border-radius:12px; background:#fff; border:1px solid #e2e8f0; line-height:1.55; font-size:0.92rem; align-self:flex-start;">
+
+                            <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.6rem; align-items:center;">
+                                <span style="font-size:0.8rem; color:var(--gray);">Teach me like:</span>
+                                <button class="btn btn-outline btn-small mode-pill active" data-tone="normal" onclick="setTeachingTone('normal', this)">📖 Standard</button>
+                                <button class="btn btn-outline btn-small mode-pill" data-tone="beginner" onclick="setTeachingTone('beginner', this)">🧒 Beginner</button>
+                                <button class="btn btn-outline btn-small mode-pill" data-tone="advanced" onclick="setTeachingTone('advanced', this)">🎓 Advanced</button>
+                                <button class="btn btn-outline btn-small mode-pill" data-tone="quick" onclick="setTeachingTone('quick', this)">⚡ Quick</button>
+                                <button class="btn btn-outline btn-small mode-pill" data-tone="detailed" onclick="setTeachingTone('detailed', this)">📚 Detailed</button>
+                            </div>
+
+                            <div id="aiTeacherMessages" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:0.9rem; min-height:120px; max-height:420px; overflow-y:auto; display:flex; flex-direction:column; gap:0.75rem; margin-bottom:0.75rem;">
+                                <div id="welcomeBubble" class="msg bot mrjohn-bubble" style="max-width:92%; padding:0.7rem 0.9rem; border-radius:12px; background:#fff; border:1px solid #e2e8f0; line-height:1.55; font-size:0.92rem; align-self:flex-start;">
                                     Hello there! I'm Mr. John, and I'll be your teacher. Click <strong>Start the lesson</strong> and I'll teach it to you step by step, just like in class. You can also ask me to explain things differently, quiz you, or help with your code below.
                                 </div>
                             </div>
+
                             <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.75rem;">
                                 <button class="btn btn-outline btn-small" onclick="teachLesson()">👨‍🏫 Teach this lesson</button>
                                 <button class="btn btn-outline btn-small" onclick="quickAI('explain','Please explain this lesson in simpler language.')">📚 Explain simply</button>
-                                <button class="btn btn-outline btn-small" onclick="generateQuizFromLesson()">📝 Generate quiz</button>
+                                <button class="btn btn-outline btn-small" onclick="quickAI('explain','Please explain this again in a different way — I did not fully understand the first time.')">🔄 Explain again</button>
+                                <button class="btn btn-outline btn-small" onclick="quickAI('explain','Please give me a concrete example to illustrate this lesson.')">💡 Give an example</button>
+                                <button class="btn btn-outline btn-small" onclick="quickAI('explain','Please show me how this lesson applies in the real world.')">🌍 Real-world example</button>
+                            </div>
+                            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.75rem;">
+                                <button class="btn btn-outline btn-small" onclick="startInlineQuiz(10)">📝 Practice quiz</button>
                                 <button class="btn btn-outline btn-small" onclick="openCodeModal()">💻 Review my code</button>
-                                <button class="btn btn-outline btn-small" onclick="quickAI('summarize','Please summarize this lesson into key points.')">📄 Summarize</button>
+                                <button class="btn btn-outline btn-small" onclick="downloadNotes()">📄 Download notes</button>
+                                <button class="btn btn-outline btn-small" onclick="startChallenge()">🧠 Mr. John's challenge</button>
                                 <button class="btn btn-outline btn-small" onclick="studyPlan()">🎯 Study plan</button>
                             </div>
                             <div style="display:flex; gap:0.5rem;">
+                                <button id="micBtn" class="btn btn-outline" onclick="toggleMic()" title="Ask by voice" style="display:none;">🎤</button>
                                 <input type="text" id="aiTeacherInput" placeholder="Ask Mr. John anything about this lesson..." autocomplete="off"
-                                    style="flex:1; padding:0.6rem 0.9rem; border:1px solid #e2e8f0; border-radius:8px; font-size:0.92rem;">
+                                    style="flex:1; padding:0.6rem 0.9rem; border:1px solid #e2e8f0; border-radius:8px; font-size:0.92rem; background:#fff; color:#1e293b;">
                                 <button class="btn btn-primary" onclick="sendAITeacher()">Send</button>
                             </div>
                         </div>
@@ -103,6 +161,21 @@
         </div>
     </div>
 
+    <!-- Assignment Modal -->
+    <div id="assignmentModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
+        <div style="background:#fff; border-radius:14px; max-width:560px; width:100%; padding:1.5rem; max-height:90vh; overflow-y:auto;">
+            <h4>🧠 My challenge answer</h4>
+            <p style="font-size:0.85rem; color:var(--gray); margin-bottom:1rem;">Write your answer to Mr. John's challenge. You can also attach a photo of your work (a design, a drawing, a project).</p>
+            <textarea id="assignmentAnswer" placeholder="Type your answer here..." style="width:100%; min-height:140px; padding:0.6rem 0.8rem; border:1px solid #e2e8f0; border-radius:8px; font-size:0.9rem;"></textarea>
+            <label style="font-size:0.85rem; font-weight:600; display:block; margin-top:0.8rem;">Attach a photo (optional, max ~3.5MB)</label>
+            <input type="file" id="assignmentImage" accept="image/*" style="width:100%; margin:0.4rem 0 0.6rem;">
+            <div style="display:flex; gap:0.6rem; justify-content:flex-end; margin-top:1rem;">
+                <button class="btn btn-outline" onclick="closeAssignmentModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitAssignment()">Submit to Mr. John</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/data.js"></script>
     <script src="js/main.js"></script>
     <script src="js/auth.js"></script>
@@ -114,6 +187,13 @@
         let currentLessonIndex = 0;
         let aiLessons = [];
         let aiBusy = false;
+        let teachingTone = 'normal';
+        let voiceMode = true;
+        let aiHistory = [];
+        let quizSession = null;
+        let mic = null;
+
+        // ==================== LESSON UI ====================
 
         function renderLessonsList() {
             const lessonsList = document.getElementById('lessonsList');
@@ -129,6 +209,8 @@
 
         function loadLesson(index) {
             currentLessonIndex = index;
+            aiHistory = [];
+            quizSession = null;
             const lesson = enrollment.lessons[index];
             document.getElementById('currentLessonTitle').textContent = lesson.title;
 
@@ -137,11 +219,10 @@
             const notes = aiLesson && aiLesson.content ? aiLesson.content.trim() : '';
             if (notes) {
                 notesEl.textContent = notes;
-                notesEl.style.display = 'block';
+                notesEl.className = '';
             } else {
                 notesEl.textContent = 'There are no written notes for this lesson yet. Click "Start the lesson with Mr. John" and he will teach you the whole thing here.';
-                notesEl.style.color = '#64748b';
-                notesEl.style.fontStyle = 'italic';
+                notesEl.className = 'placeholder';
             }
 
             const completeBtn = document.getElementById('completeBtn');
@@ -185,6 +266,51 @@
             return aiLessons.find(l => l.id == lesson.id) || null;
         }
 
+        function getFirstName() {
+            const user = getCurrentUser() || {};
+            const name = (user.name || '').trim();
+            return name.split(' ')[0] || 'friend';
+        }
+
+        function getLastCompletedLesson() {
+            let last = null;
+            if (enrollment && enrollment.lessons) {
+                enrollment.lessons.forEach(function (l) { if (l.completed) last = l; });
+            }
+            return last;
+        }
+
+        function personalizeWelcome() {
+            const el = document.getElementById('welcomeBubble');
+            if (!el) return;
+            const firstName = getFirstName();
+            const lesson = enrollment.lessons[currentLessonIndex];
+            const last = getLastCompletedLesson();
+            let msg = 'Hello ' + firstName + "! I'm Mr. John, and I'll be your teacher. ";
+            if (last) msg += 'Last time you finished **' + last.title + '**. ';
+            msg += 'Today we\'re learning **' + (lesson ? lesson.title : 'this lesson') + '**. ';
+            msg += 'Click **Start the lesson with Mr. John** and I\'ll teach it to you step by step, just like in class. You can also ask me to explain things differently, quiz you, or help with your code below.';
+            el.innerHTML = renderAIMarkdown(msg);
+        }
+
+        async function loadWeakAreas() {
+            try {
+                const res = await authFetch('/api/ai/weak-areas?course_id=' + courseId);
+                const data = await res.json();
+                if (data.success && data.weak_areas && data.weak_areas.length) {
+                    const weak = data.weak_areas.filter(function (w) { return w.total > 0 && (w.correct_count / w.total) < 0.7; });
+                    if (weak.length) {
+                        const names = weak.map(function (w) { return '**' + w.topic + '**'; }).join(', ');
+                        aiTeacherBubble('bot', '💡 I noticed you found these areas tricky in your recent quiz: ' + names + '. Don\'t worry — that\'s totally normal. Whenever you\'re ready, ask me to **explain** any of them and we\'ll go over it together.');
+                    }
+                }
+            } catch (e) {
+                // Weak-area info is optional
+            }
+        }
+
+        // ==================== MARKDOWN RENDERING ====================
+
         function escapeHtml(s) {
             return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
@@ -226,6 +352,8 @@
             return html;
         }
 
+        // ==================== CHAT BUBBLES ====================
+
         function aiTeacherBubble(role, content) {
             const box = document.getElementById('aiTeacherMessages');
             const div = document.createElement('div');
@@ -240,14 +368,32 @@
                 div.style.color = '#fff';
                 div.textContent = content;
             } else {
+                div.className = 'mrjohn-bubble';
                 div.style.alignSelf = 'flex-start';
                 div.style.background = '#fff';
                 div.style.border = '1px solid #e2e8f0';
                 div.innerHTML = renderAIMarkdown(content);
                 div.querySelectorAll('h4').forEach(function(h) { h.style.margin = '0.4rem 0 0.2rem'; });
+                const plain = plainText(div.textContent || '');
+                attachListenButton(div, plain);
             }
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
+        }
+
+        function attachListenButton(div, plain) {
+            const foot = document.createElement('div');
+            foot.style.marginTop = '0.5rem';
+            foot.style.display = 'flex';
+            foot.style.gap = '0.5rem';
+            foot.style.alignItems = 'center';
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-outline btn-small';
+            btn.textContent = '🔊 Listen';
+            btn.onclick = function () { speak(plain); };
+            foot.appendChild(btn);
+            div.appendChild(foot);
         }
 
         function aiShowTyping() {
@@ -269,25 +415,131 @@
             if (el) el.remove();
         }
 
+        function pushHistory(role, content) {
+            aiHistory.push({ role: role, content: String(content).slice(0, 800) });
+            if (aiHistory.length > 12) aiHistory.splice(0, aiHistory.length - 12);
+        }
+
+        // ==================== VOICE ====================
+
+        function plainText(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return (tmp.textContent || '')
+                .replace(/```/g, ' ')
+                .replace(/[*#>`_~]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function speak(text) {
+            if (!('speechSynthesis' in window) || !text) return false;
+            try { window.speechSynthesis.cancel(); } catch (e) {}
+            const u = new SpeechSynthesisUtterance(plainText(text));
+            u.lang = 'en-US';
+            u.rate = 1;
+            u.pitch = 1;
+            const voices = window.speechSynthesis.getVoices();
+            const v = voices.find(function (x) { return /^en[-_]?(US|GB|CA|AU)/i.test(x.lang); }) || voices.find(function (x) { return /^en/i.test(x.lang); });
+            if (v) u.voice = v;
+            u.onend = function () { speaking = false; };
+            u.onerror = function () { speaking = false; };
+            try { window.speechSynthesis.speak(u); } catch (e) { return false; }
+            return true;
+        }
+
+        function stopSpeaking() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        }
+
+        function toggleVoice() {
+            voiceMode = !voiceMode;
+            const b = document.getElementById('voiceToggle');
+            if (b) b.textContent = voiceMode ? '🔊 Voice: On' : '🔈 Voice: Off';
+            if (!voiceMode) stopSpeaking();
+        }
+
+        function speakLesson() {
+            const aiLesson = currentAILesson();
+            const notes = aiLesson && aiLesson.content ? aiLesson.content.trim() : '';
+            if (notes) {
+                speak(notes);
+            } else {
+                speak('This lesson has no written notes yet. Click Start the lesson with Mr. John, and he will teach you the whole lesson out loud.');
+            }
+        }
+
+        // ==================== MIC (ASK BY VOICE) ====================
+
+        function initMic() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SR) return;
+            const btn = document.getElementById('micBtn');
+            if (!btn) return;
+            btn.style.display = '';
+            mic = new SR();
+            mic.lang = 'en-US';
+            mic.interimResults = false;
+            mic.maxAlternatives = 1;
+            mic.onresult = function (e) {
+                const transcript = e.results[0][0].transcript;
+                const input = document.getElementById('aiTeacherInput');
+                if (input) input.value = transcript;
+                sendAITeacher();
+            };
+            mic.onerror = function () { setMicBtn(false); };
+            mic.onend = function () { setMicBtn(false); };
+        }
+
+        function setMicBtn(active) {
+            const btn = document.getElementById('micBtn');
+            if (btn) btn.textContent = active ? '🎤 Listening…' : '🎤';
+        }
+
+        function toggleMic() {
+            if (!mic) return;
+            if (mic.listening) { mic.stop(); setMicBtn(false); return; }
+            setMicBtn(true);
+            try { mic.start(); } catch (e) { setMicBtn(false); }
+        }
+
+        // ==================== TEACHING MODES ====================
+
+        function setTeachingTone(tone, el) {
+            teachingTone = tone;
+            document.querySelectorAll('.mode-pill').forEach(function (p) { p.classList.remove('active'); });
+            if (el) el.classList.add('active');
+        }
+
+        // ==================== AI CHAT ====================
+
         async function askAI(message, mode) {
             const aiLesson = currentAILesson();
             aiTeacherBubble('user', message);
+            pushHistory('user', message);
             aiShowTyping();
             aiBusy = true;
             try {
+                const lastCompleted = getLastCompletedLesson();
                 const res = await authFetch('/api/ai/chat', {
                     method: 'POST',
                     body: JSON.stringify({
-                        message,
+                        message: message,
                         mode: mode || 'lecture',
+                        tone: teachingTone === 'normal' ? undefined : teachingTone,
                         course_id: courseId,
                         lesson_id: aiLesson ? aiLesson.id : undefined,
+                        last_lesson: lastCompleted ? lastCompleted.title : undefined,
+                        history: aiHistory.slice(-8)
                     })
                 });
                 const data = await res.json();
                 aiHideTyping();
                 if (data.success) {
-                    aiTeacherBubble('bot', data.reply || 'Hmm, I got nothing back. Try again.');
+                    const reply = data.reply || 'Hmm, I got nothing back. Try again.';
+                    aiTeacherBubble('bot', reply);
+                    pushHistory('assistant', reply);
+                    if (voiceMode) speak(reply);
                 } else {
                     aiTeacherBubble('bot', '⚠️ ' + (data.message || 'Something went wrong. Please try again.'));
                 }
@@ -307,38 +559,189 @@
             askAI(message, mode);
         }
 
-        async function generateQuizFromLesson() {
+        function sendAITeacher() {
+            const input = document.getElementById('aiTeacherInput');
+            const message = input.value.trim();
+            if (!message || aiBusy) return;
+            input.value = '';
+            askAI(message, 'lecture');
+        }
+
+        document.getElementById('aiTeacherInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') sendAITeacher();
+        });
+
+        // ==================== PRACTICE QUIZ (INLINE + INSTANT GRADING) ====================
+
+        function startInlineQuiz(count) {
             const aiLesson = currentAILesson();
             if (!aiLesson) {
-                aiTeacherBubble('user', '📝 Generate a quiz for this lesson');
                 aiTeacherBubble('bot', '⚠️ I need the lesson to be ready first. Please try again in a moment.');
                 return;
             }
-            aiTeacherBubble('user', '📝 Please generate a practice quiz for this lesson.');
+            aiTeacherBubble('user', '📝 Please give me a practice quiz for this lesson.');
+            aiShowTyping();
+            aiBusy = true;
+            authFetch('/api/ai/quiz', {
+                method: 'POST',
+                body: JSON.stringify({ course_id: courseId, lesson_id: aiLesson.id, count: count || 10, difficulty: 'mixed' })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                aiHideTyping();
+                if (!data.success) {
+                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'I could not create the quiz. Please try again.'));
+                    return;
+                }
+                aiTeacherBubble('bot', "Great job getting through the material! Let's see if you understood — answer the questions below, then press **Submit answers**. I'll grade you right away.");
+                renderQuizForm(data.quiz_id, data.questions);
+            })
+            .catch(function () {
+                aiHideTyping();
+                aiTeacherBubble('bot', '⚠️ Sorry, I could not create the quiz right now. Please try again.');
+            })
+            .finally(function () { aiBusy = false; });
+        }
+
+        function renderQuizForm(quizId, questions) {
+            const box = document.getElementById('aiTeacherMessages');
+            const old = document.querySelector('.quiz-bubble');
+            if (old) old.remove();
+
+            const div = document.createElement('div');
+            div.className = 'mrjohn-bubble quiz-bubble';
+            div.style.cssText = 'align-self:flex-start; width:100%; background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:0.9rem 1rem; color:#1e293b; box-sizing:border-box;';
+            div.dataset.quizId = quizId;
+
+            const form = document.createElement('form');
+            form.id = 'quizForm';
+            form.style.cssText = 'display:flex; flex-direction:column; gap:0.9rem;';
+
+            (questions || []).forEach(function (q, qi) {
+                const qdiv = document.createElement('div');
+                const title = document.createElement('div');
+                title.style.fontWeight = '600';
+                title.style.marginBottom = '0.4rem';
+                title.style.color = '#1e293b';
+                title.textContent = 'Q' + (qi + 1) + '. ' + q.question;
+                qdiv.appendChild(title);
+                const opts = document.createElement('div');
+                opts.style.cssText = 'display:flex; flex-direction:column; gap:0.25rem;';
+                (q.options || []).forEach(function (opt, oi) {
+                    const label = document.createElement('label');
+                    label.className = 'quiz-opt-label';
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = 'q' + qi;
+                    radio.value = oi;
+                    const span = document.createElement('span');
+                    span.textContent = opt;
+                    label.appendChild(radio);
+                    label.appendChild(span);
+                    opts.appendChild(label);
+                });
+                qdiv.appendChild(opts);
+                form.appendChild(qdiv);
+            });
+
+            const btn = document.createElement('button');
+            btn.type = 'submit';
+            btn.className = 'btn btn-primary';
+            btn.textContent = 'Submit answers';
+            btn.style.alignSelf = 'flex-start';
+            form.appendChild(btn);
+            div.appendChild(form);
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+
+            quizSession = { quizId: quizId, questions: questions };
+            form.addEventListener('submit', function (e) { e.preventDefault(); submitInlineQuiz(); });
+        }
+
+        async function submitInlineQuiz() {
+            if (!quizSession) return;
+            const form = document.getElementById('quizForm');
+            if (!form) return;
+            const answers = {};
+            let selectedCount = 0;
+            quizSession.questions.forEach(function (q, qi) {
+                const sel = form.querySelector('input[name="q' + qi + '"]:checked');
+                if (sel) { answers[q.question_id] = parseInt(sel.value, 10); selectedCount++; }
+            });
+            if (selectedCount < quizSession.questions.length) {
+                aiTeacherBubble('bot', '⚠️ You answered ' + selectedCount + ' of ' + quizSession.questions.length + ' questions. Please answer them all before submitting.');
+                return;
+            }
+            const submitBtn = form.querySelector('button[type=submit]');
+            if (submitBtn) submitBtn.disabled = true;
+            aiTeacherBubble('user', '📝 Here are my answers.');
             aiShowTyping();
             aiBusy = true;
             try {
-                const res = await authFetch('/api/ai/quiz', {
+                const res = await authFetch('/api/ai/quiz/' + quizSession.quizId + '/submit', {
                     method: 'POST',
-                    body: JSON.stringify({ course_id: courseId, lesson_id: aiLesson.id, count: 10, difficulty: 'mixed' })
+                    body: JSON.stringify({ answers: answers })
                 });
                 const data = await res.json();
                 aiHideTyping();
                 if (data.success) {
-                    aiTeacherBubble('bot', '✅ Done! I have prepared a **' + data.questions.length + '-question practice quiz** for you on *' + aiLesson.title + '*. Your teacher has saved it, and you can take it from the admin / quiz section. Ask me for practice questions here any time too!');
+                    showQuizResult(data, quizSession.questions);
                 } else {
-                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'I could not create the quiz. Please try again.'));
+                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'I could not grade your quiz. Please try again.'));
                 }
             } catch (e) {
                 aiHideTyping();
-                aiTeacherBubble('bot', '⚠️ Sorry, I could not create the quiz right now. Please try again.');
+                aiTeacherBubble('bot', '⚠️ Sorry, I could not grade your quiz right now.');
             } finally {
                 aiBusy = false;
+                quizSession = null;
             }
         }
 
+        function showQuizResult(data, questions) {
+            const qmap = {};
+            questions.forEach(function (q) { qmap[q.question_id] = q; });
+
+            const lines = [];
+            lines.push('**Your score: ' + data.correct + ' / ' + data.total + ' (' + data.score + '%)**');
+            if (data.passed) {
+                lines.push(data.score >= 100 ? '🎉 **Perfect! Absolutely outstanding work!**' : '🎉 **Well done — you passed!**');
+                confetti();
+            } else {
+                lines.push('💪 Good effort! Review the ones you missed below — that is where the real learning happens.');
+            }
+
+            let wrongShown = 0;
+            if (data.details && data.details.length) {
+                for (const d of data.details) {
+                    if (d.correct) continue;
+                    const q = qmap[d.question_id];
+                    if (!q) continue;
+                    const correctText = q.options && q.options[d.correct_answer] != null ? q.options[d.correct_answer] : '?';
+                    lines.push('- ❌ **' + q.question + '**');
+                    lines.push('  Correct answer: *' + correctText + '*');
+                    if (q.explanation) lines.push('  ' + q.explanation);
+                    wrongShown++;
+                }
+            }
+            if (data.correct === data.total) {
+                lines.push('');
+                lines.push('You got every single one right. I am genuinely impressed!');
+            }
+            if (wrongShown === 0 && data.correct < data.total) {
+                lines.push('');
+                lines.push('Keep practising — you are close!');
+            }
+            aiTeacherBubble('bot', lines.join('\n'));
+            if (voiceMode) {
+                speak('You scored ' + data.correct + ' out of ' + data.total + ', which is ' + data.score + ' percent. ' + (data.passed ? 'Well done, you passed!' : 'Keep practicing, you are getting there!'));
+            }
+        }
+
+        // ==================== STUDY PLAN ====================
+
         function studyPlan() {
-            const done = enrollment.lessons.filter(function(l) { return l.completed; }).length;
+            const done = enrollment.lessons.filter(function (l) { return l.completed; }).length;
             const total = enrollment.lessons.length;
             const message = 'Create a personalized study plan for me. I am studying ' + enrollment.courseTitle +
                 ', I have completed ' + done + ' of ' + total + ' lessons (' + Math.round((done / (total || 1)) * 100) + '%). ' +
@@ -346,7 +749,163 @@
             askAI(message, 'study-plan');
         }
 
-        // ---- Code review ----
+        // ==================== DOWNLOAD NOTES ====================
+
+        async function downloadNotes() {
+            const aiLesson = currentAILesson();
+            const lessonTitle = document.getElementById('currentLessonTitle').textContent;
+            const courseTitleEl = document.getElementById('courseTitle').textContent;
+            aiTeacherBubble('user', '📄 Please create study notes for this lesson.');
+            aiShowTyping();
+            aiBusy = true;
+            try {
+                const res = await authFetch('/api/ai/chat', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        message: 'Create clean study notes for this lesson: key concepts, important definitions, worked examples, practical tips, common mistakes, and a revision checklist.',
+                        mode: 'notes',
+                        course_id: courseId,
+                        lesson_id: aiLesson ? aiLesson.id : undefined
+                    })
+                });
+                const data = await res.json();
+                aiHideTyping();
+                if (!data.success) {
+                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'I could not create your notes. Please try again.'));
+                    return;
+                }
+                aiTeacherBubble('bot', data.reply);
+                openPrintNotes(courseTitleEl, lessonTitle, data.reply, aiLesson);
+            } catch (e) {
+                aiHideTyping();
+                aiTeacherBubble('bot', '⚠️ Sorry, I could not create your notes right now.');
+            } finally {
+                aiBusy = false;
+            }
+        }
+
+        function openPrintNotes(courseTitle, lessonTitle, summaryText, aiLesson) {
+            const notes = aiLesson && aiLesson.content ? aiLesson.content.trim() : '';
+            const w = window.open('', '_blank', 'width=820,height=920');
+            if (!w) { alert('Please allow pop-ups to open your study notes.'); return; }
+            const styles = 'body{font-family:Inter,Arial,sans-serif;color:#1e293b;max-width:760px;margin:0 auto;padding:40px 24px;line-height:1.75;}h1{color:#0f172a;border-bottom:3px solid #6366f1;padding-bottom:10px;}h2{color:#4f46e5;margin-top:30px;}h4{margin-bottom:2px;}pre{background:#f1f5f9;padding:12px;border-radius:8px;overflow:auto;color:#0f172a;}ul{margin:0;padding-left:22px;}code{background:#f1f5f9;padding:1px 5px;border-radius:5px;color:#0f766e;}.meta{color:#64748b;font-size:14px;}blockquote{border-left:4px solid #6366f1;margin:12px 0;padding:4px 14px;background:#f8fafc;}.foot{margin-top:44px;color:#94a3b8;font-size:12px;text-align:center;}';
+            w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + escapeHtml(courseTitle) + ' — ' + escapeHtml(lessonTitle) + '</title><style>' + styles + '</style></head><body>');
+            w.document.write('<h1>Study Notes</h1>');
+            w.document.write('<div class="meta"><strong>Course:</strong> ' + escapeHtml(courseTitle) + '<br><strong>Lesson:</strong> ' + escapeHtml(lessonTitle) + '</div>');
+            if (notes) w.document.write('<h2>Written notes</h2><div>' + renderAIMarkdown(notes) + '</div>');
+            w.document.write('<h2>Mr. John\'s summary</h2><div>' + renderAIMarkdown(summaryText) + '</div>');
+            w.document.write('<p class="foot">Generated by pazoskill — Mr. John. Use your browser\'s "Save as PDF" to keep a copy.</p>');
+            w.document.write('</body></html>');
+            w.document.close();
+            setTimeout(function () { w.focus(); w.print(); }, 600);
+        }
+
+        // ==================== CHALLENGE (AI HOMEWORK) ====================
+
+        async function startChallenge() {
+            const aiLesson = currentAILesson();
+            aiTeacherBubble('user', '🧠 Please give me a practical challenge for this lesson.');
+            aiShowTyping();
+            aiBusy = true;
+            try {
+                const res = await authFetch('/api/ai/assignment', {
+                    method: 'POST',
+                    body: JSON.stringify({ course_id: courseId, lesson_id: aiLesson ? aiLesson.id : undefined })
+                });
+                const data = await res.json();
+                aiHideTyping();
+                if (!data.success) {
+                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'I could not create a challenge right now. Please try again.'));
+                    return;
+                }
+                aiTeacherBubble('bot', data.assignment);
+                openAssignmentModal();
+            } catch (e) {
+                aiHideTyping();
+                aiTeacherBubble('bot', '⚠️ Sorry, I could not create your challenge right now.');
+            } finally {
+                aiBusy = false;
+            }
+        }
+
+        function openAssignmentModal() {
+            document.getElementById('assignmentModal').style.display = 'flex';
+        }
+
+        function closeAssignmentModal() {
+            document.getElementById('assignmentModal').style.display = 'none';
+        }
+
+        document.getElementById('assignmentModal').addEventListener('click', function (e) {
+            if (e.target.id === 'assignmentModal') closeAssignmentModal();
+        });
+
+        function readFileAsBase64(file) {
+            return new Promise(function (resolve, reject) {
+                const r = new FileReader();
+                r.onload = function () {
+                    const s = r.result || '';
+                    resolve(s.indexOf(',') >= 0 ? s.slice(s.indexOf(',') + 1) : s);
+                };
+                r.onerror = reject;
+                r.readAsDataURL(file);
+            });
+        }
+
+        async function submitAssignment() {
+            const answerEl = document.getElementById('assignmentAnswer');
+            const fileInput = document.getElementById('assignmentImage');
+            const answer = (answerEl.value || '').trim();
+            let image_base64 = null;
+            let image_mime = null;
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                const f = fileInput.files[0];
+                if (f.size > 3.5 * 1024 * 1024) {
+                    aiTeacherBubble('bot', '⚠️ That photo is too large. Please choose one under about 3.5MB.');
+                    return;
+                }
+                image_base64 = await readFileAsBase64(f);
+                image_mime = f.type || 'image/jpeg';
+            }
+            if (!answer && !image_base64) {
+                aiTeacherBubble('bot', '⚠️ Please write an answer or attach a photo of your work.');
+                return;
+            }
+            closeAssignmentModal();
+            aiTeacherBubble('user', '🧠 Here is my answer to your challenge.');
+            aiShowTyping();
+            aiBusy = true;
+            try {
+                const aiLesson = currentAILesson();
+                const res = await authFetch('/api/ai/assignment/review', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        course_id: courseId,
+                        lesson_id: aiLesson ? aiLesson.id : undefined,
+                        submission: answer,
+                        image_base64: image_base64,
+                        image_mime: image_mime
+                    })
+                });
+                const data = await res.json();
+                aiHideTyping();
+                if (data.success) {
+                    aiTeacherBubble('bot', data.reply);
+                } else {
+                    aiTeacherBubble('bot', '⚠️ ' + (data.message || 'Mr. John could not review your answer right now.'));
+                }
+            } catch (e) {
+                aiHideTyping();
+                aiTeacherBubble('bot', '⚠️ Sorry, Mr. John could not review your answer right now.');
+            } finally {
+                aiBusy = false;
+            }
+            answerEl.value = '';
+            if (fileInput) fileInput.value = '';
+        }
+
+        // ==================== CODE REVIEW ====================
+
         function openCodeModal() {
             document.getElementById('codeModal').style.display = 'flex';
         }
@@ -372,7 +931,7 @@
                     body: JSON.stringify({
                         code: code,
                         language: document.getElementById('codeLang').value.trim() || undefined,
-                        question: document.getElementById('codeQuestion').value.trim() || undefined,
+                        question: document.getElementById('codeQuestion').value.trim() || undefined
                     })
                 });
                 const data = await res.json();
@@ -390,17 +949,28 @@
             }
         }
 
-        function sendAITeacher() {
-            const input = document.getElementById('aiTeacherInput');
-            const message = input.value.trim();
-            if (!message || aiBusy) return;
-            input.value = '';
-            askAI(message, 'lecture');
+        // ==================== CELEBRATION ====================
+
+        function confetti() {
+            if (document.getElementById('confettiLayer')) return;
+            const layer = document.createElement('div');
+            layer.id = 'confettiLayer';
+            layer.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:2000; overflow:hidden;';
+            document.body.appendChild(layer);
+            const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#6366f1', '#ec4899'];
+            for (let i = 0; i < 120; i++) {
+                const c = document.createElement('div');
+                const size = 6 + Math.random() * 8;
+                c.style.cssText = 'position:absolute; top:-20px; left:' + (Math.random() * 100) + 'vw; width:' + size + 'px; height:' + (size * 0.6) + 'px; background:' + colors[i % colors.length] + '; border-radius:2px; animation: confettiFall ' + (2.4 + Math.random() * 2) + 's linear forwards; animation-delay:' + (Math.random() * 0.5) + 's;';
+                layer.appendChild(c);
+            }
+            setTimeout(function () {
+                const l = document.getElementById('confettiLayer');
+                if (l) l.remove();
+            }, 6000);
         }
 
-        document.getElementById('aiTeacherInput').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') sendAITeacher();
-        });
+        // ==================== INIT ====================
 
         async function initLearnPage() {
             const user = await syncUserSession();
@@ -411,7 +981,6 @@
 
             enrollment = user.enrolledCourses && user.enrolledCourses.find(e => e.course_id == courseId);
             if (!enrollment) {
-                // Try matching by course id in case it was stored differently
                 enrollment = user.enrolledCourses && user.enrolledCourses.find(e => String(e.course_id) === String(courseId));
             }
             if (!enrollment) {
@@ -420,29 +989,44 @@
                 return;
             }
 
-            // Display course info
             document.getElementById('courseTitle').textContent = enrollment.courseTitle;
             updateProgress();
             renderLessonsList();
             loadAIContext();
 
-            // Load first incomplete lesson or first lesson
             const firstIncomplete = enrollment.lessons.findIndex(l => !l.completed);
             loadLesson(firstIncomplete >= 0 ? firstIncomplete : 0);
 
-            // Complete lesson handler
+            personalizeWelcome();
+            loadWeakAreas();
+            initMic();
+
+            document.getElementById('voiceToggle').textContent = voiceMode ? '🔊 Voice: On' : '🔈 Voice: Off';
+
             document.getElementById('completeBtn').addEventListener('click', async function () {
                 const lesson = enrollment.lessons[currentLessonIndex];
-                if (!lesson.completed) {
-                    const result = await updateLessonProgress(courseId, lesson.id);
-                    if (result.success) {
-                        lesson.completed = true;
-                        enrollment.progress = result.progress;
-                        enrollment.completed = result.completed;
+                if (lesson.completed) return;
+                const result = await updateLessonProgress(courseId, lesson.id);
+                if (result.success) {
+                    lesson.completed = true;
+                    enrollment.progress = result.progress;
+                    enrollment.completed = result.completed;
 
-                        renderLessonsList();
-                        updateProgress();
-                        loadLesson(currentLessonIndex);
+                    renderLessonsList();
+                    updateProgress();
+                    loadLesson(currentLessonIndex);
+
+                    const firstName = getFirstName();
+                    confetti();
+                    if (enrollment.completed || result.progress >= 100) {
+                        const msg = '🎉 **Outstanding, ' + firstName + '!** You finished the final lesson — you completed **' + enrollment.courseTitle + '**! Your certificate is ready below. I am so proud of you!';
+                        aiTeacherBubble('bot', msg);
+                        if (voiceMode) speak('Outstanding ' + firstName + '! You finished the final lesson and completed the whole course. Your certificate is ready. I am so proud of you!');
+                    } else {
+                        const msg = '🎉 **Excellent work, ' + firstName + '!** You finished *"' + lesson.title + '"* and you are now **' + result.progress + '%** through **' + enrollment.courseTitle + '**. Give me a moment — I have a short quiz to check your understanding.';
+                        aiTeacherBubble('bot', msg);
+                        if (voiceMode) speak('Excellent work, ' + firstName + '! You finished the lesson and you are now ' + result.progress + ' percent through the course. I have a short quiz for you.');
+                        startInlineQuiz(5);
                     }
                 }
             });

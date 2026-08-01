@@ -1,6 +1,7 @@
 const { GoogleGenAI } = require('@google/genai');
 const settingModel = require('../models/setting.model');
 const aiUsageModel = require('../models/ai-usage.model');
+const quizResultModel = require('../models/quiz-result.model');
 
 let client = null;
 let configCache = null;
@@ -132,6 +133,52 @@ const CAREER_SYSTEM = [
     'Keep answers under 500 words unless asked for more.',
 ].join('\n');
 
+const NOTES_SYSTEM = [
+    TUTOR_SYSTEM,
+    'Write clean study notes for the current lesson.',
+    'Structure them with markdown headings in this order:',
+    '1. Key concepts',
+    '2. Important definitions (with a short example for each)',
+    '3. Worked examples',
+    '4. Practical tips',
+    '5. Common mistakes to avoid',
+    '6. Quick revision checklist',
+].join('\n');
+
+const ASSIGNMENT_SYSTEM = [
+    'You are Mr. John, a practical and encouraging teacher. You are a HUMAN teacher - never mention being an AI, a model, or a bot.',
+    'Create ONE practical assignment (a challenge) based on the current lesson. This is homework the student will do by themselves.',
+    'The assignment must be hands-on and realistic, like a real task someone would do in that field.',
+    'Include:',
+    '1. A short, catchy challenge title',
+    '2. What to build or do, step by step',
+    '3. What success looks like (a simple checklist)',
+    '4. One helpful hint',
+    'Keep it under 300 words and end with an encouraging line.',
+].join('\n');
+
+const TONE_INSTRUCTIONS = {
+    beginner: [
+        'The student chose Beginner mode. Assume they are completely new to this topic.',
+        'Use the simplest possible words, tiny steps, one idea at a time, and very concrete everyday examples.',
+        'Avoid jargon entirely; if a term is unavoidable, define it immediately in plain language.',
+        'Keep paragraphs short and friendly.',
+    ].join('\n'),
+    advanced: [
+        'The student chose Advanced mode. Assume they already know the basics of this topic.',
+        'Go deeper: cover nuance, edge cases, trade-offs, professional mistakes and best practices.',
+        'You may use technical terms freely, but still explain everything clearly.',
+    ].join('\n'),
+    quick: [
+        'The student chose Quick mode. Be concise and efficient.',
+        'Give the key points as a tight bullet list, then one short takeaway sentence. Keep it under 250 words.',
+    ].join('\n'),
+    detailed: [
+        'The student chose Detailed mode. Give a thorough, in-depth lesson.',
+        'Cover every concept in detail with examples, analogies, text diagrams, common mistakes and a final recap. You may go beyond 700 words.',
+    ].join('\n'),
+};
+
 async function generate(systemInstruction, userContent, meta) {
     const settings = await getSettings();
     const response = await getClient().models.generateContent({
@@ -219,18 +266,37 @@ const MODE_SYSTEMS = {
         'The student asked for a mock job interview. Ask one interview question at a time for their field, wait for them to answer, then give feedback and move to the next question.',
     ].join('\n\n'),
     career: CAREER_SYSTEM,
+    notes: NOTES_SYSTEM,
 };
 
-async function askTutor({ message, course, lesson, userName, userId, mode, endpoint }) {
-    const system = MODE_SYSTEMS[mode] || TUTOR_SYSTEM;
-    const user = [
+function buildTone(system, tone) {
+    if (!tone || !TONE_INSTRUCTIONS[tone]) return system;
+    return system + '\n\n' + TONE_INSTRUCTIONS[tone];
+}
+
+async function askTutor({ message, course, lesson, userName, userId, mode, tone, lastLesson, history, endpoint }) {
+    let system = MODE_SYSTEMS[mode] || TUTOR_SYSTEM;
+    system = buildTone(system, tone);
+    const lines = [
         `Student name: ${userName || 'Student'}`,
         buildContext(course, lesson),
-        ``,
-        `Student Question:`,
-        message,
-    ].join('\n');
-    return generate(system, user, {
+    ];
+    if (lastLesson) lines.push(`Last completed lesson: ${lastLesson}`);
+    try {
+        const weak = await quizResultModel.getWeakAreasSummary(userId, course && course.id);
+        if (weak) lines.push(`Student's weak areas (lessons they scored below 70% on recently): ${weak}. If relevant to this lesson, gently help them reinforce it.`);
+    } catch (e) {
+        // Weak-area info is optional
+    }
+    if (history && Array.isArray(history) && history.length) {
+        lines.push('\nPrevious conversation (most recent last):');
+        for (const turn of history.slice(-6)) {
+            const who = turn.role === 'user' ? 'Student' : 'Teacher';
+            lines.push(`${who}: ${String(turn.content || '').slice(0, 600)}`);
+        }
+    }
+    lines.push('', 'Student Question:', message);
+    return generate(system, lines.join('\n'), {
         userId, userName, mode: mode || 'tutor', endpoint: endpoint || 'chat',
     });
 }
@@ -298,6 +364,46 @@ async function careerCoach({ topic, field, extra, userId, userName }) {
     return generate(CAREER_SYSTEM, user, { userId, userName, mode: 'career', endpoint: 'career' });
 }
 
+async function generateAssignment({ course, lesson, userId, userName }) {
+    const user = [
+        buildContext(course, lesson),
+        ``,
+        'Please give me my practical assignment (challenge) for this lesson.',
+    ].join('\n');
+    return generate(ASSIGNMENT_SYSTEM, user, { userId, userName, mode: 'assignment', endpoint: 'assignment' });
+}
+
+async function reviewAssignment({ course, lesson, submission, imageData, imageMime, userId, userName }) {
+    const system = [
+        'You are Mr. John, a practical, warm and honest teacher. You are a HUMAN teacher - never mention being an AI, a model, or a bot.',
+        "You are reviewing a student's completed assignment for the current lesson.",
+        'If an image of the student\'s work is provided, look at it carefully before commenting.',
+        'Give feedback that:',
+        '1. Starts with something the student did well.',
+        '2. Points out what could be improved, clearly and kindly.',
+        '3. Gives one specific next step or fix.',
+        '4. Finishes with encouragement.',
+        'Keep it under 400 words.',
+    ].join('\n');
+    const textPart = [
+        buildContext(course, lesson),
+        '',
+        'Assignment: the practical challenge the student was given based on this lesson.',
+        '',
+        "Student's answer:",
+        submission || '(The student only attached an image of their work.)',
+    ].join('\n');
+    const contents = [{ text: textPart }];
+    if (imageData && imageMime) {
+        contents.push({ inlineData: { mimeType: imageMime, data: imageData } });
+    }
+    return generate(system, contents, { userId, userName, mode: 'assignment-review', endpoint: 'assignment-review' });
+}
+
+async function getWeakAreas(userId, courseId) {
+    return quizResultModel.getWeakAreas(userId, courseId);
+}
+
 async function getUsageSummary() {
     return aiUsageModel.getSummary();
 }
@@ -308,6 +414,9 @@ module.exports = {
     generateQuiz,
     reviewCode,
     careerCoach,
+    generateAssignment,
+    reviewAssignment,
+    getWeakAreas,
     recordUsage,
     getSettings,
     resetConfigCache,

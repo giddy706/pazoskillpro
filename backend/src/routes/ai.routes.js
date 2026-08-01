@@ -6,6 +6,7 @@ const aiService = require('../services/ai.service');
 const courseService = require('../services/course.service');
 const lessonService = require('../services/lesson.service');
 const quizModel = require('../models/quiz.model');
+const quizResultModel = require('../models/quiz-result.model');
 const { authenticateToken, authorizeAdmin } = require('../middlewares/auth.middleware');
 
 async function loadCourseLesson(courseId, lessonId) {
@@ -73,7 +74,7 @@ async function aiError(res, req, mode, endpoint, err) {
  *         description: Tutor reply
  */
 router.post('/chat', authenticateToken, asyncHandler(async (req, res) => {
-    const { message, course_id, lesson_id, mode } = req.body;
+    const { message, course_id, lesson_id, mode, tone, history, last_lesson } = req.body;
     if (!message || !String(message).trim()) return error(res, 'Message is required', 400);
     if (!(await aiEnabledOrError(res))) return;
 
@@ -86,6 +87,11 @@ router.post('/chat', authenticateToken, asyncHandler(async (req, res) => {
             userName: req.user.name || 'Student',
             userId: req.user.id,
             mode,
+            tone,
+            lastLesson: last_lesson,
+            history: Array.isArray(history)
+                ? history.map((h) => ({ role: h.role === 'assistant' ? 'assistant' : 'user', content: String(h.content || '') }))
+                : undefined,
         });
         return success(res, { reply, course: course ? course.title : null, lesson: lesson ? lesson.title : null });
     } catch (err) {
@@ -180,6 +186,7 @@ router.post('/quiz', authenticateToken, asyncHandler(async (req, res) => {
             order_index: i,
             points: 1,
         });
+        questions[i].question_id = questionRow.id;
         const options = Array.isArray(q.options) ? q.options : [];
         for (let j = 0; j < options.length; j++) {
             await quizModel.addAnswer({
@@ -192,6 +199,96 @@ router.post('/quiz', authenticateToken, asyncHandler(async (req, res) => {
     }
 
     return success(res, { quiz_id: quiz.id, questions, message: 'Quiz generated and saved.' }, 201);
+}));
+
+/**
+ * @swagger
+ * /ai/quiz/{id}/submit:
+ *   post:
+ *     summary: Submit answers to an AI practice quiz and get an instant grade (also tracks weak areas)
+ *     tags: [AI]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               answers:
+ *                 type: object
+ *                 description: Map of question_id -> chosen answer index
+ */
+router.post('/quiz/:id/submit', authenticateToken, asyncHandler(async (req, res) => {
+    const quiz = await quizModel.findById(req.params.id);
+    if (!quiz) return error(res, 'Quiz not found', 404);
+
+    const answers = (req.body && req.body.answers) || {};
+    const questions = await quizModel.getQuestions(quiz.id);
+    const total = questions.length;
+    if (!total) return error(res, 'This quiz has no questions', 400);
+
+    let correctCount = 0;
+    let lessonTitle = null;
+    if (quiz.lesson_id) {
+        try {
+            const lesson = await lessonService.findById(quiz.lesson_id);
+            lessonTitle = lesson ? lesson.title : null;
+        } catch (e) {
+            lessonTitle = null;
+        }
+    }
+    const topic = lessonTitle || quiz.title;
+
+    const details = [];
+    for (const q of questions) {
+        const chosen = parseInt(answers[q.id], 10);
+        const correctIdx = q.answers.findIndex((a) => a.is_correct === 1);
+        const isCorrect = chosen === correctIdx;
+        if (isCorrect) correctCount++;
+        try {
+            await quizResultModel.record({
+                user_id: req.user.id,
+                quiz_id: quiz.id,
+                course_id: quiz.course_id,
+                lesson_id: quiz.lesson_id,
+                question: q.question,
+                topic,
+                correct: isCorrect ? 1 : 0,
+            });
+        } catch (e) {
+            // Tracking must never break grading
+        }
+        details.push({ question_id: q.id, correct: isCorrect, correct_answer: correctIdx });
+    }
+
+    const score = Math.round((correctCount / total) * 100);
+    const passing = quiz.passing_score || 70;
+    const passed = score >= passing;
+
+    await quizModel.saveAttempt({
+        quiz_id: quiz.id,
+        user_id: req.user.id,
+        score,
+        total_questions: total,
+        passed,
+    });
+
+    return success(res, {
+        quiz_id: quiz.id,
+        score,
+        passed,
+        correct: correctCount,
+        total,
+        passing_score: passing,
+        details,
+        message: passed ? 'Passed' : 'Keep practicing',
+    });
 }));
 
 /**
@@ -253,6 +350,96 @@ router.post('/career', authenticateToken, asyncHandler(async (req, res) => {
         return success(res, { reply });
     } catch (err) {
         return aiError(res, req, 'career', 'career', err);
+    }
+}));
+
+/**
+ * @swagger
+ * /ai/weak-areas:
+ *   get:
+ *     summary: Lessons the current student scored below 70% on (weak areas)
+ *     tags: [AI]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: course_id
+ *         schema: { type: integer }
+ */
+router.get('/weak-areas', authenticateToken, asyncHandler(async (req, res) => {
+    const courseId = req.query.course_id ? parseInt(req.query.course_id) : null;
+    const weak_areas = await aiService.getWeakAreas(req.user.id, courseId);
+    return success(res, { weak_areas });
+}));
+
+/**
+ * @swagger
+ * /ai/assignment:
+ *   post:
+ *     summary: Generate a practical assignment for a lesson
+ *     tags: [AI]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               course_id: { type: integer }
+ *               lesson_id: { type: integer }
+ */
+router.post('/assignment', authenticateToken, asyncHandler(async (req, res) => {
+    const { course_id, lesson_id } = req.body;
+    if (!(await aiEnabledOrError(res))) return;
+    const { course, lesson } = await loadCourseLesson(course_id, lesson_id);
+    if (!lesson) return error(res, 'A valid lesson_id is required', 400);
+    try {
+        const assignment = await aiService.generateAssignment({ course, lesson, userId: req.user.id, userName: req.user.name });
+        return success(res, { assignment });
+    } catch (err) {
+        return aiError(res, req, 'assignment', 'assignment', err);
+    }
+}));
+
+/**
+ * @swagger
+ * /ai/assignment/review:
+ *   post:
+ *     summary: AI feedback on a student's assignment (optional image upload)
+ *     tags: [AI]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               course_id: { type: integer }
+ *               lesson_id: { type: integer }
+ *               submission: { type: string }
+ *               image_base64: { type: string }
+ *               image_mime: { type: string }
+ */
+router.post('/assignment/review', authenticateToken, asyncHandler(async (req, res) => {
+    const { course_id, lesson_id, submission, image_base64, image_mime } = req.body;
+    if (!submission && !image_base64) return error(res, 'Please write an answer or attach an image of your work.', 400);
+    if (!(await aiEnabledOrError(res))) return;
+    if (image_base64 && image_base64.length > 4600000) {
+        return error(res, 'The attached image is too large. Please use a photo under about 3.5MB.', 400);
+    }
+    const { course, lesson } = await loadCourseLesson(course_id, lesson_id);
+    try {
+        const reply = await aiService.reviewAssignment({
+            course,
+            lesson,
+            submission: submission || '',
+            imageData: image_base64,
+            imageMime: image_mime,
+            userId: req.user.id,
+            userName: req.user.name,
+        });
+        return success(res, { reply });
+    } catch (err) {
+        return aiError(res, req, 'assignment-review', 'assignment-review', err);
     }
 }));
 

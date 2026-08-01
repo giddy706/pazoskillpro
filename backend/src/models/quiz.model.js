@@ -44,6 +44,16 @@ async function update(id, data) {
     return findById(id);
 }
 
+async function saveAttempt(data) {
+    const db = await getDB();
+    const result = await db.run(
+        `INSERT INTO quiz_attempts (quiz_id, user_id, score, total_questions, passed, completed_at)
+         VALUES (?, ?, ?, ?, ?, datetime('now'))`,
+        [data.quiz_id, parseInt(data.user_id), data.score || 0, data.total_questions || 0, data.passed ? 1 : 0]
+    );
+    return db.get(`SELECT * FROM quiz_attempts WHERE id = ?`, [result.lastID]);
+}
+
 async function remove(id) {
     const db = await getDB();
     await db.run(`DELETE FROM quiz_answers WHERE question_id IN (SELECT id FROM quiz_questions WHERE quiz_id = ?)`, [id]);
@@ -126,6 +136,7 @@ module.exports = {
     create,
     update,
     remove,
+    saveAttempt,
     getQuestions,
     addQuestion,
     updateQuestion,
