@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const courseController = require('../controllers/course.controller');
 const enrollmentController = require('../controllers/enrollment.controller');
-const { authenticateToken, authorizeAdmin } = require('../middlewares/auth.middleware');
+const { authenticateToken, authorizeAdmin, optionalAuth } = require('../middlewares/auth.middleware');
 const { validate } = require('../middlewares/validate.middleware');
 const { createCourse } = require('../validations/course.validation');
 
@@ -116,7 +116,7 @@ router.post('/:id/lessons/:lessonId/complete', authenticateToken, enrollmentCont
  *       404:
  *         description: Course not found
  */
-router.get('/:id', courseController.getDetails);
+router.get('/:id', optionalAuth, courseController.getDetails);
 
 /**
  * @swagger

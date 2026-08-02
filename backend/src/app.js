@@ -25,6 +25,7 @@ app.use(
         crossOriginEmbedderPolicy: false,
         crossOriginResourcePolicy: false,
         crossOriginOpenerPolicy: false,
+        referrerPolicy: { policy: 'no-referrer' },
     })
 );
 
@@ -34,7 +35,42 @@ app.use(xss());
 // Prevent HTTP Parameter Pollution
 app.use(hpp());
 
-app.use(cors({ origin: true, credentials: true }));
+// CORS: only allow known frontend origins (no wildcard reflection).
+const allowedOrigins = new Set(
+    (process.env.CORS_ORIGINS || '')
+        .split(',')
+        .map((o) => o.trim().replace(/\/$/, ''))
+        .filter(Boolean)
+);
+for (const origin of [
+    'https://pazoskillpro.pages.dev',
+    'http://localhost:3000',
+    'http://localhost:4173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5500',
+    'http://localhost:5500',
+    'http://localhost:8000',
+]) {
+    allowedOrigins.add(origin);
+}
+function isOriginAllowed(origin) {
+    if (!origin) return false;
+    return (
+        allowedOrigins.has(origin) ||
+        /^https:\/\/[a-z0-9-]+\.pazoskillpro\.pages\.dev$/.test(origin)
+    );
+}
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            if (isOriginAllowed(origin)) return callback(null, true);
+            callback(null, false);
+        },
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+    })
+);
 
 // Rate limiting
 const apiLimiter = rateLimit({
@@ -69,6 +105,7 @@ app.get('/health', (req, res) => {
 // Auth-specific rate limit
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
+app.use('/api/admin/login', authLimiter);
 
 // Redirect old admin dashboard URL to admin panel
 app.get('/admin-dashboard.html', (req, res) => {

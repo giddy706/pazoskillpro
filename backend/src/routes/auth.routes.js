@@ -119,22 +119,4 @@ router.get('/me', authenticateToken, authController.getMe);
  */
 router.post('/logout', authenticateToken, authController.logout);
 
-// TEMPORARY ROUTE TO MAKE YOUR ACCOUNT AN ADMIN
-// Usage: Visit https://pazoskillpro-backend.onrender.com/api/auth/make-admin?email=your@email.com
-router.get('/make-admin', async (req, res) => {
-    const email = req.query.email;
-    if (!email) return res.send('Please provide an email like: ?email=your@email.com');
-    
-    try {
-        const { getDB } = require('../config/database');
-        const db = await getDB();
-        const user = await db.get(`SELECT id FROM users WHERE email = ?`, [email]);
-        if (!user) return res.status(404).send(`No account found with email: ${email}`);
-        await db.run(`UPDATE users SET role = 'admin' WHERE email = ?`, [email]);
-        res.send(`Success! Account ${email} is now an admin. You can now log in at the frontend to access the admin dashboard.`);
-    } catch (error) {
-        res.status(500).send('Error upgrading account: ' + error.message);
-    }
-});
-
 module.exports = router;

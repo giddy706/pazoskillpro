@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middlewares/auth.middleware');
+const { authenticateToken, authorizeAdmin } = require('../middlewares/auth.middleware');
 const applicationController = require('../controllers/application.controller');
 
 /**
@@ -22,7 +22,7 @@ const applicationController = require('../controllers/application.controller');
  *       200:
  *         description: List of all applications
  */
-router.get('/', applicationController.listAll);
+router.get('/', authenticateToken, authorizeAdmin, applicationController.listAll);
 
 /**
  * @swagger
@@ -66,6 +66,6 @@ router.get('/my-applications', authenticateToken, applicationController.getMyApp
  *       200:
  *         description: Status updated
  */
-router.post('/:id/status', applicationController.updateStatus);
+router.post('/:id/status', authenticateToken, authorizeAdmin, applicationController.updateStatus);
 
 module.exports = router;

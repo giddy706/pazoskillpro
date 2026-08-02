@@ -10,6 +10,12 @@ async function register({ name, email, password, promoCode }) {
         throw new BadRequestError('Email already registered');
     }
 
+    // Validate the promo code BEFORE creating the account so a bad code
+    // fails cleanly instead of silently creating a user with no promo.
+    if (promoCode && String(promoCode).trim()) {
+        await require('./affiliate.service').validateCode(promoCode);
+    }
+
     const passwordHash = await bcrypt.hash(password, config.bcryptRounds);
     const user = await userModel.create({ name, email, passwordHash });
 

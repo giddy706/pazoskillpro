@@ -637,12 +637,13 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
         tbody.innerHTML = '<div class="loading">Loading...</div>';
         authFetch(apiUrl('/admin/courses'))
             .then(function(r) { return r.json(); })
-            .then(function(courses) {
-                if (!courses || !courses.length) { tbody.innerHTML = '<div class="empty">No courses found.</div>'; return; }
-                var html = '<table><thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Price</th><th>Published</th><th>Actions</th></tr></thead><tbody>';
+            .then(function(d) {
+                var courses = d.courses || [];
+                if (!courses.length) { tbody.innerHTML = '<div class="empty">No courses found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Price</th><th>Students</th><th>Published</th><th>Actions</th></tr></thead><tbody>';
                 courses.forEach(function(c) {
                     var pub = c.published ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-yellow">No</span>';
-                    html += '<tr><td>' + c.id + '</td><td>' + esc(c.title) + '</td><td>' + esc(c.category||'') + '</td><td>$' + (c.price||0).toFixed(2) + '</td><td>' + pub + '</td><td>';
+                    html += '<tr><td>' + c.id + '</td><td>' + esc(c.title) + '</td><td>' + esc(c.category||'') + '</td><td>KSH ' + (c.price||0).toFixed(2) + '</td><td>' + (c.students || c.students_count || 0) + '</td><td>' + pub + '</td><td>';
                     html += '<button class="btn btn-sm btn-secondary" onclick="editCourse(' + c.id + ')">Edit</button> ';
                     html += '<button class="btn btn-sm btn-danger" onclick="deleteCourse(' + c.id + ')">Del</button>';
                     html += '</td></tr>';
@@ -659,11 +660,12 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
         document.getElementById('courseTitle').value = data ? data.title : '';
         document.getElementById('courseDescription').value = data ? data.description : '';
         document.getElementById('courseCategory').value = data ? (data.category || '') : '';
-        document.getElementById('courseImage').value = data ? (data.image_url || '') : '';
+        document.getElementById('courseImage').value = data ? (data.image || data.image_url || '') : '';
+        document.getElementById('courseInstructor').value = data ? (data.instructor || '') : '';
         document.getElementById('coursePrice').value = data ? (data.price || 0) : '';
         document.getElementById('courseDuration').value = data ? (data.duration || '') : '';
         document.getElementById('courseLevel').value = data ? (data.level || '') : '';
-        document.getElementById('courseLearn').value = data ? (data.what_you_learn || '') : '';
+        document.getElementById('courseLearn').value = data ? (Array.isArray(data.outcomes) ? data.outcomes.join('\n') : (data.what_you_learn || '')) : '';
         document.getElementById('coursePublished').checked = data ? !!data.published : false;
         document.getElementById('courseFormMsg').style.display = 'none';
         openForm('courseFormOverlay');
@@ -672,7 +674,7 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
     function editCourse(id) {
         authFetch(apiUrl('/admin/courses/' + id))
             .then(function(r) { return r.json(); })
-            .then(function(c) { showCourseForm(c); })
+            .then(function(d) { showCourseForm(d.course); })
             .catch(function(err) { showMsg('courseMsg', 'error', 'Failed to load course'); });
     }
 
@@ -683,23 +685,26 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
             title: document.getElementById('courseTitle').value,
             description: document.getElementById('courseDescription').value,
             category: document.getElementById('courseCategory').value,
-            image_url: document.getElementById('courseImage').value,
+            image: document.getElementById('courseImage').value,
+            instructor: document.getElementById('courseInstructor').value,
             price: parseFloat(document.getElementById('coursePrice').value) || 0,
-            duration: parseInt(document.getElementById('courseDuration').value) || null,
+            duration: document.getElementById('courseDuration').value,
             level: document.getElementById('courseLevel').value,
-            what_you_learn: document.getElementById('courseLearn').value,
+            outcomes: document.getElementById('courseLearn').value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean),
             published: document.getElementById('coursePublished').checked
         };
-        var method = id ? 'PUT' : 'POST';
+        var method = id ? 'PATCH' : 'POST';
         var url = apiUrl('/admin/courses' + (id ? '/' + id : ''));
         authFetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
             .then(function(r) {
-                if (!r.ok) throw new Error('Failed to save');
-                showMsg('courseFormMsg', 'success', 'Saved successfully');
-                closeForm('courseFormOverlay');
-                loadCourses();
+                return r.json().then(function(d) {
+                    if (!r.ok) throw new Error(d.message || 'Failed to save course');
+                    showMsg('courseFormMsg', 'success', 'Saved successfully');
+                    closeForm('courseFormOverlay');
+                    loadCourses();
+                });
             })
-            .catch(function(err) { showMsg('courseFormMsg', 'error', 'Failed to save course'); });
+            .catch(function(err) { showMsg('courseFormMsg', 'error', err.message || 'Failed to save course'); });
     }
 
     function deleteCourse(id) {

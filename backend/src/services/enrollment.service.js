@@ -23,11 +23,16 @@ async function create(userId, courseId, promoCode) {
         throw new ConflictError('Already enrolled in this course');
     }
 
+    const courseModel = require('../models/course.model');
+    const course = await courseModel.findById(courseId);
+    if (!course) throw new NotFoundError('Course not found');
+    if (!course.published) throw new NotFoundError('Course not found');
+
     const affiliateService = require('./affiliate.service');
     const promo = await affiliateService.applyAtEnrollment(userId, courseId, promoCode);
 
     const enrollment = await enrollmentModel.create(userId, courseId);
-    await require('../models/course.model').incrementStudents(courseId);
+    await courseModel.incrementStudents(courseId);
 
     if (promo && promo.applied) {
         await affiliateService.linkEnrollment(userId, enrollment.id);

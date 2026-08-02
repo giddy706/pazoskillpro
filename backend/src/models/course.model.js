@@ -1,5 +1,10 @@
 const { getDB } = require('../config/database');
 
+const UPDATABLE_COLUMNS = new Set([
+    'title', 'category', 'description', 'duration', 'price', 'image',
+    'instructor', 'level', 'rating', 'requirements', 'outcomes', 'published',
+]);
+
 const listAll = async () => {
     const db = await getDB();
     return db.all(`SELECT * FROM courses ORDER BY id DESC`);
@@ -18,12 +23,13 @@ const findById = async (id) => {
 const create = async (data) => {
     const db = await getDB();
     const result = await db.run(
-        `INSERT INTO courses (title, category, description, duration, price, image, instructor, level, requirements, outcomes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO courses (title, category, description, duration, price, image, instructor, level, requirements, outcomes, published)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [data.title, data.category, data.description, data.duration, data.price,
          data.image, data.instructor, data.level,
          JSON.stringify(data.requirements || []),
-         JSON.stringify(data.outcomes || [])]
+         JSON.stringify(data.outcomes || []),
+         data.published === undefined ? 1 : (data.published ? 1 : 0)]
     );
     return findById(result.lastID);
 };
@@ -33,6 +39,7 @@ const update = async (id, updates) => {
     const fields = [];
     const values = [];
     for (const [key, value] of Object.entries(updates)) {
+        if (!UPDATABLE_COLUMNS.has(key)) continue;
         if (key === 'requirements' || key === 'outcomes') {
             fields.push(`${key} = ?`);
             values.push(JSON.stringify(value));
@@ -44,6 +51,7 @@ const update = async (id, updates) => {
             values.push(value);
         }
     }
+    if (fields.length === 0) return findById(id);
     values.push(parseInt(id));
     await db.run(`UPDATE courses SET ${fields.join(', ')} WHERE id = ?`, values);
     return findById(id);

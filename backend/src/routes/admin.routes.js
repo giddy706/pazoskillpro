@@ -56,15 +56,21 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 }));
 
 router.post('/courses', asyncHandler(async (req, res) => {
+    const { title, category } = req.body;
+    if (!title || !String(title).trim()) return error(res, 'Course title is required', 400);
+    if (!category || !String(category).trim()) return error(res, 'Course category is required', 400);
     const payload = {
-        title: req.body.title,
-        category: req.body.category,
+        title: String(title).trim(),
+        category: String(category).trim(),
         description: req.body.description || '',
         duration: req.body.duration || '',
-        price: req.body.price || 0,
+        price: Number(req.body.price) || 0,
         image: req.body.image || '',
         instructor: req.body.instructor || '',
         level: req.body.level || '',
+        requirements: Array.isArray(req.body.requirements) ? req.body.requirements : [],
+        outcomes: Array.isArray(req.body.outcomes) ? req.body.outcomes : [],
+        published: req.body.published === undefined ? 1 : (req.body.published ? 1 : 0),
         lessons: req.body.lessons || [],
     };
     const course = await courseService.create(payload);
@@ -72,9 +78,11 @@ router.post('/courses', asyncHandler(async (req, res) => {
 }));
 
 router.patch('/courses/:id', asyncHandler(async (req, res) => {
-    const updates = { ...req.body };
-    if (updates.requirements !== undefined) updates.requirements = Array.isArray(updates.requirements) ? updates.requirements : [];
-    if (updates.outcomes !== undefined) updates.outcomes = Array.isArray(updates.outcomes) ? updates.outcomes : [];
+    const allowed = ['title', 'category', 'description', 'duration', 'price', 'image', 'instructor', 'level', 'requirements', 'outcomes', 'published'];
+    const updates = {};
+    for (const key of allowed) {
+        if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
     const course = await courseService.update(req.params.id, updates);
     return success(res, { course });
 }));
@@ -434,19 +442,51 @@ router.post('/affiliates', asyncHandler(async (req, res) => {
 }));
 
 router.patch('/affiliates/:id', asyncHandler(async (req, res) => {
+    const current = await affiliateModel.findAffiliateById(req.params.id);
+    if (!current) return error(res, 'Affiliate not found', 404);
+
     const updates = {};
     for (const key of ['name', 'email', 'code', 'commission_percent', 'is_partner']) {
         if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
+
+    if (updates.code !== undefined) {
+        const newCode = String(updates.code).trim().toUpperCase();
+        if (!newCode) return error(res, 'Affiliate referral code is required', 400);
+        if (newCode !== String(current.code).trim().toUpperCase()) {
+            const takenAffiliate = await affiliateModel.findAffiliateByCode(newCode);
+            if (takenAffiliate && takenAffiliate.id !== parseInt(req.params.id)) {
+                return error(res, 'That referral code is already taken', 400);
+            }
+            const takenPromo = await affiliateModel.findPromoByCode(newCode);
+            if (takenPromo) return error(res, 'That promo code is already in use', 400);
+        }
+        updates.code = newCode;
+    }
+
     const affiliate = await affiliateModel.updateAffiliate(req.params.id, updates);
-    if (!affiliate) return error(res, 'Affiliate not found', 404);
+
     const promoUpdates = {};
     for (const key of ['discount_type', 'discount_value', 'course_id', 'expires_at', 'usage_limit']) {
         if (req.body[key] !== undefined) promoUpdates[key] = req.body[key];
     }
+    if (updates.code !== undefined) promoUpdates.code = updates.code;
     if (Object.keys(promoUpdates).length) {
-        const promo = await affiliateModel.findPromoByCode(affiliate.code);
-        if (promo) await affiliateModel.updatePromo(promo.id, promoUpdates);
+        const promo = await affiliateModel.findPromoByCode(current.code);
+        if (promo) {
+            await affiliateModel.updatePromo(promo.id, promoUpdates);
+        } else {
+            await affiliateModel.createPromo({
+                code: updates.code,
+                discount_type: req.body.discount_type || 'percentage',
+                discount_value: req.body.discount_value != null ? req.body.discount_value : 10,
+                course_id: req.body.course_id || null,
+                expires_at: req.body.expires_at || null,
+                usage_limit: req.body.usage_limit || null,
+                affiliate_id: affiliate.id,
+                active: 1,
+            });
+        }
     }
     const detail = await affiliateService.getAffiliateDetail(req.params.id);
     return success(res, { affiliate: detail });

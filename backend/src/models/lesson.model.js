@@ -40,9 +40,11 @@ const create = async (courseId, title, orderIndex, videoUrl = '', content = '') 
 
 const update = async (id, updates) => {
     const db = await getDB();
+    const allowed = ['course_id', 'title', 'order_index', 'video_url', 'content'];
     const fields = [];
     const values = [];
     for (const [key, value] of Object.entries(updates)) {
+        if (!allowed.includes(key)) continue;
         fields.push(`${key} = ?`);
         values.push(value);
     }

@@ -25,6 +25,20 @@ router.get('/', jobController.list);
 
 /**
  * @swagger
+ * /jobs/my-applications:
+ *   get:
+ *     summary: Get current user's job applications
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of user's applications
+ */
+router.get('/my-applications', authenticateToken, applicationController.getMyApplications);
+
+/**
+ * @swagger
  * /jobs/{id}:
  *   get:
  *     summary: Get job details
@@ -73,20 +87,6 @@ router.get('/:id', jobController.getDetails);
  *         description: Application submitted
  */
 router.post('/:id/apply', authenticateToken, applicationController.applyForJob);
-
-/**
- * @swagger
- * /jobs/my-applications:
- *   get:
- *     summary: Get current user's job applications
- *     tags: [Jobs]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of user's applications
- */
-router.get('/my-applications', authenticateToken, applicationController.getMyApplications);
 
 /**
  * @swagger

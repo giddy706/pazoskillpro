@@ -57,14 +57,21 @@ function computeCommission(promo, paidAmount) {
 async function validateCode(code, courseId) {
     const promo = await findPromo(code);
     if (courseId) validateCourseMatch(promo, courseId);
-    const price = 0;
-    const { paidAmount } = computeDiscount(promo, price);
+    let coursePrice = 0;
+    if (courseId) {
+        const courseModel = require('../models/course.model');
+        const course = await courseModel.findById(courseId);
+        coursePrice = course ? course.price : 0;
+    }
+    const { discountAmount, paidAmount } = computeDiscount(promo, coursePrice);
     return {
         valid: true,
         code: promo.code,
         discountType: promo.discount_type,
         discountValue: promo.discount_value,
         discountLabel: discountLabel(promo),
+        discountAmount,
+        paidAmount,
         affiliateId: promo.affiliate_id,
         affiliateName: promo.affiliateName || '',
         courseId: promo.course_id || null,
@@ -88,7 +95,6 @@ async function applyAtRegistration(userId, code) {
         code: promo.code,
         status: 'registered',
     });
-    await affiliateModel.incrementTimesUsed(promo.id);
 
     return {
         code: promo.code,

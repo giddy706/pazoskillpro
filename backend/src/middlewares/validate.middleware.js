@@ -14,8 +14,9 @@ const validate = (schema) => (req, res, next) => {
         }
         next();
     } catch (e) {
-        if (e instanceof z.ZodError) {
-            const message = e.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+        if (e && (e.name === 'ZodError' || e instanceof z.ZodError)) {
+            const issues = e.issues || e.errors || [];
+            const message = issues.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
             return res.status(400).json({ success: false, message });
         }
         next(e);

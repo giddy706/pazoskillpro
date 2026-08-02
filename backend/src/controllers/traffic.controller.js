@@ -1,3 +1,5 @@
+const jwt = require('jsonwebtoken');
+const { config } = require('../config/env');
 const { asyncHandler } = require('../utils/asyncHandler');
 const { success } = require('../utils/response');
 const trafficModel = require('../models/traffic.model');
@@ -17,7 +19,7 @@ exports.track = asyncHandler(async (req, res) => {
     const token = req.cookies?.token;
     if (token) {
         try {
-            const verified = require('jsonwebtoken').verify(token, process.env.JWT_SECRET || 'skillpath_super_secret_key_2026');
+            const verified = jwt.verify(token, config.jwtSecret);
             userId = verified.id;
         } catch {
             // Ignore

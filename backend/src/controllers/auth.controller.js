@@ -1,7 +1,7 @@
 const { asyncHandler } = require('../utils/asyncHandler');
 const { success, error } = require('../utils/response');
 const authService = require('../services/auth.service');
-const { BadRequestError } = require('../utils/errors');
+const { BadRequestError, NotFoundError } = require('../utils/errors');
 
 exports.register = asyncHandler(async (req, res) => {
     const { fullName, email, password, promo_code } = req.body;
@@ -40,7 +40,7 @@ exports.getMe = asyncHandler(async (req, res) => {
     ]);
 
     if (!user) {
-        throw new Error('User not found');
+        throw new NotFoundError('User not found');
     }
 
     const completedCourses = [];

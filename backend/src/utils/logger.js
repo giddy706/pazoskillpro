@@ -32,13 +32,14 @@ function logHttp(req, res, next) {
     const start = Date.now();
     res.on('finish', () => {
         const ms = Date.now() - start;
-        logger.info(`${req.method} ${req.originalUrl} ${res.statusCode} - ${ms}ms`);
+        // Use req.path (no query string) to avoid leaking tokens in query params
+        logger.info(`${req.method} ${req.path} ${res.statusCode} - ${ms}ms`);
     });
     next();
 }
 
 function logError(err, req = {}) {
-    logger.error(`${req.method || 'N/A'} ${req.originalUrl || 'N/A'} - ${err.message}`, err);
+    logger.error(`${req.method || 'N/A'} ${req.path || 'N/A'} - ${err.message}`, err);
 }
 
 function logInfo(msg) {

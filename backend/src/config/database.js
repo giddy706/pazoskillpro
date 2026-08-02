@@ -29,6 +29,16 @@ async function runMigrations() {
         const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
         await db.exec(sql);
     }
+
+    // Idempotently add columns that older migrations may have missed (SQLite has no ADD COLUMN IF NOT EXISTS)
+    const ensureColumn = async (table, column, ddl) => {
+        try {
+            await db.run(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+        } catch (err) {
+            if (!/duplicate column name/i.test(err.message)) throw err;
+        }
+    };
+    await ensureColumn('courses', 'published', 'published INTEGER DEFAULT 1');
 }
 
 async function runSeed() {

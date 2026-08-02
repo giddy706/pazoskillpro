@@ -11,6 +11,7 @@ const certificateModel = require('../models/certificate.model');
 const lessonModel = require('../models/lesson.model');
 const quizAttemptModel = require('../models/quiz-attempt.model');
 const cmsPageModel = require('../models/cms-page.model');
+const { NotFoundError } = require('../utils/errors');
 
 async function getMetrics() {
     const students = await userModel.listStudents();
@@ -181,8 +182,8 @@ async function getStudentDetail(userId) {
         const lessons = await enrollmentModel.getEnrollmentLessons(e.id, e.course_id);
         withLessons.push({
             ...e,
-            courseTitle: e.courses?.title || '',
-            coursePrice: e.courses?.price || 0,
+            courseTitle: e.courseTitle || e.courses?.title || '',
+            coursePrice: e.coursePrice ?? e.courses?.price ?? 0,
             lessons,
         });
     }
@@ -215,7 +216,7 @@ async function issueCertificate(userId, courseId, issuerName) {
 // Course publish
 async function setCoursePublished(courseId, published) {
     const course = await courseModel.findById(courseId);
-    if (!course) throw new Error('Course not found');
+    if (!course) throw new NotFoundError('Course not found');
     return courseModel.setPublished(courseId, published);
 }
 

@@ -61,12 +61,13 @@ router.get('/my-enrollments', authenticateToken, asyncHandler(async (req, res) =
 router.post('/:id/enroll', authenticateToken, asyncHandler(async (req, res) => {
     const userId = req.user.id;
     const courseId = req.params.id;
+    const { promo_code } = req.body || {};
     const existing = await enrollmentService.findByUserAndCourse(userId, courseId);
     if (existing) {
         return success(res, { enrollment: existing });
     }
-    const result = await enrollmentService.create(userId, courseId);
-    return success(res, { enrollment: result }, 201);
+    const result = await enrollmentService.create(userId, courseId, promo_code);
+    return success(res, { enrollment: result.enrollment, promo: result.promo }, 201);
 }));
 
 /**

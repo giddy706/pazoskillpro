@@ -46,9 +46,11 @@ async function aiError(res, req, mode, endpoint, err) {
         mode,
         endpoint,
         status: 'error',
-        errorMessage: err.message,
+        errorMessage: err && err.message ? err.message : String(err),
     });
-    return error(res, 'AI service error: ' + err.message, 500);
+    const { config } = require('../config/env');
+    const detail = config.env === 'production' ? '' : ': ' + (err && err.message ? err.message : '');
+    return error(res, 'AI service error' + detail, 500);
 }
 
 /**

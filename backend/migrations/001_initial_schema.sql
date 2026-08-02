@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS courses (
     rating REAL DEFAULT 5.0,
     students_count INTEGER DEFAULT 0,
     requirements TEXT DEFAULT '[]',
-    outcomes TEXT DEFAULT '[]'
+    outcomes TEXT DEFAULT '[]',
+    published INTEGER DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS lessons (

@@ -19,6 +19,16 @@ async function listAll() {
     }));
 }
 
+async function listPublished() {
+    const courses = await courseModel.listPublished();
+    return courses.map((c) => ({
+        ...c,
+        requirements: parseJsonArray(c.requirements),
+        outcomes: parseJsonArray(c.outcomes),
+        students: c.students_count,
+    }));
+}
+
 async function findById(id) {
     const course = await courseModel.findById(id);
     if (!course) throw new NotFoundError('Course not found');
@@ -44,7 +54,7 @@ async function findById(id) {
     };
 }
 
-async function create({ title, category, description, duration, price, image, instructor, level, lessons, requirements = [], outcomes = [] }) {
+async function create({ title, category, description, duration, price, image, instructor, level, lessons, requirements = [], outcomes = [], published = 1 }) {
     const course = await courseModel.create({
         title,
         category,
@@ -56,6 +66,7 @@ async function create({ title, category, description, duration, price, image, in
         level,
         requirements,
         outcomes,
+        published,
     });
 
     if (Array.isArray(lessons)) {
@@ -96,6 +107,7 @@ async function countAll() {
 
 module.exports = {
     listAll,
+    listPublished,
     findById,
     create,
     update,

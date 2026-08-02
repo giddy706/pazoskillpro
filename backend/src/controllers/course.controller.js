@@ -4,12 +4,19 @@ const { NotFoundError } = require('../utils/errors');
 const courseService = require('../services/course.service');
 
 exports.list = asyncHandler(async (req, res) => {
-    const courses = await courseService.listAll();
+    const courses = await courseService.listPublished();
     return success(res, { courses });
 });
 
 exports.getDetails = asyncHandler(async (req, res) => {
     const course = await courseService.findById(req.params.id);
+    if (!course.published) {
+        const canView =
+            req.user &&
+            (req.user.role === 'admin' ||
+                (await require('../services/enrollment.service').findByUserAndCourse(req.user.id, course.id)));
+        if (!canView) throw new NotFoundError('Course not found');
+    }
     const lessons = await require('../services/lesson.service').listByCourse(course.id);
     course.curriculum = lessons;
     return success(res, { course });
@@ -17,7 +24,17 @@ exports.getDetails = asyncHandler(async (req, res) => {
 
 exports.create = asyncHandler(async (req, res) => {
     const payload = {
-        ...req.body,
+        title: req.body.title,
+        category: req.body.category,
+        description: req.body.description || '',
+        duration: req.body.duration || '',
+        price: req.body.price || 0,
+        image: req.body.image || '',
+        instructor: req.body.instructor || '',
+        level: req.body.level || '',
+        requirements: Array.isArray(req.body.requirements) ? req.body.requirements : [],
+        outcomes: Array.isArray(req.body.outcomes) ? req.body.outcomes : [],
+        published: req.body.published === undefined ? 1 : (req.body.published ? 1 : 0),
         lessons: req.body.lessons || [],
     };
     const course = await courseService.create(payload);
@@ -25,7 +42,11 @@ exports.create = asyncHandler(async (req, res) => {
 });
 
 exports.update = asyncHandler(async (req, res) => {
-    const updates = { ...req.body };
+    const allowed = ['title', 'category', 'description', 'duration', 'price', 'image', 'instructor', 'level', 'requirements', 'outcomes', 'published'];
+    const updates = {};
+    for (const key of allowed) {
+        if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
     const course = await courseService.update(req.params.id, updates);
     return success(res, { course }, 200);
 });

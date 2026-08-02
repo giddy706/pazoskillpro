@@ -18,10 +18,26 @@ function clearToken() {
     localStorage.removeItem('authToken');
 }
 
+// Normalize the user object so both `name` and `fullName` always exist.
+function normalizeUser(user) {
+    if (!user) return user;
+    return {
+        ...user,
+        fullName: user.fullName || user.name || '',
+        name: user.name || user.fullName || '',
+    };
+}
+
+// Store the current user (normalized) into localStorage.
+function saveCurrentUser(user) {
+    if (user) localStorage.setItem('currentUser', JSON.stringify(normalizeUser(user)));
+}
+
 // Authenticated fetch - automatically attaches Bearer token
 async function authFetch(url, options = {}) {
     const token = getToken();
-    const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+    const headers = { ...(options.headers || {}) };
+    if (options.body) headers['Content-Type'] = 'application/json';
     if (token) headers['Authorization'] = 'Bearer ' + token;
     return fetch((window.API_BASE_URL || '') + url, { ...options, headers });
 }
@@ -32,7 +48,7 @@ async function syncUserSession() {
         const response = await authFetch('/api/auth/me');
         const data = await response.json();
         if (data.success) {
-            localStorage.setItem('currentUser', JSON.stringify(data.user));
+            saveCurrentUser(data.user);
             return data.user;
         } else {
             localStorage.removeItem('currentUser');
@@ -76,24 +92,14 @@ async function registerUser(userData) {
         const result = await response.json();
         if (result.success) {
             saveToken(result.token);
-            localStorage.setItem('currentUser', JSON.stringify(result.user));
+            saveCurrentUser(result.user);
             return { success: true, message: result.message, user: result.user };
         } else {
-            return { success: false, message: result.message };
+            return { success: false, message: result.message || 'Registration failed' };
         }
     } catch (err) {
-        console.warn('Backend unavailable, falling back to local storage mock');
-        const mockUser = {
-            id: Date.now(),
-            name: userData.fullName || userData.email.split('@')[0],
-            email: userData.email,
-            role: 'student',
-            enrolledCourses: [],
-            certificates: [],
-            jobApplications: []
-        };
-        localStorage.setItem('currentUser', JSON.stringify(mockUser));
-        return { success: true, message: 'Registration successful (Offline Mode)', user: mockUser };
+        console.error('Registration failed:', err);
+        return { success: false, message: 'Could not connect to the server. Please try again later.' };
     }
 }
 
@@ -109,7 +115,7 @@ async function loginUser(email, password) {
         
         if (result.success) {
             saveToken(result.token);
-            localStorage.setItem('currentUser', JSON.stringify(result.user));
+            saveCurrentUser(result.user);
             return {
                 success: true,
                 message: result.message,
@@ -143,59 +149,8 @@ async function enrollInCourse(courseId, promoCode) {
             return { success: false, message: result.message };
         }
     } catch (err) {
-        console.warn('Backend unavailable, falling back to local storage mock');
-        const user = getCurrentUser();
-        if (user) {
-            if (!user.enrolledCourses) user.enrolledCourses = [];
-            // Already enrolled? skip duplicate
-            if (user.enrolledCourses.find(e => e.course_id == courseId)) {
-                return { success: true, message: 'Already enrolled (Offline Mode)' };
-            }
-            // Look up real course title and curriculum from in-memory data or localStorage
-            let courseTitle = 'Course';
-            let lessons = [
-                { id: 1, title: 'Introduction', completed: false },
-                { id: 2, title: 'Core Concepts', completed: false },
-                { id: 3, title: 'Final Assessment', completed: false }
-            ];
-            // coursesData is defined in data.js and loaded before auth.js
-            if (typeof coursesData !== 'undefined') {
-                const found = coursesData.find(c => c.id == courseId);
-                if (found) {
-                    courseTitle = found.title;
-                    lessons = found.curriculum.map((item, i) => ({
-                        id: i + 1,
-                        title: typeof item === 'string' ? item : (item.title || `Lesson ${i + 1}`),
-                        completed: false
-                    }));
-                }
-            } else {
-                // Fallback: try localStorage
-                try {
-                    const stored = JSON.parse(localStorage.getItem('courses') || '[]');
-                    const found = stored.find(c => c.id == courseId);
-                    if (found) {
-                        courseTitle = found.title;
-                        lessons = (found.curriculum || []).map((item, i) => ({
-                            id: i + 1,
-                            title: typeof item === 'string' ? item : (item.title || `Lesson ${i + 1}`),
-                            completed: false
-                        }));
-                    }
-                } catch (_) {}
-            }
-            user.enrolledCourses.push({
-                id: Date.now(),
-                course_id: courseId,
-                courseTitle,
-                enrolledDate: new Date().toISOString(),
-                completed: false,
-                progress: 0,
-                lessons
-            });
-            updateCurrentUser(user);
-        }
-        return { success: true, message: 'Enrolled successfully (Offline Mode)' };
+        console.error('Enrollment failed:', err);
+        return { success: false, message: 'Could not connect to the server. Please try again later.' };
     }
 }
 
@@ -219,35 +174,8 @@ async function updateLessonProgress(courseId, lessonId) {
             return { success: false, message: result.message };
         }
     } catch (err) {
-        console.warn('Backend unavailable, falling back to local storage mock');
-        let progress = 0;
-        let completed = false;
-        const user = getCurrentUser();
-        if (user) {
-            const enrollment = user.enrolledCourses && user.enrolledCourses.find(e => e.course_id == courseId);
-            if (enrollment) {
-                const lesson = enrollment.lessons.find(l => l.id == lessonId);
-                if (lesson) lesson.completed = true;
-                
-                const completedCount = enrollment.lessons.filter(l => l.completed).length;
-                progress = Math.round((completedCount / enrollment.lessons.length) * 100);
-                enrollment.progress = progress;
-                
-                if (progress === 100 && !enrollment.completed) {
-                    enrollment.completed = true;
-                    completed = true;
-                    if (!user.certificates) user.certificates = [];
-                    user.certificates.push({
-                        id: Date.now(),
-                        courseId: courseId,
-                        courseTitle: enrollment.courseTitle,
-                        issuedDate: new Date().toISOString()
-                    });
-                }
-                updateCurrentUser(user);
-            }
-        }
-        return { success: true, progress, completed, user };
+        console.error('Progress update failed:', err);
+        return { success: false, message: 'Could not connect to the server. Please try again later.' };
     }
 }
 
@@ -267,21 +195,8 @@ async function applyForJob(jobId, applicationData) {
             return { success: false, message: result.message };
         }
     } catch (err) {
-        console.warn('Backend unavailable, falling back to local storage mock');
-        const user = getCurrentUser();
-        if (user) {
-            if (!user.jobApplications) user.jobApplications = [];
-            user.jobApplications.push({
-                id: Date.now(),
-                job_id: jobId,
-                jobTitle: 'Job Application',
-                company: 'Company',
-                status: 'pending',
-                appliedDate: new Date().toISOString()
-            });
-            updateCurrentUser(user);
-        }
-        return { success: true, message: 'Application submitted (Offline Mode)' };
+        console.error('Job application failed:', err);
+        return { success: false, message: 'Could not connect to the server. Please try again later.' };
     }
 }
 
@@ -300,7 +215,8 @@ async function logout() {
 // Get user profile functions (sync wrappers around localStorage)
 function getCurrentUser() {
     const userStr = localStorage.getItem('currentUser');
-    return userStr ? JSON.parse(userStr) : null;
+    if (!userStr) return null;
+    try { return normalizeUser(JSON.parse(userStr)); } catch { return null; }
 }
 
 function updateCurrentUser(user) {

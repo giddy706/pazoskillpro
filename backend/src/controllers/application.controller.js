@@ -6,7 +6,10 @@ const applicationService = require('../services/application.service');
 exports.applyForJob = asyncHandler(async (req, res) => {
     const userId = req.user.id;
     const jobId = req.params.id;
-    const { fullName, email, phone, coverLetter } = req.body;
+    const { fullName, email, phone = '', coverLetter } = req.body;
+    if (!fullName || !String(fullName).trim() || !email || !String(email).trim()) {
+        throw new BadRequestError('Your name and email are required to apply');
+    }
     const application = await applicationService.create({
         jobId,
         userId,
