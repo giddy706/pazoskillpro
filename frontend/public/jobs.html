@@ -97,6 +97,17 @@
         </div>
     </section>
 
+    <!-- Career Outcomes Stats -->
+    <section class="section" style="padding-top: 1rem; padding-bottom: 1rem;">
+        <div class="container">
+            <h2 style="text-align:center; margin-bottom:1.5rem;">Community <span style="color:var(--cyan);">Outcomes</span></h2>
+            <div id="careerStatsBand" style="display:flex; gap:1rem; flex-wrap:wrap; justify-content:center;"></div>
+            <p style="text-align:center; color:var(--gray); font-size:0.9rem; margin-top:1.25rem;">
+                We're actively partnering with employers to place more pazoskill graduates every quarter.
+            </p>
+        </div>
+    </section>
+
     <!-- Filters -->
     <section class="section" style="padding-top: 1rem;">
         <div class="container">
@@ -123,7 +134,25 @@
                 <!-- Jobs will be loaded dynamically -->
             </div>
             <div id="noJobs" class="text-center hidden" style="padding: 3rem 0;">
-                <p style="font-size: 1.25rem; color: var(--gray);">No jobs found matching your criteria.</p>
+                <div class="card" style="max-width:660px; margin:0 auto; text-align:left;">
+                    <div class="card-body">
+                        <h3 style="margin-top:0;">🚀 New opportunities are on the way</h3>
+                        <p style="color: var(--gray); line-height:1.7;">
+                            We're actively partnering with employers right now. Join the talent pool and we'll notify
+                            you the moment opportunities become available — no need to keep checking back.
+                        </p>
+                        <div id="talentPoolJoinedNote" class="hidden"
+                            style="padding:0.75rem 1rem; background:rgba(40,199,111,0.10); border:1px solid rgba(40,199,111,0.35); border-radius:0.75rem; margin-bottom:1rem;">
+                            🎉 You're in the talent pool! Keep your resume and portfolio ready in your
+                            <a href="dashboard.html" style="text-decoration:underline;">dashboard</a>.
+                        </div>
+                        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                            <a href="#" onclick="event.preventDefault(); window.careerJoin(this);"
+                                class="btn btn-glow-green">Join Talent Pool</a>
+                            <a href="courses.html" class="btn btn-outline">Browse Courses</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -183,7 +212,10 @@
     <!-- JavaScript -->
     <script src="js/data.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/career.js"></script>
     <script>
+        // Load career outcome stats band
+        window.careerInitStats('careerStatsBand');
         // Load and display jobs
         let allJobs = [];
         let currentCategory = 'all';

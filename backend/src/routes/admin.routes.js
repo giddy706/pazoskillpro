@@ -192,6 +192,17 @@ router.post('/jobs', asyncHandler(async (req, res) => {
         requiredCourseId: req.body.required_course_id || req.body.requiredCourseId || null,
     };
     const job = await jobService.create(data);
+    try {
+        const careerService = require('../services/career.service');
+        await careerService.notifyTalentPool({
+            title: 'New job opportunity',
+            message: `A new ${job.title} position at ${job.company} is now open.`,
+            jobId: job.id,
+        });
+    } catch (err) {
+        const logger = require('../utils/logger');
+        logger.warn('Failed to notify talent pool:', err.message);
+    }
     return success(res, { job }, 201);
 }));
 
