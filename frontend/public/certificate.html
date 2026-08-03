@@ -288,6 +288,10 @@
                             <div class="cert-meta-value" id="certIssuer">pazoskill Academic Directorate</div>
                         </div>
                         <div class="cert-meta-item">
+                            <div class="cert-meta-label">Date Enrolled</div>
+                            <div class="cert-meta-value" id="certEnrolled">—</div>
+                        </div>
+                        <div class="cert-meta-item">
                             <div class="cert-meta-label">Date Completed</div>
                             <div class="cert-meta-value" id="certCompleted">—</div>
                         </div>
@@ -382,6 +386,7 @@
                 document.getElementById('certIssuer').textContent = certificate.issuer_name || certificate.issuerName || 'pazoskill Academic Directorate';
                 document.getElementById('certDate').textContent = formatCertDate(certificate.issued_at || certificate.issuedDate || Date.now());
                 document.getElementById('certCompleted').textContent = formatCertDate(certificate.completedAt || certificate.completedDate || certificate.issued_at || certificate.issuedDate || Date.now());
+                document.getElementById('certEnrolled').textContent = formatCertDate(certificate.enrolledAt || certificate.enrolledDate || certificate.completedAt || certificate.completedDate || certificate.issued_at || certificate.issuedDate || Date.now());
 
                 document.getElementById('loadingMsg').classList.add('hidden');
                 document.getElementById('certContainer').classList.remove('hidden');
@@ -437,7 +442,7 @@
 
             var name = cert.userName || (getCurrentUser() ? (getCurrentUser().fullName || getCurrentUser().name) : 'Student');
             var course = cert.courseTitle || 'Course';
-            var date = formatCertDate(cert.completedAt || cert.completedDate || cert.issued_at || cert.issuedDate || Date.now());
+            var date = formatCertDate(cert.enrolledAt || cert.enrolledDate || cert.completedAt || cert.completedDate || cert.issued_at || cert.issuedDate || Date.now());
             var code = cert.certificate_code || cert.certificateCode || 'PAZO-CERT-XXXX';
             var values = { name: name, course: course, date: date, code: code };
 

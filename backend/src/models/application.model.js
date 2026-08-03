@@ -3,7 +3,7 @@ const { getDB } = require('../config/database');
 const listAll = async () => {
     const db = await getDB();
     return db.all(
-        `SELECT ja.*, j.title as jobTitle, j.company as jobCompany, u.name as userName, u.email as userEmail
+        `SELECT ja.*, j.title as "jobTitle", j.company as "jobCompany", u.name as "userName", u.email as "userEmail"
          FROM job_applications ja
          LEFT JOIN jobs j ON ja.job_id = j.id
          LEFT JOIN users u ON ja.user_id = u.id
@@ -19,7 +19,7 @@ const findById = async (id) => {
 const findByUser = async (userId) => {
     const db = await getDB();
     return db.all(
-        `SELECT ja.*, j.title as jobTitle, j.company as jobCompany, j.location as jobLocation
+        `SELECT ja.*, j.title as "jobTitle", j.company as "jobCompany", j.location as "jobLocation"
          FROM job_applications ja
          LEFT JOIN jobs j ON ja.job_id = j.id
          WHERE ja.user_id = ?

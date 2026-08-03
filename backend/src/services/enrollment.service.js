@@ -140,7 +140,7 @@ async function countAll() {
 async function getAdminEnrollments() {
     const db = await getDB();
     return db.all(
-        `SELECT e.*, u.name as userName, u.email as userEmail, c.title as courseTitle, c.price as coursePrice
+        `SELECT e.*, u.name as "userName", u.email as "userEmail", c.title as "courseTitle", c.price as "coursePrice"
          FROM enrollments e
          LEFT JOIN users u ON e.user_id = u.id
          LEFT JOIN courses c ON e.course_id = c.id

@@ -65,7 +65,7 @@ async function listActions(userId) {
 async function listNotifications(userId) {
     const db = await getDB();
     return db.all(
-        `SELECT cn.*, j.title as jobTitle
+        `SELECT cn.*, j.title as "jobTitle"
          FROM career_notifications cn
          LEFT JOIN jobs j ON cn.job_id = j.id
          WHERE cn.user_id = ?

@@ -9,9 +9,9 @@ function generateCertificateCode() {
 // The completion/enrollment dates come from the enrollments table so the
 // certificate can show the day the course was actually taken/completed.
 const CERT_SELECT = `
-    SELECT c.*, u.name as userName, u.email as userEmail, cr.title as courseTitle, cr.image as courseImage,
-           (SELECT MAX(e2.completed_at) FROM enrollments e2 WHERE e2.user_id = c.user_id AND e2.course_id = c.course_id AND e2.completed_at IS NOT NULL) as completedAt,
-           (SELECT MIN(e2.enrolled_at) FROM enrollments e2 WHERE e2.user_id = c.user_id AND e2.course_id = c.course_id) as enrolledAt
+    SELECT c.*, u.name as "userName", u.email as "userEmail", cr.title as "courseTitle", cr.image as "courseImage",
+           (SELECT MAX(e2.completed_at) FROM enrollments e2 WHERE e2.user_id = c.user_id AND e2.course_id = c.course_id AND e2.completed_at IS NOT NULL) as "completedAt",
+           (SELECT MIN(e2.enrolled_at) FROM enrollments e2 WHERE e2.user_id = c.user_id AND e2.course_id = c.course_id) as "enrolledAt"
     FROM certificates c
     JOIN users u ON c.user_id = u.id
     JOIN courses cr ON c.course_id = cr.id`;

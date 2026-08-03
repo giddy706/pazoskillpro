@@ -13,7 +13,7 @@ async function findByCourse(courseId) {
 async function listAll() {
     const db = await getDB();
     return db.all(
-        `SELECT q.*, cr.title as courseTitle
+        `SELECT q.*, cr.title as "courseTitle"
          FROM quizzes q
          JOIN courses cr ON q.course_id = cr.id
          ORDER BY q.id DESC`

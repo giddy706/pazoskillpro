@@ -54,7 +54,7 @@ const listAffiliates = async () => {
 const findPromoById = async (id) => {
     const db = await getDB();
     return db.get(
-        `SELECT pc.*, a.name as affiliateName, c.title as courseTitle
+        `SELECT pc.*, a.name as "affiliateName", c.title as "courseTitle"
          FROM promo_codes pc
          LEFT JOIN affiliates a ON pc.affiliate_id = a.id
          LEFT JOIN courses c ON pc.course_id = c.id
@@ -66,7 +66,7 @@ const findPromoById = async (id) => {
 const findPromoByCode = async (code) => {
     const db = await getDB();
     return db.get(
-        `SELECT pc.*, a.name as affiliateName, a.commission_percent as affiliateCommission, c.title as courseTitle
+        `SELECT pc.*, a.name as "affiliateName", a.commission_percent as "affiliateCommission", c.title as "courseTitle"
          FROM promo_codes pc
          LEFT JOIN affiliates a ON pc.affiliate_id = a.id
          LEFT JOIN courses c ON pc.course_id = c.id
@@ -118,7 +118,7 @@ const deletePromo = async (id) => {
 const listPromos = async () => {
     const db = await getDB();
     return db.all(
-        `SELECT pc.*, a.name as affiliateName, c.title as courseTitle
+        `SELECT pc.*, a.name as "affiliateName", c.title as "courseTitle"
          FROM promo_codes pc
          LEFT JOIN affiliates a ON pc.affiliate_id = a.id
          LEFT JOIN courses c ON pc.course_id = c.id
@@ -177,7 +177,7 @@ const updateReferral = async (id, updates) => {
 const listReferralsByAffiliate = async (affiliateId) => {
     const db = await getDB();
     return db.all(
-        `SELECT r.*, u.name as studentName, u.email as studentEmail, c.title as courseTitle
+        `SELECT r.*, u.name as "studentName", u.email as "studentEmail", c.title as "courseTitle"
          FROM referrals r
          LEFT JOIN users u ON r.user_id = u.id
          LEFT JOIN courses c ON r.course_id = c.id
@@ -190,7 +190,7 @@ const listReferralsByAffiliate = async (affiliateId) => {
 const listAllReferrals = async () => {
     const db = await getDB();
     return db.all(
-        `SELECT r.*, u.name as studentName, u.email as studentEmail, a.name as affiliateName, a.code as affiliateCode, c.title as courseTitle
+        `SELECT r.*, u.name as "studentName", u.email as "studentEmail", a.name as "affiliateName", a.code as "affiliateCode", c.title as "courseTitle"
          FROM referrals r
          LEFT JOIN users u ON r.user_id = u.id
          LEFT JOIN affiliates a ON r.affiliate_id = a.id

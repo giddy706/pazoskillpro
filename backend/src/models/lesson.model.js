@@ -13,7 +13,7 @@ const listByCourse = async (courseId) => {
 const listAll = async () => {
     const db = await getDB();
     return db.all(
-        `SELECT l.*, c.title as courseTitle
+        `SELECT l.*, c.title as "courseTitle"
          FROM lessons l
          LEFT JOIN courses c ON l.course_id = c.id
          ORDER BY l.course_id ASC, l.order_index ASC`

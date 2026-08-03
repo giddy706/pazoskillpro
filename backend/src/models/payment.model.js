@@ -14,7 +14,7 @@ async function create(data) {
 async function findById(id) {
     const db = await getDB();
     return db.get(
-        `SELECT p.*, u.name as userName, u.email as userEmail, cr.title as courseTitle
+        `SELECT p.*, u.name as "userName", u.email as "userEmail", cr.title as "courseTitle"
          FROM payments p
          JOIN users u ON p.user_id = u.id
          JOIN courses cr ON p.course_id = cr.id
@@ -26,7 +26,7 @@ async function findById(id) {
 async function listAll() {
     const db = await getDB();
     return db.all(
-        `SELECT p.*, u.name as userName, u.email as userEmail, cr.title as courseTitle
+        `SELECT p.*, u.name as "userName", u.email as "userEmail", cr.title as "courseTitle"
          FROM payments p
          JOIN users u ON p.user_id = u.id
          JOIN courses cr ON p.course_id = cr.id

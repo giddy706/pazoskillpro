@@ -11,14 +11,14 @@ const create = async (userId, courseId) => {
 
 const findById = async (id) => {
     const db = await getDB();
-    const e = await db.get(`SELECT e.*, c.title as courseTitle, c.image as courseImage, c.price as coursePrice FROM enrollments e LEFT JOIN courses c ON e.course_id = c.id WHERE e.id = ?`, [parseInt(id)]);
+    const e = await db.get(`SELECT e.*, c.title as "courseTitle", c.image as "courseImage", c.price as "coursePrice" FROM enrollments e LEFT JOIN courses c ON e.course_id = c.id WHERE e.id = ?`, [parseInt(id)]);
     return e;
 };
 
 const findByUserAndCourse = async (userId, courseId) => {
     const db = await getDB();
     return db.get(
-        `SELECT e.*, c.title as courseTitle, c.image as courseImage, c.price as coursePrice FROM enrollments e LEFT JOIN courses c ON e.course_id = c.id WHERE e.user_id = ? AND e.course_id = ?`,
+        `SELECT e.*, c.title as "courseTitle", c.image as "courseImage", c.price as "coursePrice" FROM enrollments e LEFT JOIN courses c ON e.course_id = c.id WHERE e.user_id = ? AND e.course_id = ?`,
         [parseInt(userId), parseInt(courseId)]
     );
 };
@@ -26,7 +26,7 @@ const findByUserAndCourse = async (userId, courseId) => {
 const findAllByUser = async (userId) => {
     const db = await getDB();
     const rows = await db.all(
-        `SELECT e.*, c.title as courseTitle, c.image as courseImage, c.price as coursePrice, c.category as courseCategory FROM enrollments e LEFT JOIN courses c ON e.course_id = c.id WHERE e.user_id = ? ORDER BY e.enrolled_at DESC`,
+        `SELECT e.*, c.title as "courseTitle", c.image as "courseImage", c.price as "coursePrice", c.category as "courseCategory" FROM enrollments e LEFT JOIN courses c ON e.course_id = c.id WHERE e.user_id = ? ORDER BY e.enrolled_at DESC`,
         [parseInt(userId)]
     );
     return rows;
