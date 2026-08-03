@@ -221,6 +221,12 @@ router.delete('/jobs/:id', asyncHandler(async (req, res) => {
     return success(res, { message: 'Job deleted' });
 }));
 
+// Create a default job listing for every course that does not have one yet.
+router.post('/jobs/generate-for-courses', asyncHandler(async (req, res) => {
+    const created = await jobService.ensureAllCoursesHaveJobs();
+    return success(res, { message: `${created} job(s) generated`, created });
+}));
+
 // ==================== APPLICATIONS ====================
 router.get('/applications', asyncHandler(async (req, res) => {
     const applications = await applicationService.listAll();

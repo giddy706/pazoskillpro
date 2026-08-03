@@ -140,6 +140,15 @@ async function start() {
         logger.error('Failed to create default admin:', e);
     }
 
+    // Make sure every course has a matching job listing in the website's Jobs section.
+    try {
+        const jobService = require('./services/job.service');
+        const created = await jobService.ensureAllCoursesHaveJobs();
+        if (created > 0) logger.info(`Generated ${created} job listing(s) for courses without one.`);
+    } catch (e) {
+        logger.error('Failed to auto-generate course jobs:', e);
+    }
+
     app.use('/api', routes);
 
     // Serve frontend static files EXCEPT index.html so API doesn't serve the website

@@ -84,6 +84,14 @@ async function create({ title, category, description, duration, price, image, in
         }
     }
 
+    // Make sure every new course automatically gets a matching job listing.
+    try {
+        await require('./job.service').generateJobForCourse(course);
+    } catch (err) {
+        const { logger } = require('../utils/logger');
+        logger.warn(`Failed to auto-generate job for course ${course.id}:`, err.message);
+    }
+
     return course;
 }
 

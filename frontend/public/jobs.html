@@ -257,12 +257,14 @@
 
             noJobs.classList.add('hidden');
 
-            grid.innerHTML = jobs.map(job => `
+            grid.innerHTML = jobs.map(job => {
+                const category = job.category || job.course_category || 'Technology';
+                return `
                 <div class="card">
                     <div class="card-body">
                         <div class="flex-between mb-2">
                             <span class="badge badge-success">${job.type}</span>
-                            <span style="color: var(--gray); font-size: 0.875rem;">${getTimeSincePosted(job.postedDate)}</span>
+                            <span style="color: var(--gray); font-size: 0.875rem;">${getTimeSincePosted(job.postedDate || job.created_at)}</span>
                         </div>
                         <h3 class="card-title">${job.title}</h3>
                         <p style="color: var(--gray); margin-bottom: 0.5rem;">
@@ -273,14 +275,15 @@
                         </p>
                         <p class="card-text">${job.description.substring(0, 150)}...</p>
                         <div style="margin-top: 1rem;">
-                            <span class="badge badge-primary">${job.category}</span>
+                            <span class="badge badge-primary">${category}</span>
+                            ${job.course_title ? `<span class="badge badge-success" style="margin-left:0.4rem;">${job.course_title}</span>` : ''}
                         </div>
                     </div>
                     <div class="card-footer">
                         <a href="job-detail.html?id=${job.id}" class="btn btn-primary btn-block">View Details & Apply</a>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         // Filter by category
@@ -297,9 +300,10 @@
                 // Filter jobs
                 const category = this.dataset.category;
                 currentCategory = category;
+                const jobCat = j => j.category || j.course_category || 'Technology';
                 const filtered = category === 'all'
                     ? allJobs
-                    : allJobs.filter(j => j.category === category);
+                    : allJobs.filter(j => jobCat(j) === category);
                 displayJobs(filtered);
             });
         });
@@ -307,9 +311,10 @@
         // Search functionality
         document.getElementById('searchInput').addEventListener('input', function (e) {
             const searchTerm = e.target.value.toLowerCase();
+            const jobCat = j => j.category || j.course_category || 'Technology';
             let filtered = currentCategory === 'all'
                 ? allJobs
-                : allJobs.filter(j => j.category === currentCategory);
+                : allJobs.filter(j => jobCat(j) === currentCategory);
 
             if (searchTerm) {
                 filtered = filtered.filter(job =>

@@ -1,8 +1,12 @@
 const { getDB } = require('../config/database');
 
+const _SELECT = `SELECT j.*, c.title as course_title, c.category as course_category
+    FROM jobs j
+    LEFT JOIN courses c ON j.required_course_id = c.id`;
+
 const listAll = async () => {
     const db = await getDB();
-    const jobs = await db.all(`SELECT * FROM jobs ORDER BY created_at DESC`);
+    const jobs = await db.all(`${_SELECT} ORDER BY j.created_at DESC`);
     return jobs.map(j => ({
         ...j,
         requirements: _parse(j.requirements),
@@ -13,7 +17,7 @@ const listAll = async () => {
 
 const findById = async (id) => {
     const db = await getDB();
-    const j = await db.get(`SELECT * FROM jobs WHERE id = ?`, [parseInt(id)]);
+    const j = await db.get(`${_SELECT} WHERE j.id = ?`, [parseInt(id)]);
     if (!j) return null;
     return {
         ...j,
@@ -21,6 +25,11 @@ const findById = async (id) => {
         responsibilities: _parse(j.responsibilities),
         benefits: _parse(j.benefits),
     };
+};
+
+const findByRequiredCourse = async (courseId) => {
+    const db = await getDB();
+    return db.get(`SELECT id FROM jobs WHERE required_course_id = ?`, [parseInt(courseId)]);
 };
 
 const create = async (data) => {
@@ -73,4 +82,4 @@ function _parse(val) {
     try { return JSON.parse(val || '[]'); } catch { return []; }
 }
 
-module.exports = { listAll, findById, create, update, remove, countAll };
+module.exports = { listAll, findById, findByRequiredCourse, create, update, remove, countAll };
