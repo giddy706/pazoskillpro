@@ -15,6 +15,12 @@ exports.getCertificateById = asyncHandler(async (req, res) => {
     return success(res, { certificate: sanitizeForViewer(certificate, req.user) });
 });
 
+exports.getCertificateByCourse = asyncHandler(async (req, res) => {
+    const { courseId } = req.params;
+    const certificate = await certificateService.getByUserAndCourse(req.user.id, courseId);
+    return success(res, { certificate: sanitizeForViewer(certificate, req.user) });
+});
+
 exports.verifyCertificate = asyncHandler(async (req, res) => {
     const { code } = req.params;
     const certificate = await certificateService.getByCode(code);

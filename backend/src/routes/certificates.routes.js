@@ -5,6 +5,7 @@ const { authenticateToken, optionalAuth } = require('../middlewares/auth.middlew
 
 router.get('/my-certificates', authenticateToken, certificateController.getMyCertificates);
 router.get('/verify/:code', optionalAuth, certificateController.verifyCertificate);
+router.get('/course/:courseId', authenticateToken, certificateController.getCertificateByCourse);
 router.get('/design', certificateController.getDesign);
 router.get('/:id', optionalAuth, certificateController.getCertificateById);
 

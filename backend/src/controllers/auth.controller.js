@@ -68,6 +68,7 @@ exports.getMe = asyncHandler(async (req, res) => {
         courseId: c.course_id,
         courseTitle: c.courseTitle,
         issuedDate: c.issued_at,
+        completedDate: c.completedAt,
         issuerName: c.issuer_name
     }));
 

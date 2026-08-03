@@ -288,6 +288,10 @@
                             <div class="cert-meta-value" id="certIssuer">pazoskill Academic Directorate</div>
                         </div>
                         <div class="cert-meta-item">
+                            <div class="cert-meta-label">Date Completed</div>
+                            <div class="cert-meta-value" id="certCompleted">—</div>
+                        </div>
+                        <div class="cert-meta-item">
                             <div class="cert-meta-label">Date Issued</div>
                             <div class="cert-meta-value" id="certDate">—</div>
                         </div>
@@ -338,21 +342,25 @@
                     const data = await res.json();
                     if (data.success) certificate = data.certificate;
                 } else if (courseId) {
-                    // Fetch user's certificate for this course from session
-                    const user = await syncUserSession();
-                    if (user && user.certificates) {
-                        certificate = user.certificates.find(c => String(c.courseId) === String(courseId));
-                        if (certificate) {
-                            // Enhance with API data
-                            const res2 = await fetch((window.API_BASE_URL || '') + '/api/certificates/' + certificate.id, {
-                                headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+                    // Fetch the user's certificate for this course directly from the API (authoritative data)
+                    if (token) {
+                        try {
+                            const res2 = await fetch((window.API_BASE_URL || '') + '/api/certificates/course/' + courseId, {
+                                headers: { 'Authorization': 'Bearer ' + token }
                             });
                             const data2 = await res2.json();
-                            if (data2.success) certificate = { ...certificate, ...data2.certificate };
+                            if (data2.success) certificate = data2.certificate;
+                        } catch (e) { /* fall through to session data */ }
+                    }
+                    if (!certificate) {
+                        // Fall back to session data
+                        const user = await syncUserSession();
+                        if (user && user.certificates) {
+                            certificate = user.certificates.find(c => String(c.courseId) === String(courseId));
                         }
                     }
                     if (!certificate) {
-                        // Try session data
+                        // Last resort: cached session data
                         const user2 = getCurrentUser();
                         if (user2 && user2.certificates) {
                             certificate = user2.certificates.find(c => String(c.courseId) === String(courseId));
@@ -372,7 +380,8 @@
                 document.getElementById('certCourseName').textContent = certificate.courseTitle || 'Course';
                 document.getElementById('certCode').textContent = certificate.certificate_code || certificate.certificateCode || 'PAZO-CERT-XXXX';
                 document.getElementById('certIssuer').textContent = certificate.issuer_name || certificate.issuerName || 'pazoskill Academic Directorate';
-                document.getElementById('certDate').textContent = new Date(certificate.issued_at || certificate.issuedDate || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('certDate').textContent = formatCertDate(certificate.issued_at || certificate.issuedDate || Date.now());
+                document.getElementById('certCompleted').textContent = formatCertDate(certificate.completedAt || certificate.completedDate || certificate.issued_at || certificate.issuedDate || Date.now());
 
                 document.getElementById('loadingMsg').classList.add('hidden');
                 document.getElementById('certContainer').classList.remove('hidden');
@@ -403,6 +412,13 @@
             script: "'Great Vibes', cursive"
         };
 
+        function formatCertDate(value) {
+            if (!value) return '—';
+            var d = new Date(value);
+            if (isNaN(d.getTime())) return '—';
+            return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
         function loadCertificateDesign(certificate) {
             fetch((window.API_BASE_URL || '') + '/api/certificates/design')
                 .then(function(r) { return r.json(); })
@@ -421,7 +437,7 @@
 
             var name = cert.userName || (getCurrentUser() ? (getCurrentUser().fullName || getCurrentUser().name) : 'Student');
             var course = cert.courseTitle || 'Course';
-            var date = new Date(cert.issued_at || cert.issuedDate || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            var date = formatCertDate(cert.completedAt || cert.completedDate || cert.issued_at || cert.issuedDate || Date.now());
             var code = cert.certificate_code || cert.certificateCode || 'PAZO-CERT-XXXX';
             var values = { name: name, course: course, date: date, code: code };
 

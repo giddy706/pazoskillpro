@@ -18,6 +18,12 @@ async function getByCode(code) {
     return cert;
 }
 
+async function getByUserAndCourse(userId, courseId) {
+    const cert = await certificateModel.findByUserAndCourse(userId, courseId);
+    if (!cert) throw new NotFoundError('Certificate not found for this course');
+    return cert;
+}
+
 async function getByUser(userId) {
     return certificateModel.findByUser(userId);
 }
@@ -40,6 +46,7 @@ module.exports = {
     issueCertificate,
     getById,
     getByCode,
+    getByUserAndCourse,
     getByUser,
     listAll,
     getDesign,
