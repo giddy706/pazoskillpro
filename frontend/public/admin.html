@@ -193,6 +193,7 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
             <button class="nav-item" data-section="attempts"><span class="icon">&#128200;</span><span>Attempts</span></button>
             <button class="nav-item" data-section="settings"><span class="icon">&#9881;</span><span>Settings</span></button>
             <button class="nav-item" data-section="cms"><span class="icon">&#128240;</span><span>CMS Pages</span></button>
+            <button class="nav-item" data-section="certificates"><span class="icon">&#127942;</span><span>Certificates</span></button>
         </nav>
         <div class="sidebar-footer">
             <button class="nav-item btn-logout" onclick="adminLogout()"><span class="icon">&#128682;</span><span>Logout</span></button>
@@ -498,7 +499,35 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
                 </div>
             </div>
 
+            <!-- ===== CERTIFICATES ===== -->
+            <div class="section" id="section-certificates">
+                <div class="toolbar">
+                    <h3>Manage Certificates</h3>
+                    <button class="btn btn-primary" onclick="showCertForm()">+ Issue Certificate</button>
+                </div>
+                <div class="msg" id="certMsg"></div>
+                <div class="table-container" id="certificatesTable"><div class="loading">Loading...</div></div>
+
+                <div class="form-overlay" id="certFormOverlay">
+                    <div class="form-modal">
+                        <h3>Issue Certificate</h3>
+                        <p style="color:var(--gray);margin-bottom:1rem;font-size:0.9rem;">Manually issue a certificate to a student who has completed a course.</p>
+                        <div class="msg" id="certFormMsg"></div>
+                        <form id="certForm" onsubmit="issueCertificate(event)">
+                            <div class="form-group"><label>Student (User)</label><select id="certUserId" required><option value="">-- Select Student --</option></select></div>
+                            <div class="form-group"><label>Course</label><select id="certCourseId" required><option value="">-- Select Course --</option></select></div>
+                            <div class="form-group"><label>Issuer Name (optional)</label><input type="text" id="certIssuerName" placeholder="PazoSkill Academic Directorate"></div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="closeForm('certFormOverlay')">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Issue Certificate</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
         </div>
+
     </div>
 
     <script>
@@ -590,6 +619,7 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
             case 'attempts': loadAttempts(); break;
             case 'settings': loadSettings(); break;
             case 'cms': loadCMS(); break;
+            case 'certificates': loadCertificates(); break;
         }
     }
 
@@ -601,28 +631,31 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
         if (!checkAuth()) return;
         authFetch(apiUrl('/admin/stats'))
             .then(function(r) { if (!r.ok) throw new Error('Failed to load stats'); return r.json(); })
-            .then(function(d) {
-                document.getElementById('statCourses').textContent = d.courses || 0;
-                document.getElementById('statLessons').textContent = d.lessons || 0;
-                document.getElementById('statUsers').textContent = d.users || 0;
-                document.getElementById('statEnrollments').textContent = d.enrollments || 0;
-                document.getElementById('statRevenue').textContent = '$' + (d.revenue || 0).toFixed(2);
-                document.getElementById('statAttempts').textContent = d.attempts || 0;
-                if (d.enrollTrend && d.enrollTrend.length) {
-                    var labels = d.enrollTrend.map(function(e) { return e.date; });
-                    var data = d.enrollTrend.map(function(e) { return e.count; });
+            .then(function(resp) {
+                var d = resp.stats || resp;
+                document.getElementById('statCourses').textContent = d.totalCourses || d.courses || 0;
+                document.getElementById('statLessons').textContent = d.totalLessons || d.lessons || 0;
+                document.getElementById('statUsers').textContent = d.totalUsers || d.users || 0;
+                document.getElementById('statEnrollments').textContent = d.totalEnrollments || d.enrollments || 0;
+                document.getElementById('statRevenue').textContent = 'KSH ' + ((d.totalRevenue || d.revenue || 0)).toLocaleString();
+                document.getElementById('statAttempts').textContent = d.totalAttempts || d.attempts || 0;
+                var enrollTrend = d.enrollTrend || [];
+                var revenueTrend = d.revenueTrend || [];
+                if (enrollTrend.length) {
+                    var labels = enrollTrend.map(function(e) { return e.date; });
+                    var data = enrollTrend.map(function(e) { return e.count; });
                     if (enrollChartInstance) enrollChartInstance.destroy();
                     enrollChartInstance = new Chart(document.getElementById('enrollChart'), {
                         type: 'line', data: { labels: labels, datasets: [{ label: 'Enrollments', data: data, borderColor: '#6c63ff', backgroundColor: 'rgba(108,99,255,.1)', fill: true, tension: .3 }] },
                         options: { responsive: true, plugins: { legend: { labels: { color: '#9898b8' } } }, scales: { x: { ticks: { color: '#9898b8' } }, y: { ticks: { color: '#9898b8' } } } }
                     });
                 }
-                if (d.revenueTrend && d.revenueTrend.length) {
-                    var labels2 = d.revenueTrend.map(function(e) { return e.date; });
-                    var data2 = d.revenueTrend.map(function(e) { return e.total; });
+                if (revenueTrend.length) {
+                    var labels2 = revenueTrend.map(function(e) { return e.date; });
+                    var data2 = revenueTrend.map(function(e) { return e.total; });
                     if (revenueChartInstance) revenueChartInstance.destroy();
                     revenueChartInstance = new Chart(document.getElementById('revenueChart'), {
-                        type: 'bar', data: { labels: labels2, datasets: [{ label: 'Revenue', data: data2, backgroundColor: '#00d4aa' }] },
+                        type: 'bar', data: { labels: labels2, datasets: [{ label: 'Revenue (KSH)', data: data2, backgroundColor: '#00d4aa' }] },
                         options: { responsive: true, plugins: { legend: { labels: { color: '#9898b8' } } }, scales: { x: { ticks: { color: '#9898b8' } }, y: { ticks: { color: '#9898b8' } } } }
                     });
                 }
@@ -725,12 +758,12 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
         tbody.innerHTML = '<div class="loading">Loading...</div>';
         authFetch(apiUrl('/admin/lessons'))
             .then(function(r) { return r.json(); })
-            .then(function(lessons) {
-                if (!lessons || !lessons.length) { tbody.innerHTML = '<div class="empty">No lessons found.</div>'; return; }
-                var html = '<table><thead><tr><th>ID</th><th>Course</th><th>Title</th><th>Order</th><th>Published</th><th>Actions</th></tr></thead><tbody>';
+            .then(function(resp) {
+                var lessons = resp.lessons || (Array.isArray(resp) ? resp : []);
+                if (!lessons.length) { tbody.innerHTML = '<div class="empty">No lessons found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>Course</th><th>Title</th><th>Order</th><th>Actions</th></tr></thead><tbody>';
                 lessons.forEach(function(l) {
-                    var pub = l.published ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-yellow">No</span>';
-                    html += '<tr><td>' + l.id + '</td><td>' + esc(l.course_title||'') + ' (ID:' + l.course_id + ')</td><td>' + esc(l.title) + '</td><td>' + (l.order_index||0) + '</td><td>' + pub + '</td><td>';
+                    html += '<tr><td>' + l.id + '</td><td>' + esc(l.courseTitle||l.course_title||'') + '</td><td>' + esc(l.title) + '</td><td>' + (l.order_index||0) + '</td><td>';
                     html += '<button class="btn btn-sm btn-secondary" onclick="editLesson(' + l.id + ')">Edit</button> ';
                     html += '<button class="btn btn-sm btn-danger" onclick="deleteLesson(' + l.id + ')">Del</button>';
                     html += '</td></tr>';
@@ -816,11 +849,12 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
         tbody.innerHTML = '<div class="loading">Loading...</div>';
         authFetch(apiUrl('/admin/enrollments'))
             .then(function(r) { return r.json(); })
-            .then(function(enrollments) {
-                if (!enrollments || !enrollments.length) { tbody.innerHTML = '<div class="empty">No enrollments found.</div>'; return; }
+            .then(function(resp) {
+                var enrollments = resp.enrollments || resp || [];
+                if (!enrollments.length) { tbody.innerHTML = '<div class="empty">No enrollments found.</div>'; return; }
                 var html = '<table><thead><tr><th>ID</th><th>User</th><th>Course</th><th>Enrolled</th><th>Progress</th></tr></thead><tbody>';
                 enrollments.forEach(function(e) {
-                    html += '<tr><td>' + e.id + '</td><td>' + esc(e.user_name||'') + ' (ID:' + e.user_id + ')</td><td>' + esc(e.course_title||'') + '</td><td>' + (e.enrolled_at || '') + '</td><td>' + (e.progress||0) + '%</td></tr>';
+                    html += '<tr><td>' + e.id + '</td><td>' + esc(e.userName||e.user_name||'') + '</td><td>' + esc(e.courseTitle||e.course_title||'') + '</td><td>' + (e.enrolled_at || '') + '</td><td>' + (e.progress||0) + '%</td></tr>';
                 });
                 html += '</tbody></table>';
                 tbody.innerHTML = html;
@@ -835,13 +869,13 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
         tbody.innerHTML = '<div class="loading">Loading...</div>';
         authFetch(apiUrl('/admin/users'))
             .then(function(r) { return r.json(); })
-            .then(function(users) {
-                if (!users || !users.length) { tbody.innerHTML = '<div class="empty">No users found.</div>'; return; }
-                var html = '<table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Referred By</th><th>Joined</th></tr></thead><tbody>';
+            .then(function(resp) {
+                var users = resp.users || resp || [];
+                if (!users.length) { tbody.innerHTML = '<div class="empty">No users found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr></thead><tbody>';
                 users.forEach(function(u) {
-                    var role = u.is_admin ? '<span class="badge badge-blue">Admin</span>' : '<span class="badge badge-green">User</span>';
-                    var referred = u.referredBy ? esc(u.referredBy) + (u.referrerName ? ' <small>(' + esc(u.referrerName) + ')</small>' : '') : '<span style="color: var(--text2);">-</span>';
-                    html += '<tr><td>' + u.id + '</td><td>' + esc(u.name||'') + '</td><td>' + esc(u.email) + '</td><td>' + role + '</td><td>' + referred + '</td><td>' + (u.created_at||'') + '</td></tr>';
+                    var role = (u.role === 'admin' || u.is_admin) ? '<span class="badge badge-blue">Admin</span>' : '<span class="badge badge-green">Student</span>';
+                    html += '<tr><td>' + u.id + '</td><td>' + esc(u.name||'') + '</td><td>' + esc(u.email||'') + '</td><td>' + role + '</td><td>' + (u.created_at||'').toString().slice(0,10) + '</td></tr>';
                 });
                 html += '</tbody></table>';
                 tbody.innerHTML = html;
@@ -856,12 +890,13 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
         tbody.innerHTML = '<div class="loading">Loading...</div>';
         authFetch(apiUrl('/admin/payments'))
             .then(function(r) { return r.json(); })
-            .then(function(payments) {
-                if (!payments || !payments.length) { tbody.innerHTML = '<div class="empty">No payments found.</div>'; return; }
-                var html = '<table><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead><tbody>';
+            .then(function(resp) {
+                var payments = resp.payments || resp || [];
+                if (!payments.length) { tbody.innerHTML = '<div class="empty">No payments found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>User</th><th>Course</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead><tbody>';
                 payments.forEach(function(p) {
                     var statusClass = p.status === 'completed' ? 'badge-green' : (p.status === 'pending' ? 'badge-yellow' : 'badge-red');
-                    html += '<tr><td>' + p.id + '</td><td>' + esc(p.user_name||'') + '</td><td>$' + (p.amount||0).toFixed(2) + '</td><td>' + esc(p.payment_method||'') + '</td><td><span class="badge ' + statusClass + '">' + esc(p.status) + '</span></td><td>' + (p.created_at||'') + '</td></tr>';
+                    html += '<tr><td>' + p.id + '</td><td>' + esc(p.userName||p.userEmail||'') + '</td><td>' + esc(p.courseTitle||'') + '</td><td>KSH ' + (p.amount||0).toLocaleString() + '</td><td>' + esc(p.payment_method||'') + '</td><td><span class="badge ' + statusClass + '">' + esc(p.status) + '</span></td><td>' + (p.paid_at||p.created_at||'').toString().slice(0,10) + '</td></tr>';
                 });
                 html += '</tbody></table>';
                 tbody.innerHTML = html;
@@ -1393,6 +1428,88 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
         var d = document.createElement('div');
         d.appendChild(document.createTextNode(s));
         return d.innerHTML;
+    }
+
+    // ---- Certificates ----
+    function loadCertificates() {
+        if (!checkAuth()) return;
+        var tbody = document.getElementById('certificatesTable');
+        tbody.innerHTML = '<div class="loading">Loading...</div>';
+        authFetch(apiUrl('/admin/certificates'))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var certs = data.certificates || [];
+                if (!certs.length) { tbody.innerHTML = '<div class="empty">No certificates issued yet.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>Code</th><th>Student</th><th>Course</th><th>Issued At</th><th>Actions</th></tr></thead><tbody>';
+                certs.forEach(function(c) {
+                    html += '<tr>' +
+                        '<td>' + esc(String(c.id)) + '</td>' +
+                        '<td><code style="font-size:0.8rem;">' + esc(c.certificate_code) + '</code></td>' +
+                        '<td>' + esc(c.userName || '') + '<br><small style="color:var(--gray)">' + esc(c.userEmail || '') + '</small></td>' +
+                        '<td>' + esc(c.courseTitle || '') + '</td>' +
+                        '<td>' + (c.issued_at ? new Date(c.issued_at).toLocaleDateString() : '--') + '</td>' +
+                        '<td><button class="btn btn-sm btn-danger" onclick="revokeCertificate(' + c.id + ')">Revoke</button></td>' +
+                        '</tr>';
+                });
+                html += '</tbody></table>';
+                tbody.innerHTML = html;
+            })
+            .catch(function(err) { tbody.innerHTML = '<div class="empty">Error loading certificates.</div>'; console.error(err); });
+    }
+
+    function showCertForm() {
+        // Populate user and course selects
+        Promise.all([
+            authFetch(apiUrl('/admin/users')).then(function(r) { return r.json(); }),
+            authFetch(apiUrl('/admin/courses')).then(function(r) { return r.json(); })
+        ]).then(function(results) {
+            var users = results[0].users || [];
+            var courses = results[1].courses || [];
+            var userSel = document.getElementById('certUserId');
+            userSel.innerHTML = '<option value="">-- Select Student --</option>';
+            users.forEach(function(u) {
+                userSel.innerHTML += '<option value="' + u.id + '">' + esc(u.name || u.email) + ' (' + esc(u.email) + ')</option>';
+            });
+            var courseSel = document.getElementById('certCourseId');
+            courseSel.innerHTML = '<option value="">-- Select Course --</option>';
+            courses.forEach(function(c) {
+                courseSel.innerHTML += '<option value="' + c.id + '">' + esc(c.title) + '</option>';
+            });
+            openForm('certFormOverlay');
+        }).catch(function(err) {
+            showMsg('certMsg', 'error', 'Failed to load users/courses');
+        });
+    }
+
+    function issueCertificate(e) {
+        e.preventDefault();
+        var userId = document.getElementById('certUserId').value;
+        var courseId = document.getElementById('certCourseId').value;
+        var issuerName = document.getElementById('certIssuerName').value;
+        if (!userId || !courseId) { showMsg('certFormMsg', 'error', 'Please select a student and a course'); return; }
+        authFetch(apiUrl('/admin/certificates'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, course_id: courseId, issuer_name: issuerName || undefined })
+        }).then(function(r) {
+            if (!r.ok) return r.json().then(function(d) { throw new Error(d.message || 'Failed'); });
+            return r.json();
+        }).then(function() {
+            showMsg('certMsg', 'success', 'Certificate issued successfully!');
+            closeForm('certFormOverlay');
+            loadCertificates();
+        }).catch(function(err) { showMsg('certFormMsg', 'error', err.message || 'Failed to issue certificate'); });
+    }
+
+    function revokeCertificate(id) {
+        if (!confirm('Are you sure you want to revoke this certificate? This cannot be undone.')) return;
+        authFetch(apiUrl('/admin/certificates/' + id), { method: 'DELETE' })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to revoke');
+                showMsg('certMsg', 'success', 'Certificate revoked');
+                loadCertificates();
+            })
+            .catch(function(err) { showMsg('certMsg', 'error', 'Failed to revoke certificate'); });
     }
 
     // ---- Init ----

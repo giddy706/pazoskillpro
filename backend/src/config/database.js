@@ -47,13 +47,16 @@ const dbWrapper = {
     run: async (sql, params = []) => {
         let query = translateQuery(sql);
         const isInsert = query.trim().toUpperCase().startsWith('INSERT');
+        const wasIgnoreInsert = sql.toUpperCase().includes('INSERT OR IGNORE');
         
-        if (isInsert && !query.toUpperCase().includes('RETURNING')) {
-            query += ' RETURNING id';
-        }
-        
-        if (sql.toUpperCase().includes('INSERT OR IGNORE')) {
-            query += ' ON CONFLICT DO NOTHING';
+        if (isInsert) {
+            // ON CONFLICT must come BEFORE RETURNING
+            if (wasIgnoreInsert && !query.toUpperCase().includes('ON CONFLICT')) {
+                query += ' ON CONFLICT DO NOTHING';
+            }
+            if (!query.toUpperCase().includes('RETURNING')) {
+                query += ' RETURNING id';
+            }
         }
 
         const result = await pool.query(query, params);

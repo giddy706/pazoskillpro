@@ -546,4 +546,30 @@ router.delete('/promo-codes/:id', asyncHandler(async (req, res) => {
     return success(res, { message: 'Promo code deleted' });
 }));
 
+// ==================== CERTIFICATES ====================
+const certificateModel = require('../models/certificate.model');
+
+router.get('/certificates', asyncHandler(async (req, res) => {
+    const certs = await certificateModel.listAll();
+    return success(res, { certificates: certs });
+}));
+
+router.post('/certificates', asyncHandler(async (req, res) => {
+    const { user_id, course_id, issuer_name } = req.body;
+    if (!user_id || !course_id) return error(res, 'user_id and course_id are required', 400);
+    const cert = await certificateModel.create(
+        parseInt(user_id),
+        parseInt(course_id),
+        issuer_name || 'PazoSkill Academic Directorate'
+    );
+    return success(res, { certificate: cert }, 201);
+}));
+
+router.delete('/certificates/:id', asyncHandler(async (req, res) => {
+    const db = await (require('../config/database').getDB());
+    await db.run(`DELETE FROM certificates WHERE id = ?`, [parseInt(req.params.id)]);
+    return success(res, { message: 'Certificate revoked' });
+}));
+
 module.exports = router;
+

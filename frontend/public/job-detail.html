@@ -88,7 +88,7 @@
                 try {
                     const [jobRes, userRes] = await Promise.all([
                         fetch((window.API_BASE_URL || '') + `/api/jobs/${jobId}`),
-                        fetch((window.API_BASE_URL || '') + '/api/auth/me').catch(() => ({ json: () => ({ success: false }) }))
+                        authFetch('/api/auth/me').catch(() => ({ json: () => ({ success: false }) }))
                     ]);
                     if (!jobRes.ok) throw new Error('Fetch failed');
                     const jobData = await jobRes.json();
