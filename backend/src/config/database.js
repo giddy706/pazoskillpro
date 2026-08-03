@@ -70,14 +70,31 @@ async function getDB() {
     if (pool) return dbWrapper;
     
     if (!process.env.DATABASE_URL) {
-        console.error("DATABASE_URL is not set!");
-        return dbWrapper;
+        console.error("FATAL: DATABASE_URL environment variable is not set!");
+        throw new Error("DATABASE_URL is not set. Please configure it in your Render environment variables.");
     }
 
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl.startsWith('postgres')) {
+        console.error("FATAL: DATABASE_URL does not look like a PostgreSQL URL:", dbUrl.substring(0, 30) + '...');
+        throw new Error("DATABASE_URL must be a PostgreSQL connection string (starts with postgresql:// or postgres://)");
+    }
+
+    console.log('[DB] Connecting to PostgreSQL...');
     pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
+        connectionString: dbUrl,
         ssl: { rejectUnauthorized: false }
     });
+    
+    // Test the connection immediately
+    try {
+        const client = await pool.connect();
+        console.log('[DB] PostgreSQL connected successfully!');
+        client.release();
+    } catch (err) {
+        console.error('[DB] Failed to connect to PostgreSQL:', err.message);
+        throw err;
+    }
     
     return dbWrapper;
 }
