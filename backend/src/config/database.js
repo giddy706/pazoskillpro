@@ -25,7 +25,8 @@ function translateQuery(sql) {
     
     // Replace SQLite specific functions/keywords
     pgSql = pgSql.replace(/datetime\('now'\)/gi, 'CURRENT_TIMESTAMP');
-    pgSql = pgSql.replace(/date\('now',\s*'-'\s*\|\|\s*\$1\s*\|\|\s*' days'\)/gi, "(CURRENT_DATE - ($1 || ' days')::INTERVAL)");
+    pgSql = pgSql.replace(/(?:date|datetime)\('now',\s*'-'\s*\|\|\s*\$(\d+)\s*\|\|\s*' days'\)/gi, "(CURRENT_DATE - ($$$1 || ' days')::INTERVAL)");
+    pgSql = pgSql.replace(/(?:date|datetime)\('now',\s*'-(\d+)\s*days'\)/gi, "(CURRENT_DATE - INTERVAL '$1 days')");
     pgSql = pgSql.replace(/INSERT OR IGNORE INTO/gi, 'INSERT INTO'); 
     pgSql = pgSql.replace(/COUNT\(\*\) as count/gi, 'COUNT(*)::int as count'); // Postgres count is bigint, ensure int
     
