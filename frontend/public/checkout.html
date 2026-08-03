@@ -196,55 +196,73 @@
             btn.disabled = true;
             btn.textContent = 'Processing...';
 
-            const promoCode = appliedPromo ? appliedPromo.code : (document.getElementById('promoCode').value.trim() || null);
-            const amountToPay = appliedPromo && appliedPromo.paidAmount != null ? appliedPromo.paidAmount : (course ? course.price : 0);
+            try {
+                const promoCode = appliedPromo ? appliedPromo.code : (document.getElementById('promoCode').value.trim() || null);
+                let baseAmount = appliedPromo && appliedPromo.paidAmount != null ? appliedPromo.paidAmount : (course ? course.price : 0);
+                const amountToPay = parseFloat(baseAmount);
 
-            if (amountToPay === 0) {
-                // Free course or 100% discount, bypass Paystack
-                const result = await enrollInCourse(courseId, promoCode, null);
-                if (result.success) {
-                    alert('Enrollment successful! You are now enrolled in the course.');
-                    window.location.href = 'dashboard.html';
-                } else {
-                    alert(result.message);
-                    btn.disabled = false;
-                    btn.textContent = 'Complete Payment';
+                if (isNaN(amountToPay)) {
+                    throw new Error('Invalid course price configuration.');
                 }
-                return;
-            }
 
-            if (!paystackPublicKey) {
-                alert('Payment system configuration missing. Please try again later.');
-                btn.disabled = false;
-                btn.textContent = 'Complete Payment';
-                return;
-            }
-
-            // Initialize Paystack
-            const handler = PaystackPop.setup({
-                key: paystackPublicKey,
-                email: user.email,
-                amount: amountToPay * 100, // Paystack expects amount in kobo/cents
-                currency: 'KES',
-                callback: async function (response) {
-                    // Payment successful on frontend, verify with backend
-                    const result = await enrollInCourse(courseId, promoCode, response.reference);
+                if (amountToPay <= 0) {
+                    // Free course or 100% discount, bypass Paystack
+                    const result = await enrollInCourse(courseId, promoCode, null);
                     if (result.success) {
-                        alert('Payment verified and enrollment successful!');
+                        alert('Enrollment successful! You are now enrolled in the course.');
                         window.location.href = 'dashboard.html';
                     } else {
-                        alert('Payment verification failed: ' + result.message);
+                        alert(result.message);
                         btn.disabled = false;
                         btn.textContent = 'Complete Payment';
                     }
-                },
-                onClose: function () {
-                    alert('Payment cancelled.');
-                    btn.disabled = false;
-                    btn.textContent = 'Complete Payment';
+                    return;
                 }
-            });
-            handler.openIframe();
+
+                if (!paystackPublicKey) {
+                    throw new Error('Payment system configuration missing. Please try again later.');
+                }
+
+                if (typeof PaystackPop === 'undefined') {
+                    throw new Error('Payment gateway failed to load. Please check your internet connection or disable adblockers.');
+                }
+
+                // Initialize Paystack
+                const handler = PaystackPop.setup({
+                    key: paystackPublicKey,
+                    email: user.email || 'student@pazoskill.com',
+                    amount: Math.round(amountToPay * 100), // Paystack expects integer amount in kobo/cents
+                    currency: 'KES',
+                    callback: async function (response) {
+                        // Payment successful on frontend, verify with backend
+                        try {
+                            const result = await enrollInCourse(courseId, promoCode, response.reference);
+                            if (result.success) {
+                                alert('Payment verified and enrollment successful!');
+                                window.location.href = 'dashboard.html';
+                            } else {
+                                alert('Payment verification failed: ' + result.message);
+                                btn.disabled = false;
+                                btn.textContent = 'Complete Payment';
+                            }
+                        } catch (err) {
+                            alert('An error occurred during verification.');
+                            btn.disabled = false;
+                            btn.textContent = 'Complete Payment';
+                        }
+                    },
+                    onClose: function () {
+                        alert('Payment cancelled.');
+                        btn.disabled = false;
+                        btn.textContent = 'Complete Payment';
+                    }
+                });
+                handler.openIframe();
+            } catch (error) {
+                alert(error.message);
+                btn.disabled = false;
+                btn.textContent = 'Complete Payment';
+            }
         });
     </script>
 </body>
