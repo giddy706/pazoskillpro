@@ -1,4 +1,5 @@
 const certificateModel = require('../models/certificate.model');
+const settingModel = require('../models/setting.model');
 const { NotFoundError, ConflictError } = require('../utils/errors');
 
 async function issueCertificate(userId, courseId, issuerName) {
@@ -25,10 +26,21 @@ async function listAll() {
     return certificateModel.listAll();
 }
 
+async function getDesign() {
+    const row = await settingModel.get('certificate_design');
+    if (!row || !row.setting_value) return null;
+    try {
+        return JSON.parse(row.setting_value);
+    } catch (e) {
+        return null;
+    }
+}
+
 module.exports = {
     issueCertificate,
     getById,
     getByCode,
     getByUser,
     listAll,
+    getDesign,
 };

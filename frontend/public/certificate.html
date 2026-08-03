@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Certificate - pazoskill</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <style>
         .certificate-page {
@@ -197,10 +198,30 @@
             gap: 0.4rem;
             margin-top: 1rem;
         }
+        .certificate-document.design-mode {
+            background: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .design-wrap { position: relative; display: inline-block; width: 100%; line-height: 0; }
+        .design-wrap img { width: 100%; height: auto; display: block; }
+        .design-field {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            color: #1a1a2e;
+            text-align: center;
+            line-height: 1.15;
+            max-width: 92%;
+            text-wrap: balance;
+        }
         @media print {
             nav, .cert-actions, footer { display: none !important; }
             body { background: white !important; }
             .certificate-document { box-shadow: none; }
+            .certificate-document.design-mode { border: none; }
         }
     </style>
 </head>
@@ -283,6 +304,16 @@
                         <div class="cert-signature-role">Authorized by the pazoskill Platform</div>
                     </div>
                 </div>
+
+                <div class="certificate-document design-mode hidden" id="certDocDesign">
+                    <div class="design-wrap">
+                        <img id="designImage" src="" alt="Certificate of Completion">
+                        <div class="design-field" id="designName">Student Name</div>
+                        <div class="design-field" id="designCourse">Course Title</div>
+                        <div class="design-field" id="designDate">—</div>
+                        <div class="design-field" id="designCode">PAZO-CERT-XXXX</div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -346,6 +377,8 @@
                 document.getElementById('loadingMsg').classList.add('hidden');
                 document.getElementById('certContainer').classList.remove('hidden');
 
+                loadCertificateDesign(certificate);
+
             } catch (err) {
                 console.error(err);
                 document.getElementById('loadingMsg').classList.add('hidden');
@@ -362,6 +395,73 @@
             } else {
                 navigator.clipboard.writeText(url).then(() => alert('Certificate link copied to clipboard!'));
             }
+        }
+
+        var DESIGN_FONT_MAP = {
+            default: "'Inter', sans-serif",
+            serif: "'Playfair Display', Georgia, serif",
+            script: "'Great Vibes', cursive"
+        };
+
+        function loadCertificateDesign(certificate) {
+            fetch((window.API_BASE_URL || '') + '/api/certificates/design')
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    var design = d.design;
+                    if (design && design.image) {
+                        renderCertificateDesign(design, certificate);
+                    }
+                })
+                .catch(function(err) { console.error('Certificate design load failed', err); });
+        }
+
+        function renderCertificateDesign(design, cert) {
+            document.getElementById('certDoc').classList.add('hidden');
+            document.getElementById('certDocDesign').classList.remove('hidden');
+
+            var name = cert.userName || (getCurrentUser() ? (getCurrentUser().fullName || getCurrentUser().name) : 'Student');
+            var course = cert.courseTitle || 'Course';
+            var date = new Date(cert.issued_at || cert.issuedDate || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            var code = cert.certificate_code || cert.certificateCode || 'PAZO-CERT-XXXX';
+            var values = { name: name, course: course, date: date, code: code };
+
+            var fields = design.fields || {};
+            ['name', 'course', 'date', 'code'].forEach(function(key) {
+                var el = document.getElementById('design' + key.charAt(0).toUpperCase() + key.slice(1));
+                var f = fields[key] || {};
+                el.textContent = values[key];
+                el.style.left = (f.x != null ? f.x : 50) + '%';
+                el.style.top = (f.y != null ? f.y : 50) + '%';
+                el.style.color = f.color || '#1a1a2e';
+                el.style.fontWeight = f.bold ? '700' : '400';
+                el.style.fontFamily = DESIGN_FONT_MAP[f.font] || DESIGN_FONT_MAP.default;
+            });
+
+            var img = document.getElementById('designImage');
+            img.onload = function() { scaleCertificateDesign(design); };
+            img.onerror = function() {
+                document.getElementById('certDocDesign').classList.add('hidden');
+                document.getElementById('certDoc').classList.remove('hidden');
+            };
+            img.src = design.image;
+
+            scaleCertificateDesign(design);
+            window.addEventListener('resize', function() { scaleCertificateDesign(design); });
+        }
+
+        function scaleCertificateDesign(design) {
+            var img = document.getElementById('designImage');
+            if (!img || !img.clientWidth) return;
+            var w = img.clientWidth;
+            var nw = design.naturalWidth || w;
+            var scale = w / nw;
+            var fields = design.fields || {};
+            ['name', 'course', 'date', 'code'].forEach(function(key) {
+                var f = fields[key] || {};
+                var el = document.getElementById('design' + key.charAt(0).toUpperCase() + key.slice(1));
+                var size = f.size != null ? f.size : 50;
+                el.style.fontSize = Math.max(8, size * scale) + 'px';
+            });
         }
 
         document.addEventListener('DOMContentLoaded', loadCertificate);

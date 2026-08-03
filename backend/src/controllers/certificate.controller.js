@@ -21,6 +21,11 @@ exports.verifyCertificate = asyncHandler(async (req, res) => {
     return success(res, { certificate: sanitizeForViewer(certificate, req.user), valid: true });
 });
 
+exports.getDesign = asyncHandler(async (req, res) => {
+    const design = await certificateService.getDesign();
+    return success(res, { design });
+});
+
 function sanitizeForViewer(certificate, user) {
     if (!certificate) return certificate;
     if (user && (user.id === certificate.user_id || user.role === 'admin')) return certificate;

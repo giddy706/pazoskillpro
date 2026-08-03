@@ -90,8 +90,8 @@ const authLimiter = rateLimit({
 });
 
 // Body parsing
-app.use(express.json({ limit: '8mb' }));
-app.use(express.urlencoded({ extended: true, limit: '8mb' }));
+app.use(express.json({ limit: '30mb' }));
+app.use(express.urlencoded({ extended: true, limit: '30mb' }));
 app.use(cookieParser());
 
 // Request logging via Winston
