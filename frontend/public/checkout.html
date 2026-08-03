@@ -233,23 +233,25 @@
                     email: user.email || 'student@pazoskill.com',
                     amount: Math.round(amountToPay * 100), // Paystack expects integer amount in kobo/cents
                     currency: 'KES',
-                    callback: async function (response) {
+                    callback: function (response) {
                         // Payment successful on frontend, verify with backend
-                        try {
-                            const result = await enrollInCourse(courseId, promoCode, response.reference);
-                            if (result.success) {
-                                alert('Payment verified and enrollment successful!');
-                                window.location.href = 'dashboard.html';
-                            } else {
-                                alert('Payment verification failed: ' + result.message);
+                        (async () => {
+                            try {
+                                const result = await enrollInCourse(courseId, promoCode, response.reference);
+                                if (result.success) {
+                                    alert('Payment verified and enrollment successful!');
+                                    window.location.href = 'dashboard.html';
+                                } else {
+                                    alert('Payment verification failed: ' + result.message);
+                                    btn.disabled = false;
+                                    btn.textContent = 'Complete Payment';
+                                }
+                            } catch (err) {
+                                alert('An error occurred during verification.');
                                 btn.disabled = false;
                                 btn.textContent = 'Complete Payment';
                             }
-                        } catch (err) {
-                            alert('An error occurred during verification.');
-                            btn.disabled = false;
-                            btn.textContent = 'Complete Payment';
-                        }
+                        })();
                     },
                     onClose: function () {
                         alert('Payment cancelled.');
