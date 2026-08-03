@@ -17,7 +17,7 @@ async function findAllByUser(userId) {
     return enrollmentModel.findAllByUser(userId);
 }
 
-async function create(userId, courseId, promoCode) {
+async function create(userId, courseId, promoCode, transactionReference = null) {
     const existing = await enrollmentModel.findByUserAndCourse(userId, courseId);
     if (existing) {
         throw new ConflictError('Already enrolled in this course');
@@ -31,25 +31,60 @@ async function create(userId, courseId, promoCode) {
     const affiliateService = require('./affiliate.service');
     const promo = await affiliateService.applyAtEnrollment(userId, courseId, promoCode);
 
+    const paidAmount = promo && promo.applied && promo.paidAmount != null
+        ? promo.paidAmount
+        : (course.price || 0);
+
+    // Verify Paystack Payment
+    if (paidAmount > 0) {
+        if (!transactionReference) {
+            throw new BadRequestError('Payment transaction reference is required');
+        }
+        
+        const { config } = require('../config/env');
+        try {
+            // Using native fetch, available in Node 18+
+            const response = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(transactionReference)}`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${config.paystack.secretKey}`
+                }
+            });
+            const data = await response.json();
+            
+            if (!data.status || data.data.status !== 'success') {
+                throw new BadRequestError('Payment verification failed');
+            }
+
+            // Paystack amounts are in kobo/cents. Ensure the paid amount matches what we expect.
+            const expectedAmountInKobo = paidAmount * 100;
+            if (data.data.amount < expectedAmountInKobo) {
+                throw new BadRequestError('Payment amount is less than the required amount');
+            }
+        } catch (error) {
+            if (error instanceof BadRequestError) throw error;
+            console.error('Paystack API error:', error);
+            throw new BadRequestError('Could not verify payment with Paystack');
+        }
+    }
+
     const enrollment = await enrollmentModel.create(userId, courseId);
     await courseModel.incrementStudents(courseId);
 
     if (promo && promo.applied) {
         await affiliateService.linkEnrollment(userId, enrollment.id);
     }
-    const paidAmount = promo && promo.applied && promo.paidAmount != null
-        ? promo.paidAmount
-        : (enrollment.coursePrice || 0);
+    
     const paymentModel = require('../models/payment.model');
-    const transactionRef = 'PAY-' + Date.now() + '-' + enrollment.id;
+    const actualTxRef = (paidAmount > 0) ? transactionReference : ('PAY-' + Date.now() + '-' + enrollment.id);
     await paymentModel.create({
         userId,
         courseId,
         amount: paidAmount,
         currency: 'KSH',
         status: 'completed',
-        paymentMethod: promo && promo.applied ? 'promo' : 'card',
-        transactionRef,
+        paymentMethod: (paidAmount > 0) ? 'paystack' : (promo && promo.applied ? 'promo' : 'free'),
+        transactionRef: actualTxRef,
     });
 
     return { enrollment, promo };

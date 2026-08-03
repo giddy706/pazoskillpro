@@ -55,40 +55,8 @@
                 <div>
                     <div class="card">
                         <div class="card-body">
-                            <h3>Payment Method</h3>
-                            <div class="form-group">
-                                <label class="form-label">Select Payment Method</label>
-                                <select id="paymentMethod" class="form-select">
-                                    <option value="card">Credit/Debit Card</option>
-                                    <option value="mpesa">M-Pesa</option>
-                                </select>
-                            </div>
-
-                            <div id="cardPayment">
-                                <div class="form-group">
-                                    <label class="form-label">Card Number</label>
-                                    <input type="text" class="form-input" placeholder="1234 5678 9012 3456">
-                                </div>
-                                <div class="grid grid-2">
-                                    <div class="form-group">
-                                        <label class="form-label">Expiry Date</label>
-                                        <input type="text" class="form-input" placeholder="MM/YY">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">CVV</label>
-                                        <input type="text" class="form-input" placeholder="123">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="mpesaPayment" class="hidden">
-                                <div class="form-group">
-                                    <label class="form-label">M-Pesa Account Number</label>
-                                    <input type="text" id="mpesaPhone" class="form-input" placeholder="Account Number">
-                                </div>
-                                <div class="alert alert-info">
-                                    <p>You will receive an M-Pesa prompt on your phone to complete the payment.</p>
-                                </div>
+                            <div class="alert alert-info">
+                                <p>Clicking Complete Payment will open a secure Paystack checkout window where you can pay via Card, Bank, or Mobile Money.</p>
                             </div>
 
                             <button id="payBtn" class="btn btn-primary btn-large btn-block">Complete Payment</button>
@@ -102,6 +70,7 @@
     <script src="js/data.js"></script>
     <script src="js/main.js"></script>
     <script src="js/auth.js"></script>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
     <script>
         const user = getCurrentUser();
         if (!user) {
@@ -205,35 +174,77 @@
 
         document.getElementById('applyPromoBtn').addEventListener('click', applyPromo);
 
-        // Payment method toggle
-        document.getElementById('paymentMethod').addEventListener('change', function (e) {
-            if (e.target.value === 'mpesa') {
-                document.getElementById('cardPayment').classList.add('hidden');
-                document.getElementById('mpesaPayment').classList.remove('hidden');
-            } else {
-                document.getElementById('cardPayment').classList.remove('hidden');
-                document.getElementById('mpesaPayment').classList.add('hidden');
+        let paystackPublicKey = null;
+
+        // Fetch Paystack configuration
+        async function loadPaystackConfig() {
+            try {
+                const res = await fetch((window.API_BASE_URL || '') + '/api/config/paystack');
+                const data = await res.json();
+                if (data.success) {
+                    paystackPublicKey = data.publicKey;
+                }
+            } catch (err) {
+                console.error("Failed to load Paystack config", err);
             }
-        });
+        }
+        loadPaystackConfig();
 
         // Process payment
-        document.getElementById('payBtn').addEventListener('click', function () {
-            const paymentMethod = document.getElementById('paymentMethod').value;
+        document.getElementById('payBtn').addEventListener('click', async function () {
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
 
-            // Simulate payment processing
-            alert('Processing payment...');
+            const promoCode = appliedPromo ? appliedPromo.code : (document.getElementById('promoCode').value.trim() || null);
+            const amountToPay = appliedPromo && appliedPromo.paidAmount != null ? appliedPromo.paidAmount : (course ? course.price : 0);
 
-            setTimeout(async () => {
-                const promoCode = appliedPromo ? appliedPromo.code : (document.getElementById('promoCode').value.trim() || null);
-                const result = await enrollInCourse(courseId, promoCode);
-
+            if (amountToPay === 0) {
+                // Free course or 100% discount, bypass Paystack
+                const result = await enrollInCourse(courseId, promoCode, null);
                 if (result.success) {
-                    alert('Payment successful! You are now enrolled in the course.');
+                    alert('Enrollment successful! You are now enrolled in the course.');
                     window.location.href = 'dashboard.html';
                 } else {
                     alert(result.message);
+                    btn.disabled = false;
+                    btn.textContent = 'Complete Payment';
                 }
-            }, 1000);
+                return;
+            }
+
+            if (!paystackPublicKey) {
+                alert('Payment system configuration missing. Please try again later.');
+                btn.disabled = false;
+                btn.textContent = 'Complete Payment';
+                return;
+            }
+
+            // Initialize Paystack
+            const handler = PaystackPop.setup({
+                key: paystackPublicKey,
+                email: user.email,
+                amount: amountToPay * 100, // Paystack expects amount in kobo/cents
+                currency: 'KES',
+                callback: async function (response) {
+                    // Payment successful on frontend, verify with backend
+                    const result = await enrollInCourse(courseId, promoCode, response.reference);
+                    if (result.success) {
+                        alert('Payment verified and enrollment successful!');
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        alert('Payment verification failed: ' + result.message);
+                        btn.disabled = false;
+                        btn.textContent = 'Complete Payment';
+                    }
+                },
+                onClose: function () {
+                    alert('Payment cancelled.');
+                    btn.disabled = false;
+                    btn.textContent = 'Complete Payment';
+                }
+            });
+            handler.openIframe();
         });
     </script>
 </body>

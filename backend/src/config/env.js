@@ -26,6 +26,13 @@ const config = {
         windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || 900000, 10),
         max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || 100, 10),
     },
+    paystack: {
+        secretKey: process.env.PAYSTACK_SECRET_KEY || '',
+        publicKey: process.env.PAYSTACK_PUBLIC_KEY || '',
+        currency: process.env.PAYSTACK_CURRENCY || 'KES',
+        mode: process.env.PAYSTACK_MODE || 'test',
+        baseUrl: process.env.PAYSTACK_BASE_URL || 'https://api.paystack.co',
+    },
 };
 
 module.exports = config;

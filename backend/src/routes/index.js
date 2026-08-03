@@ -13,5 +13,6 @@ router.use('/certificates', require('./certificates.routes'));
 router.use('/ai', require('./ai.routes'));
 router.use('/affiliates', require('./affiliates.routes'));
 router.use('/career', require('./career.routes'));
+router.use('/config', require('./config.routes'));
 
 module.exports = router;

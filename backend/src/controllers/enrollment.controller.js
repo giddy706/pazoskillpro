@@ -4,7 +4,8 @@ const enrollmentService = require('../services/enrollment.service');
 
 exports.enroll = asyncHandler(async (req, res) => {
     const promoCode = req.body.promo_code || req.body.promoCode || null;
-    const result = await enrollmentService.create(req.user.id, req.params.id, promoCode);
+    const transactionReference = req.body.transaction_reference || null;
+    const result = await enrollmentService.create(req.user.id, req.params.id, promoCode, transactionReference);
     return success(res, { enrollment: result.enrollment, promo: result.promo || null }, 201);
 });
 
