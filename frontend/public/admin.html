@@ -188,7 +188,8 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
             <button class="nav-item" data-section="enrollments"><span class="icon">&#128101;</span><span>Enrollments</span></button>
             <button class="nav-item" data-section="users"><span class="icon">&#128100;</span><span>Users</span></button>
             <button class="nav-item" data-section="payments"><span class="icon">&#128176;</span><span>Payments</span></button>
-<button class="nav-item" data-section="marketing"><span class="icon">&#128640;</span><span>Marketing</span></button>
+            <button class="nav-item" data-section="marketing"><span class="icon">&#128640;</span><span>Marketing</span></button>
+            <button class="nav-item" data-section="jobs"><span class="icon">&#128188;</span><span>Jobs</span></button>
             <button class="nav-item" data-section="quizzes"><span class="icon">&#128221;</span><span>Quizzes</span></button>
             <button class="nav-item" data-section="attempts"><span class="icon">&#128200;</span><span>Attempts</span></button>
             <button class="nav-item" data-section="settings"><span class="icon">&#9881;</span><span>Settings</span></button>
@@ -419,6 +420,58 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
                 </div>
             </div>
 
+            <!-- ===== JOBS ===== -->
+            <div class="section" id="section-jobs">
+                <div class="toolbar">
+                    <h3>Manage Job Openings</h3>
+                    <button class="btn btn-primary" onclick="showJobForm()">+ Add Job</button>
+                </div>
+                <div class="msg" id="jobMsg"></div>
+                <div class="table-container" id="jobsTable"><div class="loading">Loading...</div></div>
+
+                <div class="form-overlay" id="jobFormOverlay">
+                    <div class="form-modal" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+                        <h3 id="jobFormTitle">Add Job</h3>
+                        <div class="msg" id="jobFormMsg"></div>
+                        <form id="jobForm" onsubmit="saveJob(event)">
+                            <input type="hidden" id="jobId">
+                            <div class="grid grid-2">
+                                <div class="form-group"><label>Title</label><input type="text" id="jobTitle" required></div>
+                                <div class="form-group"><label>Company</label><input type="text" id="jobCompany" required></div>
+                            </div>
+                            <div class="grid grid-2">
+                                <div class="form-group"><label>Location</label><input type="text" id="jobLocation" required></div>
+                                <div class="form-group"><label>Type (e.g. Full-time, Remote)</label><input type="text" id="jobType" required></div>
+                            </div>
+                            <div class="grid grid-2">
+                                <div class="form-group"><label>Salary (Optional)</label><input type="text" id="jobSalary"></div>
+                                <div class="form-group"><label>Required Course (Optional)</label><select id="jobRequiredCourse"><option value="">-- None --</option></select></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="jobDescription" class="form-textarea" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Requirements (One per line)</label>
+                                <textarea id="jobRequirements" class="form-textarea"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Responsibilities (One per line)</label>
+                                <textarea id="jobResponsibilities" class="form-textarea"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Benefits (One per line)</label>
+                                <textarea id="jobBenefits" class="form-textarea"></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="closeForm('jobFormOverlay')">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Job</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             <!-- ===== QUIZZES ===== -->
             <div class="section" id="section-quizzes">
                 <div class="toolbar">
@@ -615,6 +668,7 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
             case 'users': loadUsers(); break;
             case 'payments': loadPayments(); break;
             case 'marketing': loadMarketing(); break;
+            case 'jobs': loadJobs(); break;
             case 'quizzes': loadQuizzes(); break;
             case 'attempts': loadAttempts(); break;
             case 'settings': loadSettings(); break;
@@ -1206,6 +1260,109 @@ window.API_BASE_URL = window.API_BASE_URL || 'https://pazoskillpro-backend.onren
                 tbody.innerHTML = html;
             })
             .catch(function(err) { statsEl.innerHTML = ''; tbody.innerHTML = '<div class="error">Error loading performance.</div>'; console.error(err); });
+    }
+
+    // ---- Jobs ----
+    function loadJobs() {
+        if (!checkAuth()) return;
+        var tbody = document.getElementById('jobsTable');
+        tbody.innerHTML = '<div class="loading">Loading...</div>';
+        authFetch(apiUrl('/jobs'))
+            .then(function(r) { return r.json(); })
+            .then(function(resp) {
+                var jobs = resp.jobs || [];
+                if (!jobs.length) { tbody.innerHTML = '<div class="empty">No jobs found.</div>'; return; }
+                var html = '<table><thead><tr><th>ID</th><th>Title</th><th>Company</th><th>Type</th><th>Required Course</th><th>Actions</th></tr></thead><tbody>';
+                jobs.forEach(function(j) {
+                    html += '<tr><td>' + j.id + '</td><td>' + esc(j.title) + '</td><td>' + esc(j.company) + '</td><td>' + esc(j.type) + '</td><td>' + (j.required_course_id || '--') + '</td><td>';
+                    html += '<button class="btn btn-sm btn-secondary" onclick="editJob(' + j.id + ')">Edit</button> ';
+                    html += '<button class="btn btn-sm btn-danger" onclick="deleteJob(' + j.id + ')">Del</button>';
+                    html += '</td></tr>';
+                });
+                html += '</tbody></table>';
+                tbody.innerHTML = html;
+            })
+            .catch(function(err) { tbody.innerHTML = '<div class="error">Error loading jobs.</div>'; console.error(err); });
+    }
+
+    function showJobForm(data) {
+        loadJobCourseSelect();
+        document.getElementById('jobFormTitle').textContent = data ? 'Edit Job' : 'Add Job';
+        document.getElementById('jobId').value = data ? data.id : '';
+        document.getElementById('jobTitle').value = data ? data.title : '';
+        document.getElementById('jobCompany').value = data ? data.company : '';
+        document.getElementById('jobLocation').value = data ? data.location : '';
+        document.getElementById('jobType').value = data ? data.type : '';
+        document.getElementById('jobSalary').value = data ? (data.salary || '') : '';
+        document.getElementById('jobDescription').value = data ? data.description : '';
+        document.getElementById('jobRequirements').value = data && data.requirements ? data.requirements.join('\n') : '';
+        document.getElementById('jobResponsibilities').value = data && data.responsibilities ? data.responsibilities.join('\n') : '';
+        document.getElementById('jobBenefits').value = data && data.benefits ? data.benefits.join('\n') : '';
+        if (data && data.required_course_id) document.getElementById('jobRequiredCourse').value = data.required_course_id;
+        document.getElementById('jobFormMsg').style.display = 'none';
+        openForm('jobFormOverlay');
+    }
+
+    function loadJobCourseSelect() {
+        authFetch(apiUrl('/admin/courses'))
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                var courses = d.courses || [];
+                var sel = document.getElementById('jobRequiredCourse');
+                sel.innerHTML = '<option value="">-- None --</option>';
+                courses.forEach(function(c) {
+                    sel.innerHTML += '<option value="' + c.id + '">' + esc(c.title) + '</option>';
+                });
+            })
+            .catch(function(err) { console.error(err); });
+    }
+
+    function editJob(id) {
+        authFetch(apiUrl('/jobs/' + id))
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if(d.success) showJobForm(d.job);
+            })
+            .catch(function(err) { showMsg('jobMsg', 'error', 'Failed to load job'); });
+    }
+
+    function saveJob(e) {
+        e.preventDefault();
+        var id = document.getElementById('jobId').value;
+        var data = {
+            title: document.getElementById('jobTitle').value,
+            company: document.getElementById('jobCompany').value,
+            location: document.getElementById('jobLocation').value,
+            type: document.getElementById('jobType').value,
+            salary: document.getElementById('jobSalary').value,
+            description: document.getElementById('jobDescription').value,
+            requirements: document.getElementById('jobRequirements').value.split('\n').filter(Boolean),
+            responsibilities: document.getElementById('jobResponsibilities').value.split('\n').filter(Boolean),
+            benefits: document.getElementById('jobBenefits').value.split('\n').filter(Boolean),
+            requiredCourseId: document.getElementById('jobRequiredCourse').value || null
+        };
+        var method = id ? 'PATCH' : 'POST';
+        var url = apiUrl('/jobs' + (id ? '/' + id : ''));
+        authFetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (!d.success && d.job) throw new Error(d.message || 'Failed to save job');
+                showMsg('jobFormMsg', 'success', 'Saved successfully');
+                closeForm('jobFormOverlay');
+                loadJobs();
+            })
+            .catch(function(err) { showMsg('jobFormMsg', 'error', err.message || 'Failed to save job'); });
+    }
+
+    function deleteJob(id) {
+        if (!confirm('Delete this job?')) return;
+        authFetch(apiUrl('/jobs/' + id), { method: 'DELETE' })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Failed to delete');
+                showMsg('jobMsg', 'success', 'Deleted');
+                loadJobs();
+            })
+            .catch(function(err) { showMsg('jobMsg', 'error', 'Failed to delete'); });
     }
 
     // ---- Quizzes ----

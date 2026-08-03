@@ -128,7 +128,11 @@
                         document.getElementById('applicationForm').classList.remove('hidden');
                     } else {
                         document.getElementById('requiredCourseName').textContent = job.requiredCourseTitle || 'Required Course';
-                        document.getElementById('viewCourseLink').href = `course-detail.html?id=${job.required_course_id}`;
+                        document.getElementById('viewCourseLink').href = '#';
+                        document.getElementById('viewCourseLink').onclick = function(e) {
+                            e.preventDefault();
+                            window.location.href = `course-detail.html?id=${job.required_course_id}`;
+                        };
                         document.getElementById('requirementNotice').classList.remove('hidden');
                     }
                 }
