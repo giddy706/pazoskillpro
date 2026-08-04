@@ -1021,7 +1021,12 @@ function adminLogout() {
         document.getElementById('coursePrice').value = data ? (data.price || 0) : '';
         document.getElementById('courseDuration').value = data ? (data.duration || '') : '';
         document.getElementById('courseLevel').value = data ? (data.level || '') : '';
-        document.getElementById('courseLearn').value = data ? (Array.isArray(data.outcomes) ? data.outcomes.join('\n') : (data.what_you_learn || '')) : '';
+        document.getElementById('courseLearn').value = data ? (function() {
+            var o = data.outcomes;
+            if (Array.isArray(o)) return o.join('\n');
+            if (typeof o === 'string') { try { var p = JSON.parse(o); return Array.isArray(p) ? p.join('\n') : ''; } catch(e) { return ''; } }
+            return '';
+        })() : '';
         document.getElementById('coursePublished').checked = data ? !!data.published : false;
         document.getElementById('courseFormMsg').style.display = 'none';
         openForm('courseFormOverlay');

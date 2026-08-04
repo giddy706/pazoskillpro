@@ -109,7 +109,7 @@
                 document.getElementById('courseLevel').textContent = course.level;
                 document.getElementById('courseInstructor').textContent = course.instructor;
                 document.getElementById('courseStudents').textContent = (course.students || 0).toLocaleString();
-                document.getElementById('courseRating').textContent = course.rating;
+                document.getElementById('courseRating').textContent = course.rating ? parseFloat(course.rating).toFixed(1) : 'N/A';
 
                 document.getElementById('courseCurriculum').innerHTML = course.curriculum.map(item =>
                     `<li style="padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb;">✓ ${item.title || item}</li>`

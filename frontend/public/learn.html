@@ -515,9 +515,14 @@
                 ? ('Senior ' + category + ' Instructor')
                 : 'Senior Instructor';
 
-            const rating = courseInfo && courseInfo.rating ? parseFloat(courseInfo.rating) : 5;
-            document.getElementById('instructorStars').textContent = starRating(rating);
-            document.getElementById('instructorScore').textContent = rating.toFixed(1);
+            const rating = courseInfo && courseInfo.rating ? parseFloat(courseInfo.rating) : 0;
+            if (rating > 0) {
+                document.getElementById('instructorStars').textContent = starRating(rating);
+                document.getElementById('instructorScore').textContent = rating.toFixed(1);
+            } else {
+                document.getElementById('instructorStars').textContent = '';
+                document.getElementById('instructorScore').textContent = 'New Course';
+            }
 
             document.getElementById('instructorTagline').textContent =
                 INSTRUCTOR_TAGLINES[instructorDisplayName] || 'Clear, friendly and practical teaching for every level.';

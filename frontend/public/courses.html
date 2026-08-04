@@ -223,9 +223,8 @@
                         <h3 class="card-title">${course.title}</h3>
                         <p class="card-text">${course.description}</p>
                         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: var(--gray); font-size: 0.875rem;">
-                            <span>⭐ ${course.rating}</span>
-                            <span>•</span>
-                            <span>👥 ${course.students} students</span>
+                            ${course.rating ? `<span>⭐ ${parseFloat(course.rating).toFixed(1)}</span><span>•</span>` : ''}
+                            <span>👥 ${course.students || 0} students</span>
                         </div>
                         <div class="flex-between">
                             <div style="display:flex; flex-direction:column; gap:0.2rem;">
