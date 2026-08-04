@@ -254,7 +254,7 @@
                     <a href="dashboard.html" class="btn btn-outline">← Dashboard</a>
                 </div>
 
-                <div class="certificate-document" id="certDoc">
+                <div class="certificate-document hidden" id="certDoc">
                     <div class="cert-corner tl"></div>
                     <div class="cert-corner tr"></div>
                     <div class="cert-corner bl"></div>
@@ -431,9 +431,14 @@
                     var design = d.design;
                     if (design && design.image) {
                         renderCertificateDesign(design, certificate);
+                    } else {
+                        document.getElementById('certDoc').classList.remove('hidden');
                     }
                 })
-                .catch(function(err) { console.error('Certificate design load failed', err); });
+                .catch(function(err) {
+                    console.error('Certificate design load failed', err);
+                    document.getElementById('certDoc').classList.remove('hidden');
+                });
         }
 
         function renderCertificateDesign(design, cert) {

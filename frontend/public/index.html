@@ -247,90 +247,7 @@
             </div>
 
             <div class="grid grid-3" id="featuredCourses">
-                <!-- Courses will be loaded dynamically -->
-                <div class="card">
-                    <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=200&fit=crop"
-                        alt="Web Development" class="card-image">
-                    <div class="card-body">
-                        <div class="flex-between mb-2">
-                            <span class="badge badge-primary">IT & Programming</span>
-                            <span style="color: var(--gray); font-size: 0.875rem;">12 Weeks</span>
-                        </div>
-                        <h3 class="card-title">Full Stack Web Development</h3>
-                        <p class="card-text">Master HTML, CSS, JavaScript, React, Node.js and build real-world
-                            applications from scratch.</p>
-                        <div class="flex-between">
-                            <div style="display:flex; flex-direction:column; gap:0.2rem;">
-                                <span
-                                    style="display:inline-block; background:linear-gradient(90deg,#e53e3e,#fc8181); color:#fff; font-size:0.72rem; font-weight:700; padding:0.18rem 0.6rem; border-radius:2rem; letter-spacing:0.06em; width:fit-content;">🏷️
-                                    20% OFF</span>
-                                <div style="display:flex; align-items:baseline; gap:0.5rem;">
-                                    <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">KSH
-                                        20,000</span>
-                                    <span style="font-size:0.9rem; color:var(--gray); text-decoration:line-through;">KSH
-                                        25,000</span>
-                                </div>
-                            </div>
-                            <a href="course-detail.html?id=1" class="btn btn-primary">Enroll Now</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=200&fit=crop"
-                        alt="Digital Marketing" class="card-image">
-                    <div class="card-body">
-                        <div class="flex-between mb-2">
-                            <span class="badge badge-success">Marketing</span>
-                            <span style="color: var(--gray); font-size: 0.875rem;">8 Weeks</span>
-                        </div>
-                        <h3 class="card-title">Digital Marketing Mastery</h3>
-                        <p class="card-text">Learn SEO, social media marketing, email campaigns, and analytics to grow
-                            any business online.</p>
-                        <div class="flex-between">
-                            <div style="display:flex; flex-direction:column; gap:0.2rem;">
-                                <span
-                                    style="display:inline-block; background:linear-gradient(90deg,#e53e3e,#fc8181); color:#fff; font-size:0.72rem; font-weight:700; padding:0.18rem 0.6rem; border-radius:2rem; letter-spacing:0.06em; width:fit-content;">🏷️
-                                    20% OFF</span>
-                                <div style="display:flex; align-items:baseline; gap:0.5rem;">
-                                    <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">KSH
-                                        14,400</span>
-                                    <span style="font-size:0.9rem; color:var(--gray); text-decoration:line-through;">KSH
-                                        18,000</span>
-                                </div>
-                            </div>
-                            <a href="course-detail.html?id=2" class="btn btn-primary">Enroll Now</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=200&fit=crop"
-                        alt="Data Analytics" class="card-image">
-                    <div class="card-body">
-                        <div class="flex-between mb-2">
-                            <span class="badge badge-warning">Data Science</span>
-                            <span style="color: var(--gray); font-size: 0.875rem;">10 Weeks</span>
-                        </div>
-                        <h3 class="card-title">Data Analytics & Visualization</h3>
-                        <p class="card-text">Transform raw data into actionable insights using Excel, SQL, Python, and
-                            Power BI.</p>
-                        <div class="flex-between">
-                            <div style="display:flex; flex-direction:column; gap:0.2rem;">
-                                <span
-                                    style="display:inline-block; background:linear-gradient(90deg,#e53e3e,#fc8181); color:#fff; font-size:0.72rem; font-weight:700; padding:0.18rem 0.6rem; border-radius:2rem; letter-spacing:0.06em; width:fit-content;">🏷️
-                                    20% OFF</span>
-                                <div style="display:flex; align-items:baseline; gap:0.5rem;">
-                                    <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">KSH
-                                        17,600</span>
-                                    <span style="font-size:0.9rem; color:var(--gray); text-decoration:line-through;">KSH
-                                        22,000</span>
-                                </div>
-                            </div>
-                            <a href="course-detail.html?id=3" class="btn btn-primary">Enroll Now</a>
-                        </div>
-                    </div>
-                </div>
+                <!-- Courses loaded dynamically -->
             </div>
         </div>
     </section>
@@ -460,6 +377,45 @@
 
     <!-- JavaScript -->
     <script src="js/main.js"></script>
+    <script>
+        (function () {
+            var grid = document.getElementById('featuredCourses');
+            if (!grid) return;
+            var api = window.API_BASE_URL || '';
+            fetch(api + '/api/courses')
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    var courses = (d.courses || []).slice(0, 3);
+                    if (!courses.length) {
+                        grid.innerHTML = '<p style="text-align:center; color:var(--gray); grid-column:1/-1;">No courses available yet.</p>';
+                        return;
+                    }
+                    grid.innerHTML = courses.map(function (c) {
+                        return '<div class="card">' +
+                            '<img src="' + (c.image || '') + '" alt="' + (c.title || '') + '" class="card-image">' +
+                            '<div class="card-body">' +
+                            '<div class="flex-between mb-2">' +
+                            '<span class="badge badge-primary">' + (c.category || '') + '</span>' +
+                            '<span style="color: var(--gray); font-size: 0.875rem;">' + (c.duration || '') + '</span>' +
+                            '</div>' +
+                            '<h3 class="card-title">' + (c.title || '') + '</h3>' +
+                            '<p class="card-text">' + (c.description || '').substring(0, 100) + '</p>' +
+                            '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;color:var(--gray);font-size:0.875rem;">' +
+                            (c.rating ? '<span>⭐ ' + parseFloat(c.rating).toFixed(1) + '</span><span>•</span>' : '') +
+                            '<span>👥 ' + (c.students || 0) + ' students</span>' +
+                            '</div>' +
+                            '<div class="flex-between">' +
+                            '<div style="font-size:1.5rem;font-weight:700;color:var(--primary-color);">KSH ' + (c.price || 0).toLocaleString() + '</div>' +
+                            '<a href="course-detail.html?id=' + c.id + '" class="btn btn-primary">View Details</a>' +
+                            '</div>' +
+                            '</div></div>';
+                    }).join('');
+                })
+                .catch(function (e) {
+                    grid.innerHTML = '<p style="text-align:center;color:var(--gray);grid-column:1/-1;">Unable to load courses.</p>';
+                });
+        })();
+    </script>
 </body>
 
 </html>
