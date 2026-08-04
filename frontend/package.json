@@ -1,7 +1,7 @@
 {
   "name": "e-training-frontend",
   "version": "1.0.0",
-  "description": "Frontend for SkillPath Academy",
+  "description": "Frontend for pazoskill",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

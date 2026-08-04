@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS courses (
     image TEXT NOT NULL,
     instructor TEXT NOT NULL,
     level TEXT NOT NULL,
-    rating REAL DEFAULT 5.0,
+    rating REAL DEFAULT 0,
     students_count INTEGER DEFAULT 0,
     requirements TEXT DEFAULT '[]',
     outcomes TEXT DEFAULT '[]',

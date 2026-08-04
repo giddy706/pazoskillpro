@@ -9,13 +9,17 @@ function parseJsonArray(value) {
     }
 }
 
+function studentCount(course) {
+    return course.students != null ? course.students : (course.students_count || 0);
+}
+
 async function listAll() {
     const courses = await courseModel.listAll();
     return courses.map((c) => ({
         ...c,
         requirements: parseJsonArray(c.requirements),
         outcomes: parseJsonArray(c.outcomes),
-        students: c.students_count,
+        students: studentCount(c),
     }));
 }
 
@@ -25,7 +29,7 @@ async function listPublished() {
         ...c,
         requirements: parseJsonArray(c.requirements),
         outcomes: parseJsonArray(c.outcomes),
-        students: c.students_count,
+        students: studentCount(c),
     }));
 }
 

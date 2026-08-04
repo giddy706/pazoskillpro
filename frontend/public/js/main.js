@@ -214,3 +214,25 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// ============================================
+// Site Settings - apply contact email from admin panel
+// ============================================
+(function () {
+    var api = window.API_BASE_URL || 'https://pazoskillpro-backend.onrender.com';
+    fetch(api + '/api/settings')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+            if (!d || !d.success || !d.settings) return;
+            var email = d.settings.contact_email;
+            if (!email) return;
+            document.querySelectorAll('[data-contact-email]').forEach(function (el) {
+                el.textContent = email;
+            });
+            document.querySelectorAll('[data-contact-mailto]').forEach(function (el) {
+                el.textContent = email;
+                el.setAttribute('href', 'mailto:' + email);
+            });
+        })
+        .catch(function () {});
+})();
+

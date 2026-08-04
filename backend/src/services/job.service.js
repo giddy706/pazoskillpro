@@ -80,14 +80,14 @@ async function generateJobForCourse(course) {
     const category = course.category || 'Technology';
     return jobModel.create({
         title: `Junior ${course.title} Specialist`,
-        company: 'SkillPath Partner Network',
+        company: 'pazoskill Partner Network',
         location: 'Remote',
         type: 'Full-time',
         salary: '$40k - $60k',
         category,
         description: `We are looking for a highly motivated individual who has completed the ${course.title} certification to join our partner network. You will apply the skills you learned to real-world projects.`,
         requirements: [
-            `Must have completed the ${course.title} course on SkillPath Academy`,
+            `Must have completed the ${course.title} course on pazoskill`,
             'Strong problem-solving skills',
             'Ability to work independently in a remote environment',
         ],

@@ -1,7 +1,7 @@
 {
   "name": "e-training-backend",
   "version": "1.0.0",
-  "description": "Organized Node.js + PostgreSQL backend with clean architecture for SkillPath Academy",
+  "description": "Organized Node.js + PostgreSQL backend with clean architecture for pazoskill",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

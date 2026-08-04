@@ -111,11 +111,19 @@
                 document.getElementById('courseStudents').textContent = (course.students || 0).toLocaleString();
                 document.getElementById('courseRating').textContent = course.rating ? parseFloat(course.rating).toFixed(1) : 'N/A';
 
-                document.getElementById('courseCurriculum').innerHTML = course.curriculum.map(item =>
-                    `<li style="padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb;">✓ ${item.title || item}</li>`
+                let outcomes = course.outcomes || [];
+                if (typeof outcomes === 'string') {
+                    try { outcomes = JSON.parse(outcomes || '[]'); } catch (e) { outcomes = []; }
+                }
+                document.getElementById('courseCurriculum').innerHTML = (Array.isArray(outcomes) ? outcomes : []).map(item =>
+                    `<li style="padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb;">✓ ${item}</li>`
                 ).join('');
 
-                document.getElementById('courseRequirements').innerHTML = (course.requirements || []).map(req =>
+                let requirements = course.requirements || [];
+                if (typeof requirements === 'string') {
+                    try { requirements = JSON.parse(requirements || '[]'); } catch (e) { requirements = []; }
+                }
+                document.getElementById('courseRequirements').innerHTML = (Array.isArray(requirements) ? requirements : []).map(req =>
                     `<li>${req}</li>`
                 ).join('');
 

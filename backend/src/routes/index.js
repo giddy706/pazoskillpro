@@ -14,5 +14,6 @@ router.use('/ai', require('./ai.routes'));
 router.use('/affiliates', require('./affiliates.routes'));
 router.use('/career', require('./career.routes'));
 router.use('/config', require('./config.routes'));
+router.use('/settings', require('./settings.routes'));
 
 module.exports = router;

@@ -7,17 +7,20 @@ const UPDATABLE_COLUMNS = new Set([
 
 const listAll = async () => {
     const db = await getDB();
-    return db.all(`SELECT *, students_count as "students" FROM courses ORDER BY id DESC`);
+    return db.all(`SELECT c.*, (SELECT COUNT(*)::int FROM enrollments e WHERE e.course_id = c.id) AS students
+                   FROM courses c ORDER BY c.id DESC`);
 };
 
 const listPublished = async () => {
     const db = await getDB();
-    return db.all(`SELECT *, students_count as "students" FROM courses WHERE published = 1 ORDER BY id DESC`);
+    return db.all(`SELECT c.*, (SELECT COUNT(*)::int FROM enrollments e WHERE e.course_id = c.id) AS students
+                   FROM courses c WHERE c.published = 1 ORDER BY c.id DESC`);
 };
 
 const findById = async (id) => {
     const db = await getDB();
-    return db.get(`SELECT *, students_count as "students" FROM courses WHERE id = ?`, [parseInt(id)]);
+    return db.get(`SELECT c.*, (SELECT COUNT(*)::int FROM enrollments e WHERE e.course_id = c.id) AS students
+                   FROM courses c WHERE c.id = ?`, [parseInt(id)]);
 };
 
 const create = async (data) => {

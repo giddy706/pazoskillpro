@@ -5,7 +5,7 @@ const PORT = process.env.PORT || 3000;
 
 start().then(() => {
     app.listen(PORT, () => {
-        console.log(`SkillPath Academy API running on port ${PORT}`);
+        console.log(`pazoskill API running on port ${PORT}`);
     });
 }).catch((err) => {
     console.error('Failed to start server:', err);

@@ -4,7 +4,7 @@ const { open } = require('sqlite');
 (async () => {
   const db = await open({ filename: 'database.sqlite', driver: sqlite3.Database });
 
-  const courseTitle = 'SkillPath Academy — Graphic Design Course';
+  const courseTitle = 'pazoskill — Graphic Design Course';
 
   // Check if course already exists
   const existing = await db.get('SELECT * FROM courses WHERE title = ?', [courseTitle]);
@@ -24,7 +24,7 @@ const { open } = require('sqlite');
     description: `Comprehensive Graphic Design course covering foundations, branding, social and print design, UI basics and a capstone rebrand project.`,
     image: '',
     price: 0,
-    instructor: 'SkillPath Academy',
+    instructor: 'pazoskill',
     level: 'Beginner → Intermediate',
     duration: 'Self-paced',
     requirements: JSON.stringify([]),

@@ -4,7 +4,7 @@ const { open } = require('sqlite');
 (async () => {
   const db = await open({ filename: 'database.sqlite', driver: sqlite3.Database });
 
-  const courseTitle = 'SkillPath Academy — Graphic Design Course';
+  const courseTitle = 'pazoskill — Graphic Design Course';
   const course = await db.get('SELECT * FROM courses WHERE title = ?', [courseTitle]);
   if (!course) { console.error('Course not found; run add_graphic_design_course.js first'); await db.close(); process.exit(1); }
   const courseId = course.id;
