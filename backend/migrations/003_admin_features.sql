@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS settings (
 INSERT OR IGNORE INTO settings (setting_key, setting_value, description) VALUES
 ('site_name', 'pazoskill', 'Site display name'),
 ('site_description', 'Learn practical skills online and get hired', 'Site meta description'),
-('contact_email', 'nderitugideon73@gmail.com', 'Admin contact email'),
+('contact_email', 'info@pazoskill.online', 'Admin contact email'),
 ('currency', 'KSH', 'Default currency'),
 ('registration_open', '1', 'Allow new user registration'),
 ('maintenance_mode', '0', 'Enable maintenance mode');
