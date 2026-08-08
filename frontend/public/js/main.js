@@ -55,6 +55,37 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// ---- Dark Mode Toggle ----
+(function () {
+    var saved = localStorage.getItem('theme');
+    if (saved === 'dark') document.documentElement.classList.add('dark-theme');
+    function insertToggle() {
+        var nav = document.querySelector('.nav-menu');
+        if (!nav || document.getElementById('themeToggle')) return;
+        var li = document.createElement('li');
+        var btn = document.createElement('button');
+        btn.id = 'themeToggle';
+        btn.className = 'theme-toggle';
+        btn.title = 'Toggle dark mode';
+        btn.textContent = document.documentElement.classList.contains('dark-theme') ? '\u2600' : '\u263E';
+        btn.addEventListener('click', function () {
+            document.documentElement.classList.toggle('dark-theme');
+            var isDark = document.documentElement.classList.contains('dark-theme');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            btn.textContent = isDark ? '\u2600' : '\u263E';
+        });
+        li.appendChild(btn);
+        nav.insertBefore(li, nav.firstChild);
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', insertToggle);
+    } else {
+        insertToggle();
+    }
+    // Also try after a short delay in case nav renders late
+    setTimeout(insertToggle, 300);
+})();
+
 // Smooth scroll for anchor links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
