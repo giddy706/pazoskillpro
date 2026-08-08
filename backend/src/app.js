@@ -44,6 +44,8 @@ const allowedOrigins = new Set(
 );
 for (const origin of [
     'https://pazoskillpro.pages.dev',
+    'https://pazoskill.online',
+    'https://www.pazoskill.online',
     'http://localhost:3000',
     'http://localhost:4173',
     'http://127.0.0.1:3000',
@@ -57,7 +59,8 @@ function isOriginAllowed(origin) {
     if (!origin) return false;
     return (
         allowedOrigins.has(origin) ||
-        /^https:\/\/[a-z0-9-]+\.pazoskillpro\.pages\.dev$/.test(origin)
+        /^https:\/\/[a-z0-9-]+\.pazoskillpro\.pages\.dev$/.test(origin) ||
+        /^https:\/\/(www\.)?pazoskill\.online$/.test(origin)
     );
 }
 app.use(
