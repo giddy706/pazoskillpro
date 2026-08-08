@@ -15,10 +15,7 @@
     <!-- Navigation -->
     <nav class="navbar">
         <div class="navbar-container">
-            <a href="index.html" class="logo">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#2563EB"/><path d="M8 24V8h5.5c4.14 0 7 2.86 7 7s-2.86 7-7 7H13v2H8zm5.5-4.5H13v-5h.5c1.94 0 3 1.06 3 2.5s-1.06 2.5-3 2.5z" fill="#fff"/></svg>
-                <span>PazoSkill</span>
-            </a>
+            <a href="index.html" class="logo"><img src="images/logo.png" alt="PazoSkill logo"><span>PazoSkill</span></a>
             <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
                 <span></span><span></span><span></span>
             </button>
@@ -48,7 +45,7 @@
                     <a href="jobs.html" class="btn btn-outline btn-large">Find Opportunities</a>
                 </div>
             </div>
-            <div class="hero-image">
+            <div class="hero-image" style="position:relative; z-index:2;">
                 <img src="images/image5.jpg" alt="Student learning on laptop">
             </div>
         </div>
@@ -217,7 +214,7 @@
             <div class="footer-content">
                 <div class="footer-section">
                     <a href="index.html" class="logo" style="color:#fff; margin-bottom:1rem; display:inline-flex;">
-                        <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#2563EB"/><path d="M8 24V8h5.5c4.14 0 7 2.86 7 7s-2.86 7-7 7H13v2H8zm5.5-4.5H13v-5h.5c1.94 0 3 1.06 3 2.5s-1.06 2.5-3 2.5z" fill="#fff"/></svg>
+                        <img src="images/logo.png" alt="PazoSkill" style="height:28px; filter:brightness(0) invert(1);">
                         <span style="color:#fff">PazoSkill</span>
                     </a>
                     <p>Empowering individuals with practical skills and connecting them to meaningful employment opportunities.</p>
@@ -270,75 +267,91 @@
         }
 
         var api = window.API_BASE_URL || '';
+        var loadingHTML = '<p style="text-align:center;color:var(--text2);grid-column:1/-1;padding:2rem 0;">Loading...</p>';
+        var retryCSS = 'display:inline-flex;align-items:center;gap:0.5rem;margin-top:0.75rem;padding:0.5rem 1rem;font-size:0.875rem;font-weight:600;color:var(--accent);background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);border-radius:var(--radius);cursor:pointer;';
 
         // Featured Courses
         var grid = document.getElementById('featuredCourses');
         if (grid) {
-            fetch(api + '/api/courses')
-                .then(function (r) { return r.json(); })
-                .then(function (d) {
-                    var courses = (d.courses || []).slice(0, 4);
-                    if (!courses.length) {
-                        grid.innerHTML = '<p style="text-align:center;color:var(--text2);grid-column:1/-1;">No courses available yet.</p>';
-                        return;
-                    }
-                    var icons = ['&#60;/&#62;', '&#9998;', '&#128200;', '&#128202;'];
-                    var levels = { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' };
-                    grid.innerHTML = courses.map(function (c, i) {
-                        var lvl = levels[c.level] || c.level || 'Beginner';
-                        var lvlClass = lvl === 'Intermediate' ? 'badge-intermediate' : 'badge-beginner';
-                        var desc = (c.description || '').substring(0, 90);
-                        var lessons = c.lessons_count || c.lessonCount || 0;
-                        var projects = c.projects_count || Math.floor(Math.random() * 4 + 2);
-                        return '<div class="course-card">' +
-                            '<div class="course-card-icon">' + (icons[i % 4]) + '</div>' +
-                            '<h3>' + (c.title || '') + '</h3>' +
-                            '<div class="course-meta">' +
-                                '<span class="badge ' + lvlClass + '">' + lvl + '</span>' +
-                                (c.duration ? '<span class="duration">&#128336; ' + c.duration + '</span>' : '') +
-                            '</div>' +
-                            '<p>' + desc + (desc.length >= 90 ? '...' : '') + '</p>' +
-                            '<div class="course-card-meta">' +
-                                '<span>&#128196; ' + lessons + ' lessons</span>' +
-                                '<span>&#128188; ' + projects + ' projects</span>' +
-                            '</div>' +
-                            '<a href="course-detail.html?id=' + c.id + '" class="btn btn-primary" style="width:100%;justify-content:center;">View Course</a>' +
-                        '</div>';
-                    }).join('');
-                })
-                .catch(function () {
-                    grid.innerHTML = '<p style="text-align:center;color:var(--text2);grid-column:1/-1;">Unable to load courses.</p>';
-                });
+            grid.innerHTML = loadingHTML;
+            function loadCourses() {
+                grid.innerHTML = loadingHTML;
+                fetch(api + '/api/courses')
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) {
+                        var courses = (d.courses || []).slice(0, 4);
+                        if (!courses.length) {
+                            grid.innerHTML = '<p style="text-align:center;color:var(--text2);grid-column:1/-1;">No courses available yet.</p>';
+                            return;
+                        }
+                        var icons = ['&#60;/&#62;', '&#9998;', '&#128200;', '&#128202;'];
+                        var levels = { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' };
+                        grid.innerHTML = courses.map(function (c, i) {
+                            var lvl = levels[c.level] || c.level || 'Beginner';
+                            var lvlClass = lvl === 'Intermediate' ? 'badge-intermediate' : 'badge-beginner';
+                            var desc = (c.description || '').substring(0, 90);
+                            var lessons = c.lessons_count || c.lessonCount || 0;
+                            var projects = c.projects_count || Math.floor(Math.random() * 4 + 2);
+                            return '<div class="course-card">' +
+                                '<div class="course-card-icon">' + (icons[i % 4]) + '</div>' +
+                                '<h3>' + (c.title || '') + '</h3>' +
+                                '<div class="course-meta">' +
+                                    '<span class="badge ' + lvlClass + '">' + lvl + '</span>' +
+                                    (c.duration ? '<span class="duration">&#128336; ' + c.duration + '</span>' : '') +
+                                '</div>' +
+                                '<p>' + desc + (desc.length >= 90 ? '...' : '') + '</p>' +
+                                '<div class="course-card-meta">' +
+                                    '<span>&#128196; ' + lessons + ' lessons</span>' +
+                                    '<span>&#128188; ' + projects + ' projects</span>' +
+                                '</div>' +
+                                '<a href="course-detail.html?id=' + c.id + '" class="btn btn-primary" style="width:100%;justify-content:center;">View Course</a>' +
+                            '</div>';
+                        }).join('');
+                    })
+                    .catch(function () {
+                        grid.innerHTML = '<p style="text-align:center;color:var(--text2);grid-column:1/-1;">Server is waking up, please wait...</p>' +
+                            '<p style="text-align:center;grid-column:1/-1;"><button style="' + retryCSS + '" onclick="window._retryCourses()">Retry</button></p>';
+                    });
+            }
+            window._retryCourses = loadCourses;
+            loadCourses();
         }
 
         // Latest Jobs
         var jobsGrid = document.getElementById('latestJobs');
         if (jobsGrid) {
-            fetch(api + '/api/jobs')
-                .then(function (r) { return r.json(); })
-                .then(function (d) {
-                    var jobs = (d.jobs || []).slice(0, 3);
-                    if (!jobs.length) {
-                        jobsGrid.innerHTML = '<p style="text-align:center;color:var(--text2);grid-column:1/-1;">No opportunities available yet.</p>';
-                        return;
-                    }
-                    jobsGrid.innerHTML = jobs.map(function (j) {
-                        var type = (j.type || 'full-time').toLowerCase();
-                        var typeClass = type === 'remote' ? 'remote' : type === 'hybrid' ? 'hybrid' : 'onsite';
-                        return '<div class="job-card">' +
-                            '<div class="job-card-header">' +
-                                '<div class="job-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></div>' +
-                                '<div><h4>' + (j.title || '') + '</h4><div class="job-card-company">' + (j.company || '') + '</div></div>' +
-                            '</div>' +
-                            '<div class="job-card-location"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + (j.location || 'Kenya') + '</div>' +
-                            '<span class="job-type-badge ' + typeClass + '">' + (j.type || 'Full-time') + '</span>' +
-                            '<div style="margin-top:1rem"><a href="job-detail.html?id=' + j.id + '" class="btn btn-primary btn-small">Apply</a></div>' +
-                        '</div>';
-                    }).join('');
-                })
-                .catch(function () {
-                    jobsGrid.innerHTML = '<p style="text-align:center;color:var(--text2);grid-column:1/-1;">Unable to load opportunities.</p>';
-                });
+            jobsGrid.innerHTML = loadingHTML;
+            function loadJobs() {
+                jobsGrid.innerHTML = loadingHTML;
+                fetch(api + '/api/jobs')
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) {
+                        var jobs = (d.jobs || []).slice(0, 3);
+                        if (!jobs.length) {
+                            jobsGrid.innerHTML = '<p style="text-align:center;color:var(--text2);grid-column:1/-1;">No opportunities available yet.</p>';
+                            return;
+                        }
+                        jobsGrid.innerHTML = jobs.map(function (j) {
+                            var type = (j.type || 'full-time').toLowerCase();
+                            var typeClass = type === 'remote' ? 'remote' : type === 'hybrid' ? 'hybrid' : 'onsite';
+                            return '<div class="job-card">' +
+                                '<div class="job-card-header">' +
+                                    '<div class="job-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></div>' +
+                                    '<div><h4>' + (j.title || '') + '</h4><div class="job-card-company">' + (j.company || '') + '</div></div>' +
+                                '</div>' +
+                                '<div class="job-card-location"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + (j.location || 'Kenya') + '</div>' +
+                                '<span class="job-type-badge ' + typeClass + '">' + (j.type || 'Full-time') + '</span>' +
+                                '<div style="margin-top:1rem"><a href="job-detail.html?id=' + j.id + '" class="btn btn-primary btn-small">Apply</a></div>' +
+                            '</div>';
+                        }).join('');
+                    })
+                    .catch(function () {
+                        jobsGrid.innerHTML = '<p style="text-align:center;color:var(--text2);grid-column:1/-1;">Server is waking up, please wait...</p>' +
+                            '<p style="text-align:center;grid-column:1/-1;"><button style="' + retryCSS + '" onclick="window._retryJobs()">Retry</button></p>';
+                    });
+            }
+            window._retryJobs = loadJobs;
+            loadJobs();
         }
 
         // Load stats
